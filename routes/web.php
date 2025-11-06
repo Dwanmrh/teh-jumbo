@@ -1,37 +1,55 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\KasController;
+use App\Http\Controllers\KasMasukController;
+use App\Http\Controllers\KasKeluarController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman awal (welcome)
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Dashboard
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Middleware untuk halaman yang hanya bisa diakses jika login
 Route::middleware('auth')->group(function () {
 
-    // Kas Masuk
-    Route::get('/kas-masuk', [KasController::class, 'masuk'])->name('kas.masuk');
+    /** =========================
+     *  KAS MASUK
+     * ========================= */
+    Route::get('/kas-masuk', [KasMasukController::class, 'index'])->name('kas-masuk.index');
+    Route::get('/kas-masuk/tambah', [KasMasukController::class, 'create'])->name('kas-masuk.create');
+    Route::post('/kas-masuk', [KasMasukController::class, 'store'])->name('kas-masuk.store');
+    Route::get('/kas-masuk/{id}/edit', [KasMasukController::class, 'edit'])->name('kas-masuk.edit');
+    Route::put('/kas-masuk/{id}', [KasMasukController::class, 'update'])->name('kas-masuk.update');
+    Route::delete('/kas-masuk/{id}', [KasMasukController::class, 'destroy'])->name('kas-masuk.destroy');
 
-    // Kas Keluar
-    Route::get('/kas-keluar', [KasController::class, 'keluar'])->name('kas.keluar');
+    /** =========================
+     *  KAS KELUAR
+     * ========================= */
+    Route::get('/kas-keluar', [KasKeluarController::class, 'index'])->name('kas-keluar.index');
+    Route::get('/kas-keluar/tambah', [KasKeluarController::class, 'create'])->name('kas-keluar.create');
+    Route::post('/kas-keluar', [KasKeluarController::class, 'store'])->name('kas-keluar.store');
+    Route::get('/kas-keluar/{id}/edit', [KasKeluarController::class, 'edit'])->name('kas-keluar.edit');
+    Route::put('/kas-keluar/{id}', [KasKeluarController::class, 'update'])->name('kas-keluar.update');
+    Route::delete('/kas-keluar/{id}', [KasKeluarController::class, 'destroy'])->name('kas-keluar.destroy');
 
-    // Persediaan Barang / Barang
+    /** =========================
+     *  BARANG
+     * ========================= */
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
 
-    // Laporan Keuangan / Laporan
+    /** =========================
+     *  LAPORAN
+     * ========================= */
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.keuangan');
 
-    // Profil
+    /** =========================
+     *  PROFIL
+     * ========================= */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

@@ -1,192 +1,84 @@
 <x-app-layout>
-
+    {{-- Font Outfit --}}
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #f7f7f7;
-        }
-
-        h2 {
-            font-weight: 600;
-            color: #2F362C;
-        }
-
-        /* ===== Filter Box ===== */
-        .filter-box {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 15px;
-            background-color: #fff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            margin-bottom: 25px;
-        }
-
-        .filter-box label {
-            font-weight: 500;
-            color: #2F362C;
-        }
-
-        .filter-box select,
-        .filter-box input {
-            background-color: #F5C04C;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: inherit;
-            font-weight: 500;
-            color: #2F362C;
-            cursor: pointer;
-        }
-
-        .filter-box select:focus,
-        .filter-box input:focus {
-            outline: none;
-        }
-
-        .filter-box button {
-            background-color: #7AC943;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .filter-box button:hover {
-            background-color: #6AB13B;
-        }
-
-        /* ===== Table Box ===== */
-        .table-box {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            padding: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #FFF2CF;
-            font-weight: 600;
-            color: #2F362C;
-        }
-
-        td {
-            background-color: #fff;
-        }
-
-        .aksi-btn {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .btn-edit {
-            background-color: #F5C04C;
-            color: #2F362C;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-hapus {
-            background-color: #FF5252;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-edit:hover {
-            background-color: #E0AC3B;
-        }
-
-        .btn-hapus:hover {
-            background-color: #E04444;
-        }
-    </style>
-
-    <div class="py-8 bg-[#f7f7f7]">
+    <div class="py-8 bg-[#f7f7f7] font-[Outfit]">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             {{-- Judul --}}
-            <h2 class="text-2xl font-semibold text-[#2F362C] mb-6">Laporan Keuangan Harian</h2>
+            <h2 class="text-2xl font-semibold text-[#2F362C] mb-6">Laporan Keuangan</h2>
 
             {{-- Filter --}}
-            <div class="filter-box">
-                <label for="filter-type">Filter</label>
-                <select id="filter-type" onchange="toggleFilterInput()">
+            <div class="bg-white p-4 rounded-md shadow-md flex flex-wrap items-center gap-3 mb-6">
+                <label for="filter-type" class="font-medium text-[#2F362C]">Filter</label>
+                <select id="filter-type" onchange="toggleFilterInput()" class="bg-[#F5C04C] text-[#2F362C] font-medium px-3 py-2 rounded-md border-none outline-none">
                     <option value="">Pilih Jangka Waktu</option>
                     <option value="harian">Harian</option>
                     <option value="bulanan">Bulanan</option>
                 </select>
 
-                <input type="date" id="filter-harian" style="display:none;">
-                <input type="month" id="filter-bulanan" style="display:none;">
+                <input type="date" id="filter-harian" class="hidden bg-[#F5C04C] px-3 py-2 rounded-md text-[#2F362C]" />
+                <input type="month" id="filter-bulanan" class="hidden bg-[#F5C04C] px-3 py-2 rounded-md text-[#2F362C]" />
+
+                <button class="bg-[#7AC943] text-white px-4 py-2 rounded-md hover:bg-[#6AB13B]">Terapkan</button>
             </div>
 
-            {{-- Tabel --}}
-            <div class="table-box">
-                <table>
+            {{-- Ringkasan Keuangan --}}
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                <div class="bg-white shadow-md rounded-md p-5 border-l-4 border-[#7AC943]">
+                    <h3 class="text-sm font-medium text-[#2F362C] mb-1">Total Kas Masuk</h3>
+                    <p class="text-lg font-bold text-[#2F362C]">Rp 25.000.000</p>
+                </div>
+                <div class="bg-white shadow-md rounded-md p-5 border-l-4 border-[#E74C3C]">
+                    <h3 class="text-sm font-medium text-[#2F362C] mb-1">Total Kas Keluar</h3>
+                    <p class="text-lg font-bold text-[#2F362C]">Rp 12.000.000</p>
+                </div>
+                <div class="bg-white shadow-md rounded-md p-5 border-l-4 border-[#F5C04C]">
+                    <h3 class="text-sm font-medium text-[#2F362C] mb-1">Total Transaksi</h3>
+                    <p class="text-lg font-bold text-[#2F362C]">Rp 37.000.000</p>
+                </div>
+                <div class="bg-white shadow-md rounded-md p-5 border-l-4 border-[#8E44AD]">
+                    <h3 class="text-sm font-medium text-[#2F362C] mb-1">Saldo Akhir</h3>
+                    <p class="text-lg font-bold text-[#2F362C]">Rp 13.000.000</p>
+                </div>
+            </div>
+
+            {{-- Tabel Laporan --}}
+            <div class="bg-white rounded-md shadow-md p-4 overflow-x-auto">
+                <table class="w-full border-collapse text-center text-sm">
                     <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Tanggal</th>
-                            <th>Profit Kotor</th>
-                            <th>Sewa Tempat</th>
-                            <th>Operasional</th>
-                            <th>Karyawan</th>
-                            <th>Makan Harian</th>
-                            <th>Profit Bersih</th>
-                            <th>Keterangan</th>
-                            <th>Aksi</th>
+                        <tr class="bg-[#FFF2CF] text-[#2F362C] font-semibold">
+                            <th class="border p-2">No</th>
+                            <th class="border p-2">Tanggal</th>
+                            <th class="border p-2">Keterangan</th>
+                            <th class="border p-2">Kas Masuk</th>
+                            <th class="border p-2">Kas Keluar</th>
+                            <th class="border p-2">Saldo</th>
                         </tr>
                     </thead>
                     <tbody>
                         @for ($i = 1; $i <= 5; $i++)
-                            <tr>
-                                <td>{{ $i }}</td>
-                                <td>2025-03-0{{ $i+6 }}</td>
-                                <td>Rp. {{ number_format(150000 + $i*5000, 0, ',', '.') }}</td>
-                                <td>Rp. 30.000</td>
-                                <td>Rp. {{ number_format(40000 + $i*2000, 0, ',', '.') }}</td>
-                                <td>Rp. 50.000</td>
-                                <td>Rp. 20.000</td>
-                                <td>Rp. {{ number_format(40000 - $i*2000, 0, ',', '.') }}</td>
-                                <td>Mushollah</td>
-                                <td>
-                                    <div class="aksi-btn">
-                                        <button class="btn-edit">Edit</button>
-                                        <button class="btn-hapus">Hapus</button>
-                                    </div>
-                                </td>
+                            <tr class="even:bg-gray-50">
+                                <td class="border p-2">{{ $i }}</td>
+                                <td class="border p-2">2025-10-{{ 10 + $i }}</td>
+                                <td class="border p-2">Penjualan Hari ke-{{ $i }}</td>
+                                <td class="border p-2 text-green-600">Rp. {{ number_format(5000000 + $i * 100000, 0, ',', '.') }}</td>
+                                <td class="border p-2 text-red-600">Rp. {{ number_format(2000000 + $i * 50000, 0, ',', '.') }}</td>
+                                <td class="border p-2 font-medium text-[#2F362C]">Rp. {{ number_format(3000000 + $i * 50000, 0, ',', '.') }}</td>
                             </tr>
                         @endfor
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Tombol Export --}}
+            <div class="mt-6 flex justify-end gap-3">
+                <button class="bg-[#F5C04C] text-[#2F362C] px-4 py-2 rounded-md font-medium hover:bg-[#E0AC3B]">
+                    Download PDF
+                </button>
+                <button class="bg-[#7AC943] text-white px-4 py-2 rounded-md font-medium hover:bg-[#6AB13B]">
+                    Download Excel
+                </button>
             </div>
 
         </div>
@@ -195,20 +87,8 @@
     <script>
         function toggleFilterInput() {
             const type = document.getElementById('filter-type').value;
-            const harian = document.getElementById('filter-harian');
-            const bulanan = document.getElementById('filter-bulanan');
-
-            if (type === 'harian') {
-                harian.style.display = 'inline-block';
-                bulanan.style.display = 'none';
-            } else if (type === 'bulanan') {
-                harian.style.display = 'none';
-                bulanan.style.display = 'inline-block';
-            } else {
-                harian.style.display = 'none';
-                bulanan.style.display = 'none';
-            }
+            document.getElementById('filter-harian').classList.toggle('hidden', type !== 'harian');
+            document.getElementById('filter-bulanan').classList.toggle('hidden', type !== 'bulanan');
         }
     </script>
-
 </x-app-layout>

@@ -66,7 +66,7 @@
             :class="sidebarOpen ? 'ml-64' : 'ml-0'">
 
             @isset($header)
-                <header class="bg-white shadow mb-4 rounded-md mt-2">
+                <header class="bg-[#FAFAFA] border-b border-gray-200 mb-4 rounded-md mt-2">
                     <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

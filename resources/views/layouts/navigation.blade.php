@@ -75,12 +75,12 @@
                 <i class="fa-solid fa-house"></i> Dashboard
             </a>
 
-            <a href="{{ route('kas.masuk') }}"
-                class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('kas.masuk') ? 'bg-[#9BCC50] text-black' : '' }}">
+            <a href="{{ route('kas-masuk.index') }}"
+                class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('kas-masuk.index') ? 'bg-[#9BCC50] text-black' : '' }}">
                 <i class="fa-solid fa-arrow-down"></i> Kas Masuk
             </a>
 
-            <a href="{{ route('kas.keluar') }}"
+            <a href="{{ route('kas-keluar.index') }}"
                 class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('kas.keluar') ? 'bg-[#9BCC50] text-black' : '' }}">
                 <i class="fa-solid fa-arrow-up"></i> Kas Keluar
             </a>
