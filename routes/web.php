@@ -5,17 +5,19 @@ use App\Http\Controllers\KasMasukController;
 use App\Http\Controllers\KasKeluarController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::middleware('auth')->group(function () {
+    /** =========================
+     *  DASHBOARD (REAL DATA)
+     * ========================= */
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /** =========================
      *  KAS MASUK
@@ -46,6 +48,8 @@ Route::middleware('auth')->group(function () {
      *  LAPORAN
      * ========================= */
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.keuangan');
+    Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf');
+    Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
 
     /** =========================
      *  PROFIL
@@ -55,4 +59,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

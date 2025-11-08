@@ -1,26 +1,29 @@
 <x-app-layout>
-    {{-- Alpine.js & SweetAlert2 --}}
+    {{-- Library wajib --}}
     <script defer src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]" x-data="{ showDetail: false, selectedItem: {} }">
+    <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]" x-data>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="text-2xl font-medium text-[#2F362C]">Kas Keluar</h2>
-                <p class="text-sm text-gray-500 mt-1">Kelola transaksi pengeluaran</p>
+            {{-- HEADER --}}
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-medium text-[#2F362C]">Kas Keluar</h2>
+                    <p class="text-sm text-gray-500 mt-1">Kelola transaksi pengeluaran</p>
+                </div>
+
+                <button id="openModalBtn"
+                    class="hidden md:inline bg-[#FF5252] hover:bg-[#D60000] text-white px-4 py-2 rounded-md font-medium transition">
+                    + Tambah Kas Keluar
+                </button>
             </div>
-            
-            <a href="{{ route('kas-keluar.create') }}"
-            class="hidden md:inline bg-[#7AC943] hover:bg-[#68AD3A] text-white px-4 py-2 rounded-md font-medium transition">
-                + Tambah Kas Keluar
-            </a>
-        </div>
 
-
-            {{-- FILTER & SEARCH --}}
+            {{-- FILTER --}}
             <form method="GET" action="{{ route('kas-keluar.index') }}"
                 class="bg-white rounded-xl shadow-md p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
                 id="searchForm">
@@ -28,313 +31,282 @@
                 <div class="flex items-center gap-2 w-full md:w-auto flex-1">
                     <input type="text" name="search" id="searchInput"
                         value="{{ request('search') }}" placeholder="Cari transaksi..."
-                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#7AC943]" />
+                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FF5252]" />
+                    <input type="hidden" name="filter_harga" value="{{ request('filter_harga') }}">
+                </div>
+
+                <div class="flex gap-2 flex-wrap items-center">
+                    {{-- FILTER HARGA --}}
+                    <div class="relative">
+                        <button type="button" id="hargaToggle"
+                            class="border border-gray-300 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                            💰
+                            @if(request('filter_harga') == '0-10000')
+                                <span>Rp 0 - 10.000</span>
+                            @elseif(request('filter_harga') == '11000-100000')
+                                <span>Rp 11.000 - 100.000</span>
+                            @elseif(request('filter_harga') == '100001-999999999')
+                                <span>> Rp 100.000</span>
+                            @else
+                                <span class="text-gray-500">Semua</span>
+                            @endif
+                        </button>
+
+                        <div id="hargaDropdown"
+                            class="hidden absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-3">
+                            <label class="block text-sm font-medium mb-2">Rentang Nominal:</label>
+                            <select name="filter_harga" id="hargaSelect"
+                                class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3">
+                                <option value="">Semua</option>
+                                <option value="0-10000" {{ request('filter_harga')=='0-10000' ? 'selected' : '' }}>Rp 0 - Rp 10.000</option>
+                                <option value="11000-100000" {{ request('filter_harga')=='11000-100000' ? 'selected' : '' }}>Rp 11.000 - Rp 100.000</option>
+                                <option value="100001-999999999" {{ request('filter_harga')=='100001-999999999' ? 'selected' : '' }}> > Rp 100.000</option>
+                            </select>
+                            <button type="submit" class="bg-[#FF5252] hover:bg-[#D60000] text-white w-full py-2 rounded-lg">Terapkan</button>
+                        </div>
+                    </div>
+
+                    {{-- FILTER WAKTU --}}
+                    <div class="relative">
+                        <button type="button" id="filterToggle"
+                            class="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                            📅
+                            @if(request('filter_waktu') == 'custom' && request('start_date') && request('end_date'))
+                                <span>
+                                    {{ \Carbon\Carbon::parse(request('start_date'))->format('d M Y') }} -
+                                    {{ \Carbon\Carbon::parse(request('end_date'))->format('d M Y') }}
+                                </span>
+                            @elseif(request('filter_waktu'))
+                                <span>{{ ucfirst(str_replace('-', ' ', request('filter_waktu'))) }}</span>
+                            @else
+                                <span class="text-gray-500">Semua</span>
+                            @endif
+                        </button>
+
+                        <div id="filterDropdown"
+                            class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4">
+                            <label class="block text-sm font-medium mb-2">Rentang Tanggal:</label>
+                            <select name="filter_waktu" id="tanggalSelect"
+                                class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3">
+                                <option value="">Sepanjang Waktu</option>
+                                <option value="hari-ini" {{ request('filter_waktu')=='hari-ini' ? 'selected' : '' }}>Hari Ini</option>
+                                <option value="kemarin" {{ request('filter_waktu')=='kemarin' ? 'selected' : '' }}>Kemarin</option>
+                                <option value="minggu-ini" {{ request('filter_waktu')=='minggu-ini' ? 'selected' : '' }}>Minggu Ini</option>
+                                <option value="bulan-ini" {{ request('filter_waktu')=='bulan-ini' ? 'selected' : '' }}>Bulan Ini</option>
+                                <option value="bulan-lalu" {{ request('filter_waktu')=='bulan-lalu' ? 'selected' : '' }}>Bulan Lalu</option>
+                                <option value="tahun-ini" {{ request('filter_waktu')=='tahun-ini' ? 'selected' : '' }}>Tahun Ini</option>
+                                <option value="custom" {{ request('filter_waktu')=='custom' ? 'selected' : '' }}>Tanggal Kustom</option>
+                            </select>
+
+                            <div id="customDateRange" class="{{ request('filter_waktu')=='custom' ? '' : 'hidden' }}">
+                                <label class="text-sm text-gray-700">Dari:</label>
+                                <input type="date" name="start_date"
+                                    class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-2"
+                                    value="{{ request('start_date') }}">
+                                <label class="text-sm text-gray-700">Sampai:</label>
+                                <input type="date" name="end_date"
+                                    class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3"
+                                    value="{{ request('end_date') }}">
+                            </div>
+
+                            <button type="submit"
+                                class="bg-[#FF5252] hover:bg-[#D60000] text-white w-full py-2 rounded-lg mb-2">Terapkan</button>
+                        </div>
+                    </div>
+
+                    {{-- RESET --}}
+                    <a href="{{ route('kas-keluar.index') }}"
+                        class="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                        🔄
+                    </a>
                 </div>
             </form>
 
-             @php
-                $totalKas = $kasKeluar->sum('nominal');
-                $jumlahTransaksi = $kasKeluar->count();
-            @endphp
-
-            @php
-    function getKategoriColor($kategori) {
-        return match (strtolower($kategori)) {
-            'pembelian' => ['bg-red-100', 'text-red-600'],
-            'gaji' => ['bg-green-100', 'text-green-600'],
-            'operasional' => ['bg-blue-100', 'text-blue-600'],
-            'lainnya' => ['bg-gray-100', 'text-gray-600'],
-            default => ['bg-gray-200', 'text-gray-700'],
-        };
-    }
-@endphp
-
-{{-- CARD TOTAL --}}
-<div class="bg-gradient-to-r from-[#FF6A6A] to-[#D60000] text-white p-6 rounded-xl shadow-md mb-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <p class="text-sm opacity-90">Total Kas Keluar</p>
-            <p class="text-3xl font-bold">Rp {{ number_format($totalKas, 0, ',', '.') }}</p>
-
-            <p class="mt-2 text-sm opacity-90">
-                {{ $jumlahTransaksi }} transaksi tercatat
-            </p>
-        </div>
-
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 scale-y-[-1]" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="17 6 23 6 23 12" stroke-linecap="round" stroke-linejoin="round"/>
-         </svg>
-    </div>
-</div>
-
-{{-- TABEL DESKTOP --}}
-<div id="kasDataContainer" class="hidden md:block bg-white p-5 rounded-xl shadow-md">
-    <table class="w-full border-collapse text-center text-sm">
-        <thead class="bg-gray-100 text-[#2F362C] font-medium">
-            <tr>
-                <th class="p-3 border-b border-gray-200">No</th>
-                <th class="p-3 border-b border-gray-200">Tanggal</th>
-                <th class="p-3 border-b border-gray-200">Kode Kas</th>
-                <th class="p-3 border-b border-gray-200">Penerima</th>
-                <th class="p-3 border-b border-gray-200">Kategori</th>
-                <th class="p-3 border-b border-gray-200">Nominal</th>
-                <th class="p-3 border-b border-gray-200">Metode</th>
-                <th class="p-3 border-b border-gray-200">Deskripsi</th>
-                <th class="p-3 border-b border-gray-200">Bukti</th>
-                <th class="p-3 border-b border-gray-200">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($kasKeluar as $index => $item)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="p-3 border-b border-gray-200">{{ $index + 1 }}</td>
-                    <td class="p-3 border-b border-gray-200">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                    <td class="p-3 border-b border-gray-200">{{ $item->kode_kas }}</td>
-                    <td class="p-3 border-b border-gray-200">{{ $item->penerima }}</td>
-                    <td class="p-3 border-b border-gray-200">
-    @php
-        [$bgColor, $textColor] = getKategoriColor($item->kategori);
-    @endphp
-    <span class="px-2 py-1 text-xs rounded-md font-medium {{ $bgColor }} {{ $textColor }}">
-        {{ $item->kategori }}
-    </span>
-</td>
-
-
-                    <td class="p-3 border-b border-gray-200 font-bold text-red-600">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
-                    <td class="p-3 border-b border-gray-200">{{ $item->metode_pembayaran }}</td>
-                    <td class="p-3 border-b border-gray-200">{{ $item->deskripsi ?? '-' }}</td>
-                    <td class="p-3 border-b border-gray-200">
-                        @if($item->bukti_pembayaran)
-                            <a href="{{ asset('storage/' . $item->bukti_pembayaran) }}" target="_blank" class="text-blue-500 underline">Lihat</a>
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </td>
-                    <td class="p-3 border-b border-gray-200">
-                        <div class="flex justify-center gap-6">
-                                  <a href="{{ route('kas-masuk.edit', $item->id) }}"
-                                        class="text-blue-500 hover:text-blue-600 transition transform hover:scale-110">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M16.862 3.487a2.25 2.25 0 013.182 3.182L7.125 19.588 3 21l1.412-4.125L16.862 3.487z" />
-                                            </svg>
-                                    </a>
-                            <form action="{{ route('kas-keluar.destroy', $item->id) }}" method="POST" class="delete-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button"
-                                            class="text-red-500 hover:text-red-600 transition transform hover:scale-110 delete-btn"
-                                            data-nama="{{ $item->keterangan }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-9 0h10" />
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="10" class="text-center text-gray-500 p-3">Belum ada data kas keluar.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-
-
-
-            {{-- LIST MOBILE --}}
-            <div id="kasDataContainerMobile" class="md:hidden space-y-4">
-                @forelse ($kasKeluar as $item)
-                    <div @click="showDetail = true; selectedItem = {{ json_encode($item) }}"
-                        class="bg-white rounded-xl shadow-md p-4 border-l-4 border-[#7AC943] flex justify-between items-center cursor-pointer">
-                        <div>
-                            <p class="text-base font-semibold text-[#2F362C]">{{ $item->kategori }}</p>
-                            <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[#2F362C] text-sm font-bold">
-                                Rp {{ number_format($item->nominal, 0, ',', '.') }}
-                            </p>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-center text-gray-500 mt-4">Belum ada transaksi kas keluar.</p>
-                @endforelse
+            {{-- CARD TOTAL --}}
+            <div class="bg-gradient-to-r from-[#FF6A6A] to-[#D60000] text-white p-6 rounded-xl shadow-md mb-6">
+                <p class="text-sm opacity-90">Total Kas Keluar</p>
+                <p class="text-3xl font-bold">Rp {{ number_format($kasKeluar->sum('nominal'), 0, ',', '.') }}</p>
+                <p class="mt-2 text-sm opacity-90">{{ $kasKeluar->count() }} transaksi tercatat</p>
             </div>
 
-            {{-- TOMBOL FLOATING MOBILE --}}
-            <a href="{{ route('kas-keluar.create') }}"
-               class="fixed bottom-6 right-6 bg-[#7AC943] hover:bg-[#68AD3A] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg text-3xl z-30 md:hidden">
-                +
-            </a>
-
-            <!-- DETAIL MOBILE (ganti blok lama dengan ini) -->
-            <div x-show="showDetail"
-                x-transition
-                class="fixed top-[64px] inset-x-0 bottom-0 bg-white z-30 md:hidden overflow-y-auto p-5">
-                <header class="flex items-center mb-6">
-                    <button @click="showDetail = false" class="text-2xl text-gray-700 mr-4 font-bold">&larr;</button>
-                    <h1 class="text-xl font-semibold text-[#2F362C]">Rincian Transaksi</h1>
-                </header>
-
-                <!-- Kode Kas -->
-                <div class="mb-4">
-                    <div class="rounded-lg bg-white border border-gray-200 p-4 shadow-sm">
-                        <div class="text-xs text-gray-500">Kode Kas</div>
-                        <div class="text-lg font-semibold text-[#2F362C]" x-text="selectedItem.kode_kas || '-'"></div>
-                    </div>
-                </div>
-
-                <!-- Total / Nominal (kotak kuning) -->
-                <div class="mb-4">
-                    <div class="rounded-lg bg-[#FFF2CF] border border-[#F5D88C] p-5 shadow-sm text-center">
-                        <div class="text-sm text-gray-600">Total Kas Keluar</div>
-                        <div class="text-2xl font-bold text-[#2F362C]" x-text="selectedItem.nominal ? ('Rp ' + new Intl.NumberFormat('id-ID').format(selectedItem.nominal)) : 'Rp 0'"></div>
-                    </div>
-                </div>
-
-                <!-- Dua kolom: Tanggal | Metode Pembayaran -->
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm">
-                        <div class="text-xs text-gray-500">Tanggal Transaksi</div>
-                        <div class="font-medium text-[#2F362C]" x-text="selectedItem.tanggal ? (new Date(selectedItem.tanggal).toLocaleDateString()) : '-'"></div>
-                    </div>
-
-                    <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm">
-                        <div class="text-xs text-gray-500">Metode Pembayaran</div>
-                        <div class="font-medium text-[#2F362C]" x-text="selectedItem.metode_pembayaran || '-'"></div>
-                    </div>
-                </div>
-
-                <!-- Dua kolom: Penerima | Kategori -->
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm">
-                        <div class="text-xs text-gray-500">Penerima</div>
-                        <div class="font-medium text-[#2F362C]" x-text="selectedItem.penerima || '-'"></div>
-                    </div>
-
-                    <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm">
-                        <div class="text-xs text-gray-500">Kategori</div>
-                        <div class="font-medium text-[#2F362C]" x-text="selectedItem.kategori || '-'"></div>
-                    </div>
-                </div>
-
-                <!-- Deskripsi -->
-                <div class="mb-3">
-                    <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm min-h-[70px]">
-                        <div class="text-xs text-gray-500 mb-1">Deskripsi</div>
-                        <div class="text-sm text-[#2F362C]" x-text="selectedItem.deskripsi || '-'"></div>
-                    </div>
-                </div>
-
-                <!-- Bukti Pembayaran: thumbnail kecil (klik buka full) -->
-                <template x-if="selectedItem.bukti_pembayaran">
-                    <div class="mb-6">
-                        <div class="rounded-lg bg-white border border-gray-200 p-3 shadow-sm">
-                            <div class="text-xs text-gray-500 mb-2">Bukti Pembayaran</div>
-
-                            <div class="flex items-center gap-3">
-                                <!-- Thumbnail -->
-                                <template x-if="selectedItem.bukti_pembayaran">
-                                    <img 
-                                        :src="('/storage/' + selectedItem.bukti_pembayaran)" 
-                                        @click="window.open('/storage/' + selectedItem.bukti_pembayaran, '_blank')"
-                                        class="w-24 h-24 object-cover rounded-md cursor-pointer border"
-                                        alt="Bukti Pembayaran">
-                                </template>
-
-                                <!-- Info + tombol lihat -->
-                                <div class="flex-1">
-                                    <div class="text-sm text-[#2F362C] break-words" x-text="selectedItem.bukti_pembayaran.split('/').pop()"></div>
-                                    <div class="mt-2">
-                                        <button type="button"
-                                            @click="window.open('/storage/' + selectedItem.bukti_pembayaran, '_blank')"
-                                            class="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm text-sm text-blue-600 hover:bg-gray-50">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A2 2 0 0122 9.618V18a2 2 0 01-2 2H6a2 2 0 01-2-2V9.618a2 2 0 01.447-1.894L9 10m6 0v6" />
-                                            </svg>
-                                            Lihat Bukti
-                                        </button>
+            {{-- TABEL DATA --}}
+            <div class="bg-white rounded-xl shadow-md p-5 overflow-x-auto">
+                <table class="w-full border-collapse text-center text-sm min-w-[800px]">
+                    <thead class="bg-gray-100 text-[#2F362C] font-medium">
+                        <tr>
+                            <th class="p-3">Kode Kas</th>
+                            <th class="p-3">Tanggal</th>
+                            <th class="p-3">Penerima</th>
+                            <th class="p-3">Kategori</th>
+                            <th class="p-3">Nominal</th>
+                            <th class="p-3">Metode</th>
+                            <th class="p-3">Deskripsi</th>
+                            <th class="p-3">Bukti</th>
+                            <th class="p-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($kasKeluar as $item)
+                            <tr class="border-b hover:bg-[#f9f9f9]">
+                                <td>{{ $item->kode_kas }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
+                                <td>{{ $item->penerima }}</td>
+                                <td>{{ $item->kategori }}</td>
+                                <td class="font-semibold text-red-700">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
+                                <td>{{ $item->metode_pembayaran }}</td>
+                                <td>{{ $item->deskripsi ?? '-' }}</td>
+                                <td>
+                                    @if($item->bukti_pembayaran)
+                                        <a href="{{ asset('storage/' . $item->bukti_pembayaran) }}" target="_blank"
+                                            class="text-blue-500 underline">Lihat</a>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="flex justify-center gap-3">
+                                        <a href="{{ route('kas-keluar.edit', $item->id) }}"
+                                            class="text-blue-500 hover:text-blue-700 transition transform hover:scale-110">✎</a>
+                                        <form method="POST" action="{{ route('kas-keluar.destroy', $item->id) }}" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button"
+                                                class="text-red-500 hover:text-red-700 transition transform hover:scale-110 delete-btn"
+                                                data-nama="{{ $item->kode_kas }}">
+                                                🗑️
+                                            </button>
+                                        </form>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Tombol Edit & Hapus (fixed) -->
-                <div class="fixed bottom-6 right-4 flex flex-col gap-3 z-50">
-                    <a :href="'/kas-keluar/' + selectedItem.id + '/edit'"
-                    class="w-12 h-12 bg-[#EABF59] hover:bg-[#D4AA4E] text-white rounded-full flex items-center justify-center shadow-md text-lg">
-                    ✏️
-                    </a>
-
-                    <button
-                        type="button"
-                        @click=" 
-                            Swal.fire({
-                                title: 'Yakin ingin menghapus?',
-                                text: selectedItem.kode_kas || '',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#d33',
-                                cancelButtonColor: '#7AC943',
-                                confirmButtonText: 'Ya, hapus!',
-                                cancelButtonText: 'Batal'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    // buat form hapus dan submit
-                                    const form = document.createElement('form');
-                                    form.method = 'POST';
-                                    form.action = '/kas-keluar/' + selectedItem.id;
-
-                                    const csrf = document.createElement('input');
-                                    csrf.type = 'hidden';
-                                    csrf.name = '_token';
-                                    csrf.value = document.querySelector('meta[name=csrf-token]').content;
-                                    form.appendChild(csrf);
-
-                                    const method = document.createElement('input');
-                                    method.type = 'hidden';
-                                    method.name = '_method';
-                                    method.value = 'DELETE';
-                                    form.appendChild(method);
-
-                                    document.body.appendChild(form);
-                                    form.submit();
-                                }
-                            });
-                        "
-                        class="w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md text-lg">
-                        🗑️
-                    </button>
-                </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="9" class="py-3 text-gray-500">Belum ada data kas keluar.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
+            {{-- FLOATING BUTTON MOBILE --}}
+            <button id="openModalBtnMobile"
+                class="fixed bottom-6 right-6 bg-[#FF5252] hover:bg-[#D60000] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg text-3xl z-30 md:hidden">
+                +
+            </button>
 
-    {{-- DELETE ALERT --}}
+            {{-- MODAL TAMBAH --}}
+            <div id="createModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-[1000]">
+                <div class="bg-white rounded-xl shadow-lg w-[90%] md:w-[400px] p-6 relative">
+                    <h3 class="text-lg font-semibold mb-4 text-[#2F362C]">Tambah Kas Keluar</h3>
+
+                    <form method="POST" action="{{ route('kas-keluar.store') }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Tanggal Transaksi</label>
+                            <input type="date" name="tanggal" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Penerima</label>
+                            <input type="text" name="penerima" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Kategori</label>
+                            <select name="kategori" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                                <option value="" disabled selected>Pilih kategori</option>
+                                <option value="Pembelian">Pembelian</option>
+                                <option value="Gaji">Gaji</option>
+                                <option value="Operasional">Operasional</option>
+                                <option value="Lainnya">Lain-lain</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Nominal</label>
+                            <input type="number" name="nominal" min="0" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Metode Pembayaran</label>
+                            <div class="flex gap-2">
+                                <button type="button" class="metode-btn flex-1 py-2 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 font-medium" data-value="Tunai">Tunai</button>
+                                <button type="button" class="metode-btn flex-1 py-2 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 font-medium" data-value="QRIS">QRIS</button>
+                                <button type="button" class="metode-btn flex-1 py-2 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 font-medium" data-value="Transfer">Transfer</button>
+                            </div>
+                            <input type="hidden" name="metode_pembayaran" id="metode_pembayaran" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Deskripsi</label>
+                            <textarea name="deskripsi" class="w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium">Upload Bukti Pembayaran</label>
+                            <input type="file" name="bukti_pembayaran" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                        </div>
+
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button type="button" id="closeModalBtn"
+                                class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md">Batal</button>
+                            <button type="submit"
+                                class="bg-[#FF5252] hover:bg-[#D60000] text-white px-4 py-2 rounded-md">Simpan</button>
+                        </div>
+                    </form>
+
+                    <button id="closeModalIcon" class="absolute top-2 right-3 text-gray-500 hover:text-gray-800">✕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- SCRIPT --}}
     <script>
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const form = this.closest('.delete-form');
-                const nama = this.dataset.nama;
+    document.addEventListener("DOMContentLoaded", () => {
+        // Modal
+        const modal = document.getElementById("createModal");
+        const openBtn = document.getElementById("openModalBtn");
+        const openBtnMobile = document.getElementById("openModalBtnMobile");
+        const closeBtn = document.getElementById("closeModalBtn");
+        const closeIcon = document.getElementById("closeModalIcon");
+        const metodeBtns = document.querySelectorAll(".metode-btn");
+        const metodeInput = document.getElementById("metode_pembayaran");
 
+        const openModal = () => { modal.classList.remove("hidden"); modal.classList.add("flex"); document.body.style.overflow = "hidden"; };
+        const closeModal = () => { modal.classList.add("hidden"); modal.classList.remove("flex"); document.body.style.overflow = ""; };
+
+        openBtn?.addEventListener("click", openModal);
+        openBtnMobile?.addEventListener("click", openModal);
+        closeBtn?.addEventListener("click", closeModal);
+        closeIcon?.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+        metodeBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                metodeBtns.forEach(b => {
+                    b.classList.remove("bg-[#FF5252]", "text-white");
+                    b.classList.add("bg-gray-100", "text-gray-700");
+                });
+                btn.classList.add("bg-[#FF5252]", "text-white");
+                btn.classList.remove("bg-gray-100", "text-gray-700");
+                metodeInput.value = btn.dataset.value;
+            });
+        });
+
+        // Delete Alert
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const form = btn.closest(".delete-form");
+                const nama = btn.dataset.nama;
                 Swal.fire({
-                    title: 'Yakin ingin menghapus?',
-                    html: `<p>Data <strong>${nama}</strong> akan dihapus secara permanen.</p>`,
-                    icon: 'warning',
+                    title: "Yakin ingin hapus?",
+                    html: `<p>Data <strong>${nama}</strong> akan dihapus permanen.</p>`,
+                    icon: "warning",
                     showCancelButton: true,
-                    confirmButtonColor: '#FF5252',
-                    cancelButtonColor: '#7AC943',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Ya, Hapus",
+                    cancelButtonText: "Batal"
+                }).then(result => {
                     if (result.isConfirmed) {
                         form.submit();
                     }
@@ -342,14 +314,36 @@
             });
         });
 
-        @if (session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '{{ session('success') }}',
-            showConfirmButton: false,
-            timer: 2000
+        // Filter dropdown
+        const hargaToggle = document.getElementById('hargaToggle');
+        const hargaDropdown = document.getElementById('hargaDropdown');
+        const filterToggle = document.getElementById('filterToggle');
+        const filterDropdown = document.getElementById('filterDropdown');
+        const tanggalSelect = document.getElementById('tanggalSelect');
+        const customDateRange = document.getElementById('customDateRange');
+
+        hargaToggle?.addEventListener('click', e => {
+            e.stopPropagation();
+            hargaDropdown.classList.toggle('hidden');
+            filterDropdown.classList.add('hidden');
         });
-        @endif
+
+        filterToggle?.addEventListener('click', e => {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('hidden');
+            hargaDropdown.classList.add('hidden');
+        });
+
+        tanggalSelect?.addEventListener('change', () => {
+            customDateRange.classList.toggle('hidden', tanggalSelect.value !== 'custom');
+        });
+
+        document.addEventListener('click', e => {
+            if (!hargaDropdown.contains(e.target) && !hargaToggle.contains(e.target))
+                hargaDropdown.classList.add('hidden');
+            if (!filterDropdown.contains(e.target) && !filterToggle.contains(e.target))
+                filterDropdown.classList.add('hidden');
+        });
+    });
     </script>
 </x-app-layout>
