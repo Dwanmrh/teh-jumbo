@@ -73,6 +73,13 @@ class KasKeluarController extends Controller
             }
         }
 
+        if ($request->filter_harga) {
+            $range = explode('-', $request->filter_harga);
+            if (count($range) === 2) {
+                $query->whereBetween('nominal', [$range[0], $range[1]]);
+            }
+        }
+
         $kasKeluar = $query->orderBy('tanggal', 'desc')->get();
 
         return view('kas-keluar.index', compact('kasKeluar'));

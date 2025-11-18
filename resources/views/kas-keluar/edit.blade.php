@@ -122,7 +122,7 @@
             metodeBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     metodeBtns.forEach(b => {
-                        b.classList.remove('bg-[#FF5252]', 'text-white');
+                        b.classList.remove('bg-red', 'text-white');
                         b.classList.add('bg-gray-100', 'text-gray-700');
                     });
                     btn.classList.add('bg-[#FF5252]', 'text-white');
