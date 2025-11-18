@@ -26,7 +26,7 @@ class KasMasukController extends Controller
         });
     }
 
-    // 📆 Filter waktu
+    // Filter waktu
     if ($request->filter_waktu) {
         switch ($request->filter_waktu) {
             case 'hari-ini':
@@ -59,7 +59,7 @@ class KasMasukController extends Controller
         }
     }
 
-    // 💰 Filter harga
+    // Filter harga
     if ($request->filter_harga) {
         $range = explode('-', $request->filter_harga);
         if (count($range) === 2) {
@@ -67,9 +67,10 @@ class KasMasukController extends Controller
         }
     }
 
-    $kas = $query->orderBy('tanggal_transaksi', 'desc')->get();
+    $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->get();
 
-    return view('kas-masuk.index', compact('kas'));
+
+    return view('kas-masuk.index', compact('kasMasuk'));
 }
 
 
@@ -97,13 +98,13 @@ class KasMasukController extends Controller
 
     public function edit($id)
     {
-        $kas = KasMasuk::findOrFail($id);
-        return view('kas-masuk.edit', compact('kas'));
+        $kasMasuk = KasMasuk::findOrFail($id);
+        return view('kas-masuk.edit', compact('kasMasuk'));
     }
 
     public function update(Request $request, $id)
     {
-        $kas = KasMasuk::findOrFail($id);
+        $kasMasuk = KasMasuk::findOrFail($id);
 
         $validated = $request->validate([
             'tanggal_transaksi' => 'required|date',
@@ -115,15 +116,15 @@ class KasMasukController extends Controller
         ]);
 
         $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
-        $kas->update($validated);
+        $kasMasuk->update($validated);
 
         return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
-        $kas = KasMasuk::findOrFail($id);
-        $kas->delete();
+        $kasMasuk = KasMasuk::findOrFail($id);
+        $kasMasuk->delete();
 
         return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil dihapus.');
     }

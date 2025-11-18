@@ -15,7 +15,7 @@
 
             {{-- FORM EDIT --}}
             <div class="bg-white rounded-xl shadow-md p-6">
-                <form action="{{ route('kas-masuk.update', $kas->id) }}" method="POST">
+                <form action="{{ route('kas-masuk.update', $kasMasukMasuk->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -23,7 +23,7 @@
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Tanggal Transaksi</label>
                         <input type="date" name="tanggal_transaksi"
-                            value="{{ old('tanggal_transaksi', $kas->tanggal_transaksi) }}"
+                            value="{{ old('tanggal_transaksi', $kasMasukMasuk->tanggal_transaksi) }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                     </div>
 
@@ -31,7 +31,7 @@
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Keterangan</label>
                         <textarea name="keterangan"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2">{{ old('keterangan', $kas->keterangan) }}</textarea>
+                            class="w-full border border-gray-300 rounded-md px-3 py-2">{{ old('keterangan', $kasMasuk->keterangan) }}</textarea>
                     </div>
 
                     {{-- 🔹 Kategori --}}
@@ -39,8 +39,8 @@
                         <label class="block text-sm font-medium text-[#2F362C]">Kategori</label>
                         <select name="kategori"
                             class="w-full border border-gray-300 rounded-md px-3 py-2" required>
-                            <option value="Penjualan" {{ old('kategori', $kas->kategori) == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
-                            <option value="Lain-lain" {{ old('kategori', $kas->kategori) == 'Lain-lain' ? 'selected' : '' }}>Lain-lain</option>
+                            <option value="Penjualan" {{ old('kategori', $kasMasuk->kategori) == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
+                            <option value="Lain-lain" {{ old('kategori', $kasMasuk->kategori) == 'Lain-lain' ? 'selected' : '' }}>Lain-lain</option>
                         </select>
                     </div>
 
@@ -49,13 +49,13 @@
                         <div>
                             <label class="block text-sm font-medium text-[#2F362C]">Jumlah</label>
                             <input type="number" name="jumlah" id="jumlah" min="1"
-                                value="{{ old('jumlah', $kas->jumlah) }}"
+                                value="{{ old('jumlah', $kasMasuk->jumlah) }}"
                                 class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-[#2F362C]">Harga Satuan</label>
                             <input type="number" name="harga_satuan" id="harga_satuan" min="0"
-                                value="{{ old('harga_satuan', $kas->harga_satuan) }}"
+                                value="{{ old('harga_satuan', $kasMasuk->harga_satuan) }}"
                                 class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                         </div>
                     </div>
@@ -64,7 +64,7 @@
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Total (Otomatis)</label>
                         <input type="number" name="total" id="total"
-                            value="{{ old('total', $kas->total) }}"
+                            value="{{ old('total', $kasMasuk->total) }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" readonly>
                     </div>
 
@@ -75,23 +75,23 @@
                             <button type="button"
                                 class="metode-btn flex-1 py-2 rounded-lg border border-gray-300
                                 font-medium transition
-                                {{ old('metode_pembayaran', $kas->metode_pembayaran) == 'Tunai' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                                {{ old('metode_pembayaran', $kasMasuk->metode_pembayaran) == 'Tunai' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                                 data-value="Tunai">Tunai</button>
 
                             <button type="button"
                                 class="metode-btn flex-1 py-2 rounded-lg border border-gray-300
                                 font-medium transition
-                                {{ old('metode_pembayaran', $kas->metode_pembayaran) == 'QRIS' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                                {{ old('metode_pembayaran', $kasMasuk->metode_pembayaran) == 'QRIS' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                                 data-value="QRIS">QRIS</button>
 
                             <button type="button"
                                 class="metode-btn flex-1 py-2 rounded-lg border border-gray-300
                                 font-medium transition
-                                {{ old('metode_pembayaran', $kas->metode_pembayaran) == 'Transfer' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                                {{ old('metode_pembayaran', $kasMasuk->metode_pembayaran) == 'Transfer' ? 'bg-[#7AC943] text-white border-[#68AD3A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                                 data-value="Transfer">Transfer</button>
                         </div>
                         <input type="hidden" name="metode_pembayaran" id="metode_pembayaran"
-                            value="{{ old('metode_pembayaran', $kas->metode_pembayaran) }}" required>
+                            value="{{ old('metode_pembayaran', $kasMasuk->metode_pembayaran) }}" required>
                     </div>
 
                     {{-- 🔹 Tombol Aksi --}}
@@ -125,17 +125,20 @@
             hargaInput.addEventListener("input", hitungTotal);
 
             // Pilih metode pembayaran
-            metodeBtns.forEach(btn => {
-                btn.addEventListener("click", () => {
-                    metodeBtns.forEach(b => {
-                        b.classList.remove("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
-                        b.classList.add("bg-gray-100", "text-gray-700");
-                    });
-                    btn.classList.add("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
-                    btn.classList.remove("bg-gray-100", "text-gray-700");
-                    metodeInput.value = btn.dataset.value;
+         metodeBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+
+                metodeBtns.forEach(b => {
+                    b.classList.remove("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
+                    b.classList.add("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
                 });
+
+                btn.classList.remove("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
+                btn.classList.add("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
+
+                metodeInput.value = btn.dataset.value;
             });
+        });
         });
     </script>
 </x-app-layout>
