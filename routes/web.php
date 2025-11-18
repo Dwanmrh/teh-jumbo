@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /** =========================
      *  LAPORAN
      * ========================= */
-    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.keuangan');
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf');
     Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
 
