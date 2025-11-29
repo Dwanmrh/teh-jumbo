@@ -118,7 +118,7 @@
             {{-- FILTER --}}
             <form method="GET" action="{{ route('kas-keluar.index') }}"
                 class="bg-white rounded-xl shadow-md p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                id="searchForm">
+                id="filterForm">
 
                 <div class="flex items-center gap-2 w-full md:w-auto flex-1">
                     <input type="text" name="search" id="searchInput"
@@ -239,49 +239,259 @@
 
             {{-- Script dropdown & search --}}
             <script>
-                const hargaToggle = document.getElementById('hargaToggle');
-                const hargaDropdown = document.getElementById('hargaDropdown');
-                const filterToggle = document.getElementById('filterToggle');
-                const filterDropdown = document.getElementById('filterDropdown');
-                const tanggalSelect = document.getElementById('tanggalSelect');
-                const customDateRange = document.getElementById('customDateRange');
-                const searchInput = document.getElementById('searchInput');
-                const searchForm = document.getElementById('searchForm');
+document.addEventListener('DOMContentLoaded', function() {
+    // === ELEMENTS ===
+    const hargaToggle = document.getElementById('hargaToggle');
+    const hargaDropdown = document.getElementById('hargaDropdown');
+    const filterToggle = document.getElementById('filterToggle');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const tanggalSelect = document.getElementById('tanggalSelect');
+    const customDateRange = document.getElementById('customDateRange');
+    const searchInput = document.getElementById('searchInput');
+    const filterForm = document.getElementById('filterForm');
+    const hargaSelect = document.getElementById('hargaSelect');
+    
+    // Filter states
+    let currentSearch = searchInput.value.toLowerCase();
+    let currentHargaFilter = hargaSelect.value;
+    let currentWaktuFilter = tanggalSelect.value;
+    let currentStartDate = document.querySelector('input[name="start_date"]')?.value || '';
+    let currentEndDate = document.querySelector('input[name="end_date"]')?.value || '';
 
-                hargaToggle.addEventListener('click', e => {
-                    e.stopPropagation();
+    // === DROPDOWN HANDLERS ===
+    hargaToggle?.addEventListener('click', e => {
+        e.stopPropagation();
+        filterDropdown.classList.add('hidden');
+        hargaDropdown.classList.toggle('hidden');
+    });
 
-                     filterDropdown.classList.add('hidden');
+    filterToggle?.addEventListener('click', e => {
+        e.stopPropagation();
+        hargaDropdown.classList.add('hidden');
+        filterDropdown.classList.toggle('hidden');
+    });
 
+    // === FILTER CHANGE HANDLERS (TANPA RELOAD) ===
+    tanggalSelect?.addEventListener('change', function() {
+        handleFilterWaktuChange(this);
+        applyAllFilters(); // Apply filter tanpa reload
+    });
 
-                    hargaDropdown.classList.toggle('hidden');
-                });
+    hargaSelect?.addEventListener('change', function() {
+        currentHargaFilter = this.value;
+        applyAllFilters(); // Apply filter tanpa reload
+    });
 
-                filterToggle.addEventListener('click', e => {
-                    e.stopPropagation();
+    // Custom date inputs - tanpa reload
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    startDateInput?.addEventListener('change', function() {
+        currentStartDate = this.value;
+        applyAllFilters();
+    });
+    
+    endDateInput?.addEventListener('change', function() {
+        currentEndDate = this.value;
+        applyAllFilters();
+    });
 
-                     hargaDropdown.classList.add('hidden');
+    // === SEARCH REAL-TIME (TANPA RELOAD) ===
+    let searchTimeout;
+    searchInput?.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        currentSearch = this.value.toLowerCase();
+        
+        searchTimeout = setTimeout(() => {
+            applyAllFilters();
+        }, 300); // Debounce 300ms
+    });
 
-                    filterDropdown.classList.toggle('hidden');
-                });
+    // === MAIN FILTER FUNCTION ===
+    function applyAllFilters() {
+        filterDesktopTable();
+        filterMobileList();
+        updateFilterDisplay();
+    }
 
-                tanggalSelect.addEventListener('change', () => {
-                    customDateRange.classList.toggle('hidden', tanggalSelect.value !== 'custom');
-                });
+    function filterDesktopTable() {
+        const rows = document.querySelectorAll('#kasDataContainer table tbody tr');
+        let visibleCount = 0;
 
-                document.addEventListener('click', e => {
-                    if (!hargaDropdown.contains(e.target) && !hargaToggle.contains(e.target)) hargaDropdown.classList.add('hidden');
-                    if (!filterDropdown.contains(e.target) && !filterToggle.contains(e.target)) filterDropdown.classList.add('hidden');
-                });
+        rows.forEach(row => {
+            // Skip "no data" row
+            if (row.querySelector('td[colspan="10"]')) {
+                row.style.display = rows.length === 1 ? '' : 'none';
+                return;
+            }
 
-                let searchTimeout;
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        searchForm.submit();
-                    }, 400);
-                });
-            </script>
+            const cells = Array.from(row.children);
+            const kodeKas = cells[0]?.textContent.toLowerCase() || '';
+            const tanggal = cells[1]?.textContent.toLowerCase() || '';
+            const kategori = cells[2]?.textContent.toLowerCase() || '';
+            const metode = cells[3]?.textContent.toLowerCase() || '';
+            const penerima = cells[4]?.textContent.toLowerCase() || '';
+            const nominal = cells[5]?.textContent.toLowerCase().replace(/[^\d]/g, '') || '';
+            const deskripsi = cells[6]?.textContent.toLowerCase() || '';
+
+            // Check search
+            const matchesSearch = !currentSearch || 
+                kodeKas.includes(currentSearch) ||
+                tanggal.includes(currentSearch) ||
+                kategori.includes(currentSearch) ||
+                metode.includes(currentSearch) ||
+                penerima.includes(currentSearch) ||
+                deskripsi.includes(currentSearch) ||
+                nominal.includes(currentSearch);
+
+            // Check harga filter
+            const matchesHarga = checkHargaFilter(nominal);
+            
+            // Check waktu filter
+            const matchesWaktu = checkWaktuFilter(tanggal);
+
+            const shouldShow = matchesSearch && matchesHarga && matchesWaktu;
+            row.style.display = shouldShow ? '' : 'none';
+            
+            if (shouldShow) visibleCount++;
+        });
+
+        // Show/hide no data message
+        const noDataRow = Array.from(rows).find(row => row.querySelector('td[colspan="10"]'));
+        if (noDataRow) {
+            noDataRow.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+
+    function filterMobileList() {
+        const items = document.querySelectorAll('#kasDataContainerMobile > div');
+        
+        items.forEach(item => {
+            const textContent = item.textContent.toLowerCase();
+            const kategoriEl = item.querySelector('.font-semibold');
+            const kategori = kategoriEl ? kategoriEl.textContent.toLowerCase() : '';
+            const tanggalEl = item.querySelector('p.text-sm');
+            const tanggal = tanggalEl ? tanggalEl.textContent.toLowerCase() : '';
+            const nominalEl = item.querySelector('.text-right .font-semibold');
+            const nominal = nominalEl ? nominalEl.textContent.toLowerCase().replace(/[^\d]/g, '') : '';
+
+            // Check search
+            const matchesSearch = !currentSearch || textContent.includes(currentSearch);
+            
+            // Check harga filter
+            const matchesHarga = checkHargaFilter(nominal);
+            
+            // Check waktu filter
+            const matchesWaktu = checkWaktuFilter(tanggal);
+
+            item.style.display = (matchesSearch && matchesHarga && matchesWaktu) ? '' : 'none';
+        });
+    }
+
+    function checkHargaFilter(nominalStr) {
+        if (!currentHargaFilter) return true;
+        
+        const nominal = parseInt(nominalStr) || 0;
+        const [minStr, maxStr] = currentHargaFilter.split('-');
+        const min = parseInt(minStr) || 0;
+        const max = parseInt(maxStr) || Infinity;
+        
+        return nominal >= min && nominal <= max;
+    }
+
+    function checkWaktuFilter(tanggalStr) {
+        if (!currentWaktuFilter || currentWaktuFilter === '') return true;
+        
+        // Parse tanggal dari format "d M Y" ke Date object
+        // Untuk contoh ini, kita asumsikan match jika ada kata kunci
+        // Implementasi lengkap perlu parsing tanggal yang lebih sophisticated
+        const today = new Date();
+        const queryDate = new Date(tanggalStr);
+        
+        switch(currentWaktuFilter) {
+            case 'hari-ini':
+                return isSameDay(today, queryDate);
+            case 'kemarin':
+                return isSameDay(new Date(today.getTime() - 86400000), queryDate);
+            case 'minggu-ini':
+                return isSameWeek(today, queryDate);
+            case 'bulan-ini':
+                return isSameMonth(today, queryDate);
+            case 'custom':
+                if (!currentStartDate || !currentEndDate) return true;
+                const start = new Date(currentStartDate);
+                const end = new Date(currentEndDate);
+                return queryDate >= start && queryDate <= end;
+            default:
+                return true;
+        }
+    }
+
+    // Helper functions untuk filter waktu (simplified)
+    function isSameDay(date1, date2) {
+        return date1.toDateString() === date2.toDateString();
+    }
+
+    function isSameWeek(date1, date2) {
+        const week1 = getWeekNumber(date1);
+        const week2 = getWeekNumber(date2);
+        return week1 === week2 && date1.getFullYear() === date2.getFullYear();
+    }
+
+    function isSameMonth(date1, date2) {
+        return date1.getMonth() === date2.getMonth() && date1.getFullYear() === date2.getFullYear();
+    }
+
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    }
+
+    function updateFilterDisplay() {
+        // Update tampilan tombol filter dengan state aktif
+        if (currentHargaFilter) {
+            const hargaLabel = hargaToggle.querySelector('span:last-child');
+            if (hargaLabel) {
+                const ranges = {
+                    '0-10000': 'Rp 0 - 10rb',
+                    '11000-100000': 'Rp 11rb - 100rb',
+                    '100001-999999999': '> Rp 100rb'
+                };
+                hargaLabel.textContent = ranges[currentHargaFilter] || 'Filter Harga';
+            }
+        }
+        
+        if (currentWaktuFilter) {
+            const waktuLabel = filterToggle.querySelector('span:last-child');
+            if (waktuLabel) waktuLabel.textContent = currentWaktuFilter.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    }
+
+    function handleFilterWaktuChange(select) {
+        const customDiv = document.getElementById('customDateRange');
+        if (select.value === 'custom') {
+            customDiv.classList.remove('hidden');
+        } else {
+            customDiv.classList.add('hidden');
+        }
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', e => {
+        if (!hargaDropdown?.contains(e.target) && !hargaToggle?.contains(e.target)) 
+            hargaDropdown.classList.add('hidden');
+        if (!filterDropdown?.contains(e.target) && !filterToggle?.contains(e.target)) 
+            filterDropdown.classList.add('hidden');
+    });
+
+    // Initial filter apply
+    applyAllFilters();
+});
+</script>
+
 
             @php
                 $totalKas = $kasKeluar->sum('nominal');

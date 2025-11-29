@@ -8,78 +8,78 @@
     <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]" x-data="{ showDetail: false, selectedItem: {}, showTambah: false }">
         <div class="max-w-8xl mx-auto sm:px-6 lg:px-9">
 
-         <!-- MODAL TAMBAH KAS MASUK -->
-<div 
-    x-show="showTambah"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 scale-90"
-    x-transition:enter-end="opacity-100 scale-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100 scale-100"
-    x-transition:leave-end="opacity-0 scale-90"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
->
-    <div @click.outside="showTambah = false"
-        class="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 relative">
-        
-        <button @click="showTambah = false" 
-            class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            {{-- ... (Modal Tambah Kas Masuk) ... --}}
+            <div 
+                x-show="showTambah"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 scale-90"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-90"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            >
+                <div @click.outside="showTambah = false"
+                    class="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 relative">
+                    
+                    <button @click="showTambah = false" 
+                        class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
 
-        <h2 class="text-xl font-semibold text-[#2F362C] mb-4">Tambah Kas Masuk</h2>
+                    <h2 class="text-xl font-semibold text-[#2F362C] mb-4">Tambah Kas Masuk</h2>
 
-        <form method="POST" action="{{ route('kas-masuk.store') }}">
-            @csrf
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Tanggal Transaksi</label>
-                    <input type="date" name="tanggal_transaksi" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
+                    <form method="POST" action="{{ route('kas-masuk.store') }}">
+                        @csrf
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tanggal Transaksi</label>
+                                <input type="date" name="tanggal_transaksi" required
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+                                <input type="text" name="keterangan" placeholder="Contoh: Penjualan produk"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                                <select name="kategori" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
+                                    <option value="Penjualan">Penjualan</option>
+                                    <option value="Lain-lain">Lain-lain</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Jumlah</label>
+                                    <input type="number" name="jumlah" required min="1"
+                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Harga Satuan</label>
+                                    <input type="number" name="harga_satuan" required min="0"
+                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                                <select name="metode_pembayaran" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
+                                    <option value="Tunai">Tunai</option>
+                                    <option value="Transfer">Transfer</option>
+                                    <option value="QRIS">QRIS</option>
+                                </select>
+                            </div>
+
+                            <button type="submit"
+                                class="bg-green-600 hover:bg-green-600 text-white font-medium w-full py-2 rounded-lg transition mt-3">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Keterangan</label>
-                    <input type="text" name="keterangan" placeholder="Contoh: Penjualan produk"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Kategori</label>
-                    <select name="kategori" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
-                        <option value="Penjualan">Penjualan</option>
-                        <option value="Lain-lain">Lain-lain</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Jumlah</label>
-                        <input type="number" name="jumlah" required min="1"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Harga Satuan</label>
-                        <input type="number" name="harga_satuan" required min="0"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                    <select name="metode_pembayaran" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
-                        <option value="Tunai">Tunai</option>
-                        <option value="Transfer">Transfer</option>
-                        <option value="QRIS">QRIS</option>
-                    </select>
-                </div>
-
-                <button type="submit"
-                    class="bg-green-600 hover:bg-green-600 text-white font-medium w-full py-2 rounded-lg transition mt-3">
-                    Simpan
-                </button>
             </div>
-        </form>
-    </div>
-</div>
 
             <div class="flex justify-between items-center mb-6">
                 <div>
@@ -96,10 +96,10 @@
             </div>
 
 
-            {{-- FILTER --}}
+            {{-- FILTER (Perubahan: Tambahkan ID 'filterForm' dan ubah action) --}}
             <form method="GET" action="{{ route('kas-masuk.index') }}"
                 class="bg-white rounded-xl shadow-md p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                id="searchForm">
+                id="filterForm"> {{-- Ubah ID agar tidak rancu dengan searchForm --}}
 
                 <div class="flex items-center gap-2 w-full md:w-auto flex-1">
                     <input type="text" name="search" id="searchInput"
@@ -109,7 +109,8 @@
                 </div>
 
                 <div class="flex gap-2 flex-wrap items-center">
-                    {{-- FILTER HARGA --}}
+                    {{-- FILTER HARGA (Tombol Terapkan di sini tetap submit form untuk filtering harga/waktu) --}}
+                    {{-- ... (Filter Harga tidak diubah) ... --}}
                     <div class="relative">
                         <button type="button" id="hargaToggle"
                             class="border border-gray-300 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-1">
@@ -131,14 +132,14 @@
                     </div>
 
                     {{-- FILTER WAKTU --}}
+                    {{-- ... (Filter Waktu tidak diubah) ... --}}
                     <div class="relative">
                         <button type="button" id="filterToggle"
                             class="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                             
-                            <!-- SVG Icon (Calendar) -->
                             <i class="fa fa-calendar" aria-hidden="true"></i>
 
-                             @if(request('filter_waktu') == 'custom' && request('start_date') && request('end_date'))
+                            @if(request('filter_waktu') == 'custom' && request('start_date') && request('end_date'))
                                 <span>
                                     {{ \Carbon\Carbon::parse(request('start_date'))->format('d M Y') }} - {{ \Carbon\Carbon::parse(request('end_date'))->format('d M Y') }}
                                 </span>
@@ -196,7 +197,7 @@
                 const tanggalSelect = document.getElementById('tanggalSelect');
                 const customDateRange = document.getElementById('customDateRange');
                 const searchInput = document.getElementById('searchInput');
-                const searchForm = document.getElementById('searchForm');
+                const filterForm = document.getElementById('filterForm'); // Gunakan ID filterForm
 
                 hargaToggle.addEventListener('click', e => {
                     e.stopPropagation();
@@ -223,13 +224,45 @@
                     if (!filterDropdown.contains(e.target) && !filterToggle.contains(e.target)) filterDropdown.classList.add('hidden');
                 });
 
-                let searchTimeout;
+                // --- PERUBAHAN UTAMA UNTUK SEARCH LOKAL (NON-RELOAD) ---
                 searchInput.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        searchForm.submit();
-                    }, 400);
+                    const query = searchInput.value.toLowerCase();
+                    
+                    // Filter untuk tabel desktop
+                    const desktopRows = document.querySelectorAll('#kasDataContainer table tbody tr');
+                    desktopRows.forEach(row => {
+                        // Pastikan tidak menyertakan baris 'Belum ada data'
+                        if (row.querySelector('td[colspan="10"]')) return; 
+
+                        // Ambil teks dari kolom yang ingin dicari (Kode Kas, Keterangan, Jumlah, Total)
+                        const kodeKas = row.children[0].textContent.toLowerCase();
+                        const keterangan = row.children[2].textContent.toLowerCase();
+                        const total = row.children[6].textContent.toLowerCase();
+
+                        if (kodeKas.includes(query) || keterangan.includes(query) || total.includes(query)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    // Filter untuk mobile list
+                    const mobileItems = document.querySelectorAll('#kasDataContainerMobile > div');
+                    mobileItems.forEach(item => {
+                        // Ambil data yang tersimpan di atribut data-keterangan/data-total di AlpineJS
+                        // Karena di mobile datanya tersimpan di x-data (yang di-JSON-encode), 
+                        // kita akan mencari berdasarkan teks yang terlihat di list (keterangan dan total)
+                        const visibleKeterangan = item.querySelector('.font-semibold').textContent.toLowerCase();
+                        const visibleTotal = item.querySelector('.text-right .font-semibold').textContent.toLowerCase();
+
+                        if (visibleKeterangan.includes(query) || visibleTotal.includes(query)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
                 });
+                // --- AKHIR PERUBAHAN UTAMA ---
             </script>
 
             @php
@@ -248,6 +281,7 @@
             @endphp
 
             {{-- CARD TOTAL --}}
+            {{-- ... (Card Total tidak diubah) ... --}}
             <div class="bg-gradient-to-r from-[#4CC66A] to-[#1F8A3A] text-white p-6 rounded-xl shadow-md mb-6">
                 <div class="flex justify-between items-center">
                     <div>
@@ -293,10 +327,10 @@
                                 <td class="p-3 border-b border-gray-200 text-blue-600 font-medium">
                                     @php
                                     [$bgColor, $textColor] = getKategoriColor($item->kategori);
-                                        @endphp
-                                        <span class="px-2 py-1 text-xs rounded-md font-medium {{ $bgColor }} {{ $textColor }}">
-                                            {{ $item->kategori }}
-                                        </span>
+                                    @endphp
+                                    <span class="px-2 py-1 text-xs rounded-md font-medium {{ $bgColor }} {{ $textColor }}">
+                                        {{ $item->kategori }}
+                                    </span>
                                 </td>
                                 <td class="p-3 border-b border-gray-200">{{ $item->jumlah }}</td>
                                 <td class="p-3 border-b border-gray-200">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
@@ -318,9 +352,9 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="button"
-                                                    class="text-red-500 hover:text-red-600 transition transform hover:scale-110 delete-btn"
-                                                    data-id="{{ $item->id }}"
-                                                    data-deskripsi="{{ $item->deskripsi ?? '' }}">
+                                                     class="text-red-500 hover:text-red-600 transition transform hover:scale-110 delete-btn"
+                                                     data-id="{{ $item->id }}"
+                                                     data-deskripsi="{{ $item->keterangan ?? '' }}"> {{-- Gunakan $item->keterangan --}}
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-9 0h10" />
@@ -341,6 +375,7 @@
                 </table>
             </div>
             
+            {{-- ... (Script SweetAlert Delete tidak diubah) ... --}}
             <script>
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -367,6 +402,7 @@
 
 
             {{-- MOBILE LIST --}}
+            {{-- ... (Mobile List dan Detail Mobile tidak diubah) ... --}}
             <div id="kasDataContainerMobile" class="md:hidden space-y-4">
                 @forelse ($kasMasuk as $item)
                     <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
@@ -397,6 +433,7 @@
             </div>
 
             {{-- FLOATING BUTTON --}}
+            {{-- ... (Floating Button dan Detail Mobile tidak diubah) ... --}}
             <button @click="showTambah = true"
                 class="fixed bottom-6 right-6 bg-[#7AC943] hover:bg-[#68AD3A] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg text-3xl z-30 md:hidden">
                 +
@@ -502,6 +539,7 @@
                 </div>
             </div>
         </div>
+        
     </div>
 
 </x-app-layout>
