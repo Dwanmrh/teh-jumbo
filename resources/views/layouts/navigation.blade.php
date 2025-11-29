@@ -47,6 +47,13 @@
                 <span class="text-[11px]">Dashboard</span>
             </a>
 
+            <a href="{{ route('pos.index') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('pos.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                <span class="text-[11px]">POS</span>
+            </a>
+
             <a href="{{ route('products.index') }}"
                class="flex flex-col items-center gap-1 flex-1 py-1
                {{ request()->routeIs('products.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
@@ -89,6 +96,14 @@
                 <span class="material-symbols-outlined text-lg">grid_view</span>
                 <span class="text-xs font-medium">Dashboard</span>
             </a>
+
+            <a href="{{ route('pos.index') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('pos.index') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">shopping_cart</span>
+                <span class="text-xs font-medium">POS</span>
+            </a>
+            
 
             <a href="{{ route('products.index') }}"
                class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1

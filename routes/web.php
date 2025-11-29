@@ -7,6 +7,7 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PosController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -60,6 +61,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('products', ProductController::class);
+
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+
+    Route::post('/pos/cart/add', [PosController::class, 'addToCart'])->name('pos.cart.add');
+    Route::post('/pos/cart/plus', [PosController::class, 'qtyPlus'])->name('pos.cart.plus');
+    Route::post('/pos/cart/minus', [PosController::class, 'qtyMinus'])->name('pos.cart.minus');
+    Route::post('/pos/cart/remove', [PosController::class, 'removeItem'])->name('pos.cart.remove');
+
+    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+
+
+;
+
+
 
 
 });
