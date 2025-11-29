@@ -10,7 +10,19 @@
         {{-- HEADER & FILTER SECTION --}}
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
 
-            <h2 class="text-2xl font-bold text-[#2F362C]">Dashboard</h2>
+        <div>
+            <h2 class="text-xl font-semibold text-[#2F362C] flex items-center gap-2">
+                <span class="material-symbols-outlined">
+                    stacked_bar_chart
+                </span>
+                Dashboard
+            </h2>
+
+            <p class="text-sm text-gray-600">
+                Ringkasan keuangan anda
+            </p>
+        </div>
+
 
             {{-- FILTER DI SEBELAH KANAN (BULAN & TAHUN) --}}
             {{-- Perubahan: Menggunakan flex-wrap dan justify-end agar filter rapi di mobile --}}
@@ -78,11 +90,11 @@
 
                 <h3 class="text-xl mt-8 text-emerald-600">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</h3>
                 <div class="flex justify-between items-center mt-2">
-                    <p class="text-xs text-gray-400">
+                    <p class="text-xm text-gray-400 mt-2">
                         {{ $countMasuk }} transaksi
                     </p>
-                    <p class="text-xs mt-1 text-emerald-600 flex items-center gap-1">
-                        <span class="material-symbols-outlined !text-[14px] leading-none">
+                    <p class="text-xm mt-1 text-emerald-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined !text-[15px] leading-none">
                             arrow_outward
                         </span>
                         Rata-rata: Rp {{ $countMasuk > 0 ? number_format($totalMasuk / $countMasuk, 0, ',', '.') : 0 }}
@@ -100,10 +112,10 @@
 
                 <h3 class="text-xl mt-8 text-rose-600">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</h3>
                 <div class="flex justify-between items-center mt-2">
-                    <p class="text-xs text-gray-400 mt-2">{{ $countKeluar }} transaksi</p>
+                    <p class="text-xm text-gray-400 mt-2">{{ $countKeluar }} transaksi</p>
 
-                    <p class="text-xs text-rose-600 mt-1 flex items-center gap-1">
-                        <span class="material-symbols-outlined !text-[14px] leading-none">
+                    <p class="text-xm text-rose-600 mt-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined !text-[15px] leading-none">
                             south_east
                         </span>
                         Rata-rata: Rp {{ $countKeluar > 0 ? number_format($totalKeluar / $countKeluar, 0, ',', '.') : 0 }}
@@ -114,9 +126,17 @@
             @php
                 $isSurplus = $saldoAkhir >= 0;
             @endphp
+
+            @php
+                $persentaseTerpakai = $totalMasuk > 0 
+                    ? ($totalKeluar / $totalMasuk) * 100 
+                    : 0;
+            @endphp
+
             <div class="p-5 bg-white/80 rounded-xl shadow border-l-4 {{ $isSurplus ? 'border-blue-600' : 'border-yellow-400' }} min-h-[150px] w-full">
                 <div class="flex justify-between items-start">
                     <p class="text-sm font-medium {{ $isSurplus ? 'text-blue-700' : 'text-yellow-500' }}">Saldo Saat Ini</p>
+
 
                     {{-- Icon wallet --}}
                     <div class="p-1 border {{ $isSurplus ? 'bg-blue-300/40 border-blue-300/40' : 'bg-yellow-300/40 border-yellow-300/40' }} rounded-xl flex items-center justify-center -mt-2 ">
@@ -130,12 +150,21 @@
                 </h3>
 
                 {{-- Status --}}
+            <div class="flex justify-between items-center mt-2">
                 <p class="text-sm mt-3 font-medium inline-flex items-center gap-1 {{ $isSurplus ? 'text-blue-600' : 'text-yellow-400' }}">
                     <span class="material-symbols-outlined text-sm">
                         {{ $isSurplus ? 'check_circle' : 'error' }}
                     </span>
                     {{ $isSurplus ? 'Surplus' : 'Defisit' }}
                 </p>
+                <p class="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined !text-[20px] leading-none">
+                        vital_signs
+                    </span>
+                    {{ number_format($persentaseTerpakai, 0) }}% used
+                </p>
+            </div>
+
             </div>
         </div>
 

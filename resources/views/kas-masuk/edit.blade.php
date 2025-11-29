@@ -15,7 +15,7 @@
 
             {{-- FORM EDIT --}}
             <div class="bg-white rounded-xl shadow-md p-6">
-                <form action="{{ route('kas-masuk.update', $kasMasukMasuk->id) }}" method="POST">
+                <form action="{{ route('kas-masuk.update', $kasMasuk->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -23,7 +23,7 @@
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Tanggal Transaksi</label>
                         <input type="date" name="tanggal_transaksi"
-                            value="{{ old('tanggal_transaksi', $kasMasukMasuk->tanggal_transaksi) }}"
+                            value="{{ old('tanggal_transaksi', $kasMasuk->tanggal_transaksi) }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2" required>
                     </div>
 

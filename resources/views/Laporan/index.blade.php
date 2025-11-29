@@ -1,9 +1,8 @@
 <x-app-layout>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
-    <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
 
     <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-9">
 
             {{-- Header --}}
             <h2 class="text-xl font-semibold text-[#2F362C]">Laporan Keuangan</h2>

@@ -1,13 +1,12 @@
 <x-app-layout>
     {{-- Library wajib --}}
-    <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
     <script defer src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]" x-data="{ showDetail: false, selectedItem: {}, showTambah: false }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-8xl mx-auto sm:px-6 lg:px-9">
 
          <!-- MODAL TAMBAH KAS KELUAR -->
         <div 

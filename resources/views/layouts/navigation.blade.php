@@ -1,106 +1,124 @@
-<nav x-data="{ sidebarOpen: false }" class="font-[Outfit] relative">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 
-    <!-- ===== Navbar Atas ===== -->
-    <div class="bg-[#EABF59] px-4 py-3 flex justify-between items-center shadow-md fixed top-0 left-0 w-full z-50">
+    <!-- ===== NAVBAR ATAS (DESKTOP) ===== -->
+    <div class="bg-white border-b px-4 py-3 flex justify-between items-center fixed top-0 left-0 w-full z-50">
         <div class="flex items-center space-x-3">
+
             <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
-                <img src="{{ asset('assets/images/logo_teh.png') }}" alt="Logo" class="h-8 w-8">
-                <span class="text-lg font-semibold text-[#1E1E1E]">Teh Solo</span>
+                <img src="{{ asset('assets/images/logo_teh.png') }}" class="h-8 w-8">
+                <span class="text-lg font-semibold text-[#1E1E1E]">Teh Solo de Jumbo Fibonacci</span>
             </a>
-
-            <!-- Tombol Burger -->
-            <button
-                @click="sidebarOpen = !sidebarOpen"
-                class="ml-3 text-[#1E1E1E] focus:outline-none hover:bg-[#d4aa4e] p-2 rounded-md transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
         </div>
 
-        <div>
-            <x-dropdown align="right" width="48">
-                <x-slot name="trigger">
-                    <button
-                        class="inline-flex items-center px-3 py-2 border-0 text-sm font-medium rounded-md text-[#1E1E1E] bg-transparent hover:bg-[#d4aa4e] transition ease-in-out duration-150">
-                        <div>{{ Auth::user()->name }}</div>
-                        <svg class="ml-1 h-4 w-4 text-[#1E1E1E]" xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </x-slot>
+        <!-- User -->
+        <x-dropdown align="right" width="48">
+            <x-slot name="trigger">
+                <button class="px-3 py-2 rounded-md hover:bg-white flex items-center gap-2">
+                    <span>{{ Auth::user()->name }}</span>
+                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                </button>
+            </x-slot>
 
-                <x-slot name="content">
-                    <x-dropdown-link :href="route('profile.edit')" class="hover:bg-[#F1C661]/40">
-                        {{ __('Profile') }}
-                    </x-dropdown-link>
+            <x-slot name="content">
+                <x-dropdown-link :href="route('profile.edit')">Profile</x-dropdown-link>
 
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <x-dropdown-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();"
-                            class="text-red-600 hover:bg-red-50">
-                            {{ __('Log Out') }}
-                        </x-dropdown-link>
-                    </form>
-                </x-slot>
-            </x-dropdown>
-        </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <x-dropdown-link :href="route('logout')"
+                        onclick="event.preventDefault(); this.closest('form').submit();"
+                        class="text-red-600">Log Out</x-dropdown-link>
+                </form>
+            </x-slot>
+        </x-dropdown>
     </div>
 
     <!-- Spacer -->
     <div class="h-[64px]"></div>
 
-    <!-- ===== Sidebar Overlay (mulai di bawah navbar) ===== -->
-    <div
-        x-show="sidebarOpen"
-        class="fixed inset-0 z-40 flex"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <!-- Overlay Hitam -->
-        <div class="fixed inset-0 bg-black bg-opacity-40" @click="sidebarOpen = false"></div>
 
-        <!-- Sidebar (mulai dari bawah navbar) -->
-        <div
-            class="absolute left-0 top-[64px] w-64 bg-[#2F3E2F] text-white shadow-lg h-[calc(100vh-64px)] overflow-y-auto transform transition-transform duration-200 ease-out"
-            x-transition:enter="transform transition ease-out duration-200"
-            x-transition:enter-start="-translate-x-full"
-            x-transition:enter-end="translate-x-0"
-            x-transition:leave="transform transition ease-in duration-200"
-            x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="-translate-x-full"
-        >
-            <div class="mt-3 space-y-1 px-3 pb-4">
-                <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('dashboard') ? 'bg-[#9BCC50] text-black' : '' }}">
-                    <i class="fa-solid fa-house"></i> Dashboard
-                </a>
+    <!-- ===== NAVIGATION FOOTER (MOBILE) ===== -->
+    <div class="sm:hidden fixed bottom-0 left-0 w-full z-50">
+        <div class="w-full bg-white border-t px-3 py-2 flex justify-between items-center">
+            
+            <a href="{{ route('dashboard') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('dashboard') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined text-xl">grid_view</span>
+                <span class="text-[11px]">Dashboard</span>
+            </a>
 
-                <a href="{{ route('kas-masuk.index') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('kas-masuk.index') ? 'bg-[#9BCC50] text-black' : '' }}">
-                    <i class="fa-solid fa-arrow-down"></i> Kas Masuk
-                </a>
+            <a href="{{ route('products.index') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('products.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined text-xl">inventory_2</span>
+                <span class="text-[11px]">Produk</span>
+            </a>
 
-                <a href="{{ route('kas-keluar.index') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('kas.keluar') ? 'bg-[#9BCC50] text-black' : '' }}">
-                    <i class="fa-solid fa-arrow-up"></i> Kas Keluar
-                </a>
+            <a href="{{ route('kas-masuk.index') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('kas-masuk.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined text-xl">trending_up</span>
+                <span class="text-[11px]">Kas Masuk</span>
+            </a>
 
-                <a href="{{ route('laporan.index') }}"
-                    class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#9BCC50] transition {{ request()->routeIs('laporan.index') ? 'bg-[#9BCC50] text-black' : '' }}">
-                    <i class="fa-solid fa-file-invoice"></i> Laporan Keuangan
-                </a>
-            </div>
+            <a href="{{ route('kas-keluar.index') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('kas-keluar.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined text-xl">trending_down</span>
+                <span class="text-[11px]">Kas Keluar</span>
+            </a>
+
+            <a href="{{ route('laporan.index') }}"
+               class="flex flex-col items-center gap-1 flex-1 py-1
+               {{ request()->routeIs('laporan.index') ? 'text-black font-semibold' : 'text-gray-600' }}">
+                <span class="material-symbols-outlined text-xl">description</span>
+                <span class="text-[11px]">Laporan</span>
+            </a>
+
         </div>
     </div>
+
+
+    <!-- ===== NAVIGATION (DESKTOP Tengah) ===== -->
+    <div class="hidden sm:flex w-full justify-center mt-5">
+        <div class="w-[92%] px-3 py-2 rounded-2xl flex justify-evenly items-center" style="background-color: #eeeeee;">
+            
+            <a href="{{ route('dashboard') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('dashboard') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">grid_view</span>
+                <span class="text-xs font-medium">Dashboard</span>
+            </a>
+
+            <a href="{{ route('products.index') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('products.index') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">inventory_2</span>
+                <span class="text-xs font-medium">Produk</span>
+            </a>
+
+            <a href="{{ route('kas-masuk.index') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('kas-masuk.index') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">trending_up</span>
+                <span class="text-xs font-medium">Kas Masuk</span>
+            </a>
+
+            <a href="{{ route('kas-keluar.index') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('kas-keluar.index') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">trending_down</span>
+                <span class="text-xs font-medium">Kas Keluar</span>
+            </a>
+
+            <a href="{{ route('laporan.index') }}"
+               class="flex flex-col items-center gap-1 px-3 py-2 rounded-xl flex-1
+               {{ request()->routeIs('laporan.index') ? 'bg-white shadow-md' : 'hover:bg-white/60' }}">
+                <span class="material-symbols-outlined text-lg">description</span>
+                <span class="text-xs font-medium">Laporan</span>
+            </a>
+
+        </div>
+    </div>
+
 </nav>
