@@ -35,5 +35,6 @@ class KasKeluar extends Model
         'nominal',
         'bukti_pembayaran',
         'deskripsi',
+        'user_id',
     ];
 }

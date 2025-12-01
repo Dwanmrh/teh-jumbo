@@ -16,14 +16,18 @@ class LaporanController extends Controller
 {
     public function index(Request $request)
     {
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
         // Ambil list tahun
         $listTahun = collect([
             ...DB::table('kas_masuk')
+                ->where('user_id', $userId)
                 ->select(DB::raw('YEAR(tanggal_transaksi) as tahun'))
                 ->pluck('tahun')
                 ->toArray(),
 
             ...DB::table('kas_keluar')
+                ->where('user_id', $userId)
                 ->select(DB::raw('YEAR(tanggal) as tahun'))
                 ->pluck('tahun')
                 ->toArray(),
@@ -31,46 +35,48 @@ class LaporanController extends Controller
 
         // --- QUERY KAS MASUK ---
         $kasMasuk = DB::table('kas_masuk')
+            ->where('user_id', $userId)
             ->when($request->tahun, fn($q) => $q->whereYear('tanggal_transaksi', $request->tahun))
             ->when($request->bulan, fn($q) => $q->whereMonth('tanggal_transaksi', $request->bulan))
             ->get();
 
         // --- QUERY KAS KELUAR ---
         $kasKeluar = DB::table('kas_keluar')
+            ->where('user_id', $userId)
             ->when($request->tahun, fn($q) => $q->whereYear('tanggal', $request->tahun))
             ->when($request->bulan, fn($q) => $q->whereMonth('tanggal', $request->bulan))
             ->get();
 
         // Hitung total
-        $totalMasuk  = $kasMasuk->sum('total');
+        $totalMasuk = $kasMasuk->sum('total');
         $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas  = $totalMasuk - $totalKeluar;
+        $selisihKas = $totalMasuk - $totalKeluar;
 
         // Gabungan laporan
         $laporan = $kasMasuk->map(function ($m) {
             return [
-                'tanggal'    => $m->tanggal_transaksi,
+                'tanggal' => $m->tanggal_transaksi,
                 'keterangan' => $m->keterangan,
-                'kategori'   => $m->kategori ?? '-',
-                'metode_pembayaran'     => $m->metode_pembayaran ?? '-',
-                'kas_masuk'  => $m->total,
+                'kategori' => $m->kategori ?? '-',
+                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
+                'kas_masuk' => $m->total,
                 'kas_keluar' => 0,
-                'saldo'      => $m->total,
+                'saldo' => $m->total,
             ];
         })->merge(
-            $kasKeluar->map(function ($k) {
-                return [
-                    'tanggal'    => $k->tanggal,
-                    'deskripsi' => $k->deskripsi,
-                    'kategori'   => $k->kategori ?? '-',
-                    'metode_pembayaran'     => $k->metode_pembayaran ?? '-',
-                    'penerima'   => $k->penerima ?? '-',
-                    'kas_masuk'  => 0,
-                    'kas_keluar' => $k->nominal,
-                    'saldo'      => -$k->nominal,
-                ];
-            })
-        )->sortByDesc('tanggal')->values();
+                $kasKeluar->map(function ($k) {
+                    return [
+                        'tanggal' => $k->tanggal,
+                        'deskripsi' => $k->deskripsi,
+                        'kategori' => $k->kategori ?? '-',
+                        'metode_pembayaran' => $k->metode_pembayaran ?? '-',
+                        'penerima' => $k->penerima ?? '-',
+                        'kas_masuk' => 0,
+                        'kas_keluar' => $k->nominal,
+                        'saldo' => -$k->nominal,
+                    ];
+                })
+            )->sortByDesc('tanggal')->values();
 
         // KIRIM SEMUA DATA KE VIEW
         return view('laporan.index', compact(
@@ -95,13 +101,14 @@ class LaporanController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $filterType  = $request->get('filter_type');
+        $filterType = $request->get('filter_type');
         $filterValue = $request->get('filter_value');
-        $startDate   = $request->get('start_date');
-        $endDate     = $request->get('end_date');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
-        $kasMasukQuery  = KasMasuk::query();
-        $kasKeluarQuery = KasKeluar::query();
+        $kasMasukQuery = KasMasuk::where('user_id', $userId);
+        $kasKeluarQuery = KasKeluar::where('user_id', $userId);
 
         // --- FILTER ---
         if ($filterType === 'harian' && $filterValue) {
@@ -109,45 +116,45 @@ class LaporanController extends Controller
             $kasKeluarQuery->whereDate('tanggal', $filterValue);
         } elseif ($filterType === 'bulanan' && $filterValue) {
             $month = Carbon::parse($filterValue)->month;
-            $year  = Carbon::parse($filterValue)->year;
+            $year = Carbon::parse($filterValue)->year;
             $kasMasukQuery->whereMonth('tanggal_transaksi', $month)->whereYear('tanggal_transaksi', $year);
             $kasKeluarQuery->whereMonth('tanggal', $month)->whereYear('tanggal', $year);
         } elseif ($filterType === 'rentang' && $startDate && $endDate) {
             $start = Carbon::parse($startDate)->startOfDay();
-            $end   = Carbon::parse($endDate)->endOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
             $kasMasukQuery->whereBetween('tanggal_transaksi', [$start, $end]);
             $kasKeluarQuery->whereBetween('tanggal', [$start, $end]);
         }
 
-        $kasMasuk  = $kasMasukQuery->orderBy('tanggal_transaksi', 'desc')->get();
+        $kasMasuk = $kasMasukQuery->orderBy('tanggal_transaksi', 'desc')->get();
         $kasKeluar = $kasKeluarQuery->orderBy('tanggal', 'desc')->get();
 
-        $totalMasuk  = $kasMasuk->sum('total');
+        $totalMasuk = $kasMasuk->sum('total');
         $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas  = $totalMasuk - $totalKeluar;
+        $selisihKas = $totalMasuk - $totalKeluar;
 
         // --- GABUNG LAPORAN ---
         $laporan = collect();
 
         foreach ($kasMasuk as $m) {
             $laporan->push([
-                'tanggal'    => $m->tanggal_transaksi,
+                'tanggal' => $m->tanggal_transaksi,
                 'keterangan' => $m->keterangan ?? '-',
-                'kategori'   => $m->kategori ?? '-',
-                'metode_pembayaran'     => $m->metode_pembayaran ?? '-',
-                'kas_masuk'  => $m->total,
+                'kategori' => $m->kategori ?? '-',
+                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
+                'kas_masuk' => $m->total,
                 'kas_keluar' => 0,
             ]);
         }
 
         foreach ($kasKeluar as $k) {
             $laporan->push([
-                'tanggal'    => $k->tanggal,
+                'tanggal' => $k->tanggal,
                 'deskripsi' => $k->deskripsi ?? '-',
-                'kategori'   => $k->kategori ?? '-',
-                'metode_pembayaran'     => $k->metode_pembayaran ?? '-',
-                'penerima'   => $k->penerima ?? '-',
-                'kas_masuk'  => 0,
+                'kategori' => $k->kategori ?? '-',
+                'metode_pembayaran' => $k->metode_pembayaran ?? '-',
+                'penerima' => $k->penerima ?? '-',
+                'kas_masuk' => 0,
                 'kas_keluar' => $k->nominal,
             ]);
         }
@@ -173,9 +180,10 @@ class LaporanController extends Controller
     {
         $tahun = $request->get('tahun');
         $bulan = $request->get('bulan');
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
-        $kasMasukQuery  = KasMasuk::query();
-        $kasKeluarQuery = KasKeluar::query();
+        $kasMasukQuery = KasMasuk::where('user_id', $userId);
+        $kasKeluarQuery = KasKeluar::where('user_id', $userId);
 
         // FILTER TAHUN
         if ($tahun) {
@@ -194,32 +202,32 @@ class LaporanController extends Controller
         $kasKeluar = $kasKeluarQuery->orderBy('tanggal', 'desc')->get();
 
         // Hitung total
-        $totalMasuk  = $kasMasuk->sum('total');
+        $totalMasuk = $kasMasuk->sum('total');
         $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas  = $totalMasuk - $totalKeluar;
+        $selisihKas = $totalMasuk - $totalKeluar;
 
         // Gabungkan laporan
         $laporan = collect();
 
         foreach ($kasMasuk as $m) {
             $laporan->push([
-                'tanggal'    => $m->tanggal_transaksi,
+                'tanggal' => $m->tanggal_transaksi,
                 'keterangan' => $m->keterangan ?? '-',
-                'kategori'   => $m->kategori ?? '-',
-                'metode_pembayaran'     => $m->metode_pembayaran ?? '-',
-                'kas_masuk'  => $m->total,
+                'kategori' => $m->kategori ?? '-',
+                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
+                'kas_masuk' => $m->total,
                 'kas_keluar' => 0,
             ]);
         }
 
         foreach ($kasKeluar as $k) {
             $laporan->push([
-                'tanggal'    => $k->tanggal,
+                'tanggal' => $k->tanggal,
                 'deskripsi' => $k->deskripsi ?? '-',
-                'kategori'   => $k->kategori ?? '-',
-                'metode_pembayaran'     => $k->metode_pembayaran ?? '-',
-                'penerima'   => $k->penerima ?? '-',
-                'kas_masuk'  => 0,
+                'kategori' => $k->kategori ?? '-',
+                'metode_pembayaran' => $k->metode_pembayaran ?? '-',
+                'penerima' => $k->penerima ?? '-',
+                'kas_masuk' => 0,
                 'kas_keluar' => $k->nominal,
             ]);
         }
@@ -236,12 +244,12 @@ class LaporanController extends Controller
         });
 
         return [
-            'laporan'      => $laporan,
-            'kasMasuk'     => $kasMasuk,
-            'kasKeluar'    => $kasKeluar,
-            'totalMasuk'   => $totalMasuk,
-            'totalKeluar'  => $totalKeluar,
-            'selisihKas'   => $selisihKas,
+            'laporan' => $laporan,
+            'kasMasuk' => $kasMasuk,
+            'kasKeluar' => $kasKeluar,
+            'totalMasuk' => $totalMasuk,
+            'totalKeluar' => $totalKeluar,
+            'selisihKas' => $selisihKas,
         ];
     }
 

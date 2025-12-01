@@ -11,67 +11,67 @@ class KasMasukController extends Controller
     /**
      * Menampilkan semua data kas masuk.
      */
-   public function index(Request $request)
-{
-    $query = KasMasuk::query();
-    $tz = 'Asia/Jakarta';
-    $now = Carbon::now($tz);
+    public function index(Request $request)
+    {
+        $query = KasMasuk::where('user_id', \Illuminate\Support\Facades\Auth::id());
+        $tz = 'Asia/Jakarta';
+        $now = Carbon::now($tz);
 
-    // 🔍 Filter search (tambahkan kode_kas)
-    if ($request->search) {
-        $query->where(function($q) use ($request) {
-            $q->where('kode_kas', 'like', "%{$request->search}%")
-              ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
-              ->orWhere('keterangan', 'like', "%{$request->search}%");
-        });
-    }
-
-    // Filter waktu
-    if ($request->filter_waktu) {
-        switch ($request->filter_waktu) {
-            case 'hari-ini':
-                $query->whereDate('tanggal_transaksi', $now->toDateString());
-                break;
-            case 'kemarin':
-                $query->whereDate('tanggal_transaksi', $now->copy()->subDay()->toDateString());
-                break;
-            case 'minggu-ini':
-                $query->whereBetween('tanggal_transaksi', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
-                break;
-            case 'bulan-ini':
-                $query->whereMonth('tanggal_transaksi', $now->month);
-                break;
-            case 'bulan-lalu': // ➡️ Tambahan: bulan lalu
-                $lastMonth = $now->copy()->subMonth();
-                $query->whereBetween('tanggal_transaksi', [$lastMonth->copy()->startOfMonth(), $lastMonth->copy()->endOfMonth()]);
-                break;
-            case 'tahun-ini':
-                $query->whereYear('tanggal_transaksi', $now->year);
-                break;
-            case 'custom':
-                if ($request->start_date && $request->end_date) {
-                    $query->whereBetween('tanggal_transaksi', [
-                        Carbon::parse($request->start_date),
-                        Carbon::parse($request->end_date)
-                    ]);
-                }
-                break;
+        // 🔍 Filter search (tambahkan kode_kas)
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('kode_kas', 'like', "%{$request->search}%")
+                    ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
+                    ->orWhere('keterangan', 'like', "%{$request->search}%");
+            });
         }
-    }
 
-    // Filter harga
-    if ($request->filter_harga) {
-        $range = explode('-', $request->filter_harga);
-        if (count($range) === 2) {
-            $query->whereBetween('total', [$range[0], $range[1]]);
+        // Filter waktu
+        if ($request->filter_waktu) {
+            switch ($request->filter_waktu) {
+                case 'hari-ini':
+                    $query->whereDate('tanggal_transaksi', $now->toDateString());
+                    break;
+                case 'kemarin':
+                    $query->whereDate('tanggal_transaksi', $now->copy()->subDay()->toDateString());
+                    break;
+                case 'minggu-ini':
+                    $query->whereBetween('tanggal_transaksi', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
+                    break;
+                case 'bulan-ini':
+                    $query->whereMonth('tanggal_transaksi', $now->month);
+                    break;
+                case 'bulan-lalu': // ➡️ Tambahan: bulan lalu
+                    $lastMonth = $now->copy()->subMonth();
+                    $query->whereBetween('tanggal_transaksi', [$lastMonth->copy()->startOfMonth(), $lastMonth->copy()->endOfMonth()]);
+                    break;
+                case 'tahun-ini':
+                    $query->whereYear('tanggal_transaksi', $now->year);
+                    break;
+                case 'custom':
+                    if ($request->start_date && $request->end_date) {
+                        $query->whereBetween('tanggal_transaksi', [
+                            Carbon::parse($request->start_date),
+                            Carbon::parse($request->end_date)
+                        ]);
+                    }
+                    break;
+            }
         }
+
+        // Filter harga
+        if ($request->filter_harga) {
+            $range = explode('-', $request->filter_harga);
+            if (count($range) === 2) {
+                $query->whereBetween('total', [$range[0], $range[1]]);
+            }
+        }
+
+        $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->get();
+
+
+        return view('kas-masuk.index', compact('kasMasuk'));
     }
-
-    $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->get();
-
-
-    return view('kas-masuk.index', compact('kasMasuk'));
-}
 
 
     public function create()
@@ -91,6 +91,7 @@ class KasMasukController extends Controller
         ]);
 
         $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
+        $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
         KasMasuk::create($validated);
 
         return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil ditambahkan.');

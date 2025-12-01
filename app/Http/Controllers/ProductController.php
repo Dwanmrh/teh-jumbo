@@ -8,14 +8,15 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::all();
+        $userId = \Illuminate\Support\Facades\Auth::id();
+        $products = Product::where('user_id', $userId)->get();
 
         return view('products.index', [
-            'totalProduk' => Product::count(),
-            'totalStok'   => Product::sum('stok'),
-            'nilaiStok'   => Product::sum(\DB::raw('harga * stok')),
-            'stokRendah'  => Product::where('stok', '<=', 5)->count(),
-            'products'    => $products,
+            'totalProduk' => Product::where('user_id', $userId)->count(),
+            'totalStok' => Product::where('user_id', $userId)->sum('stok'),
+            'nilaiStok' => Product::where('user_id', $userId)->sum(\DB::raw('harga * stok')),
+            'stokRendah' => Product::where('user_id', $userId)->where('stok', '<=', 5)->count(),
+            'products' => $products,
         ]);
     }
 
@@ -27,6 +28,7 @@ class ProductController extends Controller
             $data['foto'] = $r->file('foto')->store('produk', 'public');
         }
 
+        $data['user_id'] = \Illuminate\Support\Facades\Auth::id();
         Product::create($data);
         return redirect()->route('products.index');
     }
@@ -73,4 +75,3 @@ class ProductController extends Controller
     }
 
 }
-

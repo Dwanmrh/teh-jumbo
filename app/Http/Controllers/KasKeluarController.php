@@ -14,15 +14,15 @@ class KasKeluarController extends Controller
      */
     public function index(Request $request)
     {
-        $query = KasKeluar::query();
+        $query = KasKeluar::where('user_id', \Illuminate\Support\Facades\Auth::id());
 
         // 🔍 Pencarian berdasarkan kategori, metode, penerima, atau deskripsi
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('kategori', 'like', "%{$request->search}%")
-                  ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
-                  ->orWhere('penerima', 'like', "%{$request->search}%")
-                  ->orWhere('deskripsi', 'like', "%{$request->search}%");
+                    ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
+                    ->orWhere('penerima', 'like', "%{$request->search}%")
+                    ->orWhere('deskripsi', 'like', "%{$request->search}%");
             });
         }
 
@@ -113,6 +113,7 @@ class KasKeluarController extends Controller
             $validated['bukti_pembayaran'] = $path;
         }
 
+        $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
         KasKeluar::create($validated);
 
         return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil ditambahkan.');

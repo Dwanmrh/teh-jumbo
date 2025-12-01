@@ -9,7 +9,7 @@ class BarangController extends Controller
 {
     public function index()
     {
-        $data = Barang::all();
+        $data = Barang::where('user_id', \Illuminate\Support\Facades\Auth::id())->get();
         return view('barang', compact('data'));
     }
 
@@ -21,6 +21,7 @@ class BarangController extends Controller
             'harga' => 'required|numeric',
         ]);
 
+        $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
         Barang::create($validated);
         return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan.');
     }

@@ -14,7 +14,7 @@ class KasMasuk extends Model
     protected $keyType = 'string';  // karena pakai UUID (string)
     public $incrementing = false;   // non auto-increment
 
-   protected $fillable = [
+    protected $fillable = [
         'kode_kas',
         'tanggal_transaksi',
         'keterangan',
@@ -23,8 +23,10 @@ class KasMasuk extends Model
         'jumlah',
         'harga_satuan',
         'total',
+        'user_id',
     ];
-        /**
+
+    /**
      * Event listener saat membuat data baru
      */
     protected static function boot()

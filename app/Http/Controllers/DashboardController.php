@@ -16,18 +16,22 @@ class DashboardController extends Controller
         $tanggal = $request->tanggal;
         $bulanInput = $request->bulan; // format YYYY-MM
         $tahun = $request->tahun;
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
         // List bulan
-        $bulanList = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $bulanList = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
         // Ambil list tahun unik
         $tahunList = DB::table('kas_masuk')
+            ->where('user_id', $userId)
             ->selectRaw('YEAR(tanggal_transaksi) as tahun')
             ->union(
-                DB::table('kas_keluar')->selectRaw('YEAR(tanggal) as tahun')
+                DB::table('kas_keluar')
+                    ->where('user_id', $userId)
+                    ->selectRaw('YEAR(tanggal) as tahun')
             )
             ->groupBy('tahun')
-            ->orderBy('tahun','desc')
+            ->orderBy('tahun', 'desc')
             ->pluck('tahun');
 
         // INIT
@@ -41,11 +45,11 @@ class DashboardController extends Controller
         */
         if ($filterType === 'harian' && $tanggal) {
 
-            $totalMasuk = KasMasuk::whereDate('tanggal_transaksi', $tanggal)->sum('total');
-            $countMasuk = KasMasuk::whereDate('tanggal_transaksi', $tanggal)->count();
+            $totalMasuk = KasMasuk::where('user_id', $userId)->whereDate('tanggal_transaksi', $tanggal)->sum('total');
+            $countMasuk = KasMasuk::where('user_id', $userId)->whereDate('tanggal_transaksi', $tanggal)->count();
 
-            $totalKeluar = KasKeluar::whereDate('tanggal', $tanggal)->sum('nominal');
-            $countKeluar = KasKeluar::whereDate('tanggal', $tanggal)->count();
+            $totalKeluar = KasKeluar::where('user_id', $userId)->whereDate('tanggal', $tanggal)->sum('nominal');
+            $countKeluar = KasKeluar::where('user_id', $userId)->whereDate('tanggal', $tanggal)->count();
 
             $labelList = [Carbon::parse($tanggal)->translatedFormat('d M Y')];
             $dataMasuk = [$totalMasuk];
@@ -58,8 +62,7 @@ class DashboardController extends Controller
 
         /*
         | 2. FILTER BULANAN (dengan atau tanpa tahun)
-        */
-        elseif ($filterType === 'bulanan' && $bulanInput) {
+        */ elseif ($filterType === 'bulanan' && $bulanInput) {
 
             $explode = explode('-', $bulanInput);
             $year = $explode[0];
@@ -74,8 +77,8 @@ class DashboardController extends Controller
             }
 
             // Perhitungan total bulan
-            $qMasuk = KasMasuk::whereMonth('tanggal_transaksi', $month);
-            $qKeluar = KasKeluar::whereMonth('tanggal', $month);
+            $qMasuk = KasMasuk::where('user_id', $userId)->whereMonth('tanggal_transaksi', $month);
+            $qKeluar = KasKeluar::where('user_id', $userId)->whereMonth('tanggal', $month);
 
             if ($filterYear) {
                 $qMasuk->whereYear('tanggal_transaksi', $filterYear);
@@ -98,10 +101,12 @@ class DashboardController extends Controller
             // Grafik per-hari
             for ($d = 1; $d <= $daysInMonth; $d++) {
 
-                $q1 = KasMasuk::whereDay('tanggal_transaksi', $d)
+                $q1 = KasMasuk::where('user_id', $userId)
+                    ->whereDay('tanggal_transaksi', $d)
                     ->whereMonth('tanggal_transaksi', $month);
 
-                $q2 = KasKeluar::whereDay('tanggal', $d)
+                $q2 = KasKeluar::where('user_id', $userId)
+                    ->whereDay('tanggal', $d)
                     ->whereMonth('tanggal', $month);
 
                 if ($filterYear) {
@@ -121,17 +126,18 @@ class DashboardController extends Controller
 
         /*
         | 3. TAHUNAN DEFAULT (12 bulan)
-        */
-        else {
+        */ else {
 
             $tahun = $tahun ?? now()->year;
 
             for ($m = 1; $m <= 12; $m++) {
 
-                $masuk = KasMasuk::whereYear('tanggal_transaksi', $tahun)
+                $masuk = KasMasuk::where('user_id', $userId)
+                    ->whereYear('tanggal_transaksi', $tahun)
                     ->whereMonth('tanggal_transaksi', $m)->sum('total');
 
-                $keluar = KasKeluar::whereYear('tanggal', $tahun)
+                $keluar = KasKeluar::where('user_id', $userId)
+                    ->whereYear('tanggal', $tahun)
                     ->whereMonth('tanggal', $m)->sum('nominal');
 
                 $labelList[] = $bulanList[$m - 1];
@@ -142,8 +148,8 @@ class DashboardController extends Controller
 
             $totalMasuk = array_sum($dataMasuk);
             $totalKeluar = array_sum($dataKeluar);
-            $countMasuk = KasMasuk::whereYear('tanggal_transaksi', $tahun)->count();
-            $countKeluar = KasKeluar::whereYear('tanggal', $tahun)->count();
+            $countMasuk = KasMasuk::where('user_id', $userId)->whereYear('tanggal_transaksi', $tahun)->count();
+            $countKeluar = KasKeluar::where('user_id', $userId)->whereYear('tanggal', $tahun)->count();
             $selisihKas = $totalMasuk - $totalKeluar;
             $saldoAkhir = $selisihKas;
         }
@@ -151,14 +157,13 @@ class DashboardController extends Controller
         /*
         | PIE CHART FILTER IKUT FILTER YANG DIPILIH
         */
-        $kategoriMasuk = KasMasuk::selectRaw('kategori, SUM(total) as total');
-        $kategoriKeluar = KasKeluar::selectRaw('kategori, SUM(nominal) as total');
+        $kategoriMasuk = KasMasuk::where('user_id', $userId)->selectRaw('kategori, SUM(total) as total');
+        $kategoriKeluar = KasKeluar::where('user_id', $userId)->selectRaw('kategori, SUM(nominal) as total');
 
         if ($filterType === 'harian') {
             $kategoriMasuk->whereDate('tanggal_transaksi', $tanggal);
             $kategoriKeluar->whereDate('tanggal', $tanggal);
-        }
-        elseif ($filterType === 'bulanan') {
+        } elseif ($filterType === 'bulanan') {
 
             $kategoriMasuk->whereMonth('tanggal_transaksi', $month);
             $kategoriKeluar->whereMonth('tanggal', $month);
@@ -167,14 +172,13 @@ class DashboardController extends Controller
                 $kategoriMasuk->whereYear('tanggal_transaksi', $tahun);
                 $kategoriKeluar->whereYear('tanggal', $tahun);
             }
-        }
-        else {
+        } else {
             $kategoriMasuk->whereYear('tanggal_transaksi', $tahun);
             $kategoriKeluar->whereYear('tanggal', $tahun);
         }
 
-        $kategoriMasuk = $kategoriMasuk->groupBy('kategori')->pluck('total','kategori')->toArray();
-        $kategoriKeluar = $kategoriKeluar->groupBy('kategori')->pluck('total','kategori')->toArray();
+        $kategoriMasuk = $kategoriMasuk->groupBy('kategori')->pluck('total', 'kategori')->toArray();
+        $kategoriKeluar = $kategoriKeluar->groupBy('kategori')->pluck('total', 'kategori')->toArray();
 
         // Pie Chart
         $kategoriMasukLabel = array_keys($kategoriMasuk);
@@ -199,12 +203,25 @@ class DashboardController extends Controller
         RETURN
         */
         return view('dashboard', compact(
-            'filterType','tanggal','bulanInput','tahun','tahunList','labelList',
-            'dataMasuk','dataKeluar','dataSelisih',
-            'totalMasuk','totalKeluar','selisihKas','saldoAkhir',
-            'countMasuk','countKeluar',
-            'kategoriMasukLabel','kategoriMasukNominal',
-            'kategoriKeluarLabel','kategoriKeluarNominal',
+            'filterType',
+            'tanggal',
+            'bulanInput',
+            'tahun',
+            'tahunList',
+            'labelList',
+            'dataMasuk',
+            'dataKeluar',
+            'dataSelisih',
+            'totalMasuk',
+            'totalKeluar',
+            'selisihKas',
+            'saldoAkhir',
+            'countMasuk',
+            'countKeluar',
+            'kategoriMasukLabel',
+            'kategoriMasukNominal',
+            'kategoriKeluarLabel',
+            'kategoriKeluarNominal',
             'saldoKumulatif'
         ));
     }

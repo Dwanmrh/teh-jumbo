@@ -37,9 +37,9 @@
                     {{-- 🔹 Kategori --}}
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Kategori</label>
-                        <select name="kategori"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2" required>
-                            <option value="Penjualan" {{ old('kategori', $kasMasuk->kategori) == 'Penjualan' ? 'selected' : '' }}>Penjualan</option>
+                        <select name="kategori" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                            <option value="" {{ old('kategori', $kasMasuk->kategori) == '' ? 'selected' : '' }}>
+                                Penjualan</option>
                             <option value="Lain-lain" {{ old('kategori', $kasMasuk->kategori) == 'Lain-lain' ? 'selected' : '' }}>Lain-lain</option>
                         </select>
                     </div>
@@ -63,8 +63,7 @@
                     {{-- 🔹 Total Otomatis --}}
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-[#2F362C]">Total (Otomatis)</label>
-                        <input type="number" name="total" id="total"
-                            value="{{ old('total', $kasMasuk->total) }}"
+                        <input type="number" name="total" id="total" value="{{ old('total', $kasMasuk->total) }}"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" readonly>
                     </div>
 
@@ -125,20 +124,20 @@
             hargaInput.addEventListener("input", hitungTotal);
 
             // Pilih metode pembayaran
-         metodeBtns.forEach(btn => {
-            btn.addEventListener("click", () => {
+            metodeBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
 
-                metodeBtns.forEach(b => {
-                    b.classList.remove("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
-                    b.classList.add("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
+                    metodeBtns.forEach(b => {
+                        b.classList.remove("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
+                        b.classList.add("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
+                    });
+
+                    btn.classList.remove("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
+                    btn.classList.add("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
+
+                    metodeInput.value = btn.dataset.value;
                 });
-
-                btn.classList.remove("bg-gray-100", "text-gray-700", "border-gray-300", "hover:bg-gray-200");
-                btn.classList.add("bg-[#7AC943]", "text-white", "border-[#68AD3A]");
-
-                metodeInput.value = btn.dataset.value;
             });
-        });
         });
     </script>
 </x-app-layout>

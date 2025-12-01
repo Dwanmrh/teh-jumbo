@@ -14,6 +14,7 @@ class Product extends Model
         'harga',
         'stok',
         'foto',
+        'user_id',
     ];
 
     public function stockHistories()

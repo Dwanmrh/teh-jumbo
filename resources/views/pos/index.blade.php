@@ -107,6 +107,7 @@
         <form method="POST" action="{{ route('pos.checkout') }}"
               onsubmit="document.getElementById('cartData').value = JSON.stringify(cart)">
             @csrf
+            <input type="hidden" id="cartData" name="cart_json">
             <input type="hidden" id="modalTotalValue" name="total">
 
 
@@ -345,8 +346,5 @@ document.getElementById('searchInput').addEventListener('input', function () {
     });
 });
 </script>
-
-
-
 
 </x-app-layout>
