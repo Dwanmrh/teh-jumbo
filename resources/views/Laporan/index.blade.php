@@ -1,246 +1,312 @@
 <x-app-layout>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    {{-- Container Utama --}}
+    <div class="space-y-8">
 
-    <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]">
-        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-9">
+        {{-- 1. HEADER & EXPORT ACTIONS --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-stone-800 tracking-tight">Laporan Keuangan</h2>
+                <p class="text-stone-500 text-sm mt-1">Ringkasan arus kas dan rekapitulasi transaksi.</p>
+            </div>
 
-            {{-- Header --}}
-            <h2 class="text-xl font-semibold text-[#2F362C]">Laporan Keuangan</h2>
-            <p class="text-sm text-gray-500 mb-4">Ringkasan dan rincian transaksi</p>
+            <div class="flex items-center gap-3">
+                {{-- PDF Export --}}
+                <a href="{{ route('laporan.export.pdf', request()->all()) }}"
+                   class="group flex items-center gap-2 bg-white border border-stone-200 text-stone-600 px-4 py-2.5 rounded-xl hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-soft active:scale-95">
+                    <span class="material-symbols-rounded text-[20px] group-hover:scale-110 transition-transform">picture_as_pdf</span>
+                    <span class="text-sm font-bold">PDF</span>
+                </a>
 
-            {{-- CARD FILTER + EXPORT --}}
-            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                {{-- Excel Export --}}
+                <a href="{{ route('laporan.export.excel', request()->all()) }}"
+                   class="group flex items-center gap-2 bg-white border border-stone-200 text-stone-600 px-4 py-2.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-soft active:scale-95">
+                    <span class="material-symbols-rounded text-[20px] group-hover:scale-110 transition-transform">table_view</span>
+                    <span class="text-sm font-bold">Excel</span>
+                </a>
+            </div>
+        </div>
 
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="material-symbols-outlined text-gray-600">filter_alt</span>
-                    <h3 class="text-lg font-semibold text-gray-700">Filter Laporan</h3>
+        {{-- 2. FILTER SECTION (Glass Bar) --}}
+        <div class="bg-white p-1.5 rounded-2xl shadow-soft border border-stone-200/60">
+            <form method="GET" action="{{ route('laporan.index') }}" id="filterForm" class="flex flex-col sm:flex-row gap-2">
+
+                {{-- Label Visual --}}
+                <div class="hidden sm:flex items-center justify-center px-4 bg-stone-50 rounded-xl border border-stone-100">
+                    <span class="material-symbols-rounded text-stone-400">filter_alt</span>
                 </div>
 
-                <form method="GET" action="{{ route('laporan.index') }}" id="filterForm">
-                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-
-                        {{-- Filter BULAN + TAHUN --}}
-                        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-
-                            {{-- BULAN --}}
-                            <div class="flex flex-col w-full sm:w-auto">
-                                <label class="text-sm font-medium text-gray-700 mb-1">Bulan</label>
-                                <select name="bulan" class="w-full sm:w-[350px] border-gray-100 rounded-lg p-2 auto-submit bg-gray-100">
-                                    <option value="">Semua Bulan</option>
-                                    @for ($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>
-                                            {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-
-                            {{-- TAHUN --}}
-                            <div class="flex flex-col w-full sm:w-auto">
-                                <label class="text-sm font-medium text-gray-700 mb-1">Tahun</label>
-                                <select name="tahun" class="w-full sm:w-[350px] border-gray-100 rounded-lg p-2 auto-submit bg-gray-100">
-                                    <option value="">Semua Tahun</option>
-                                    @foreach ($listTahun as $th)
-                                        <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>
-                                            {{ $th }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                        </div>
-
-                        {{-- EXPORT BUTTONS --}}
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                            {{-- PDF --}}
-                            <a href="{{ route('laporan.export.pdf', request()->all()) }}"
-                                class="flex items-center gap-2 border border-red-400 text-red-500 px-5 py-2 rounded-lg hover:bg-red-50 transition w-full sm:w-auto justify-center">
-                                <span class="material-symbols-outlined text-base">download</span>
-                                Download PDF
-                            </a>
-
-                            {{-- Excel --}}
-                            <a href="{{ route('laporan.export.excel', request()->all()) }}"
-                                class="flex items-center gap-2 border border-green-400 text-green-600 px-5 py-2 rounded-lg hover:bg-green-50 transition w-full sm:w-auto justify-center">
-                                <span class="material-symbols-outlined text-base">dataset</span>
-                                Download Excel
-                            </a>
-                        </div>
-
+                {{-- Select Bulan --}}
+                <div class="relative flex-1 group">
+                    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-rounded text-stone-400 text-[20px]">calendar_month</span>
                     </div>
-                </form>
+                    <select name="bulan" class="auto-submit w-full pl-10 pr-4 py-3 bg-stone-50 border-0 text-stone-700 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-colors cursor-pointer hover:bg-stone-100">
+                        <option value="">Pilih Bulan</option>
+                        @for ($i = 1; $i <= 12; $i++)
+                            <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
 
-                <script>
-                    document.querySelectorAll('.auto-submit').forEach(el => {
-                        el.addEventListener('change', () => {
-                            document.getElementById('filterForm').submit();
-                        });
-                    });
-                </script>
+                {{-- Select Tahun --}}
+                <div class="relative flex-1 group">
+                    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-rounded text-stone-400 text-[20px]">schedule</span>
+                    </div>
+                    {{-- Bagian Select Tahun yang sudah diperbarui --}}
+                    <div class="relative flex-1 group">
+                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-rounded text-stone-400 text-[20px]">schedule</span>
+                        </div>
+                        <select name="tahun" class="auto-submit w-full pl-10 pr-4 py-3 bg-stone-50 border-0 text-stone-700 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-colors cursor-pointer hover:bg-stone-100">
+                            <option value="">Pilih Tahun</option>
+                            @php
+                                $tahunSekarang = date('Y');
+                            @endphp
+                            {{-- Loop dari tahun sekarang mundur 5 tahun ke belakang --}}
+                            @for ($th = $tahunSekarang; $th >= $tahunSekarang - 5; $th--)
+                                <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>
+                                    {{ $th }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
 
+        {{-- 3. STATISTIK CARDS (Modern Grid) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {{-- Card Pemasukan --}}
+            <div class="bg-white p-6 rounded-2xl shadow-soft border border-stone-100 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-rounded text-6xl text-emerald-600">trending_up</span>
+                </div>
+                <div class="flex flex-col gap-1 relative z-10">
+                    <div class="flex items-center gap-2 text-emerald-600 mb-2">
+                        <span class="p-1.5 bg-emerald-100 rounded-lg material-symbols-rounded text-lg">arrow_upward</span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Total Masuk</span>
+                    </div>
+                    <span class="text-3xl font-extrabold text-stone-800 tracking-tight">
+                        Rp {{ number_format($totalMasuk, 0, ',', '.') }}
+                    </span>
+                    <span class="text-xs text-stone-500 font-medium mt-1">
+                        {{ $kasMasuk->count() }} transaksi berhasil
+                    </span>
+                </div>
             </div>
 
-            {{-- Card Ringkasan --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                <div class="bg-white border-l-4 border-green-500 rounded-xl p-5 shadow-sm w-full">
-                    <p class="text-gray-600 text-sm font-medium">Total Kas Masuk</p>
-                    <p class="text-xl font-semibold text-emerald-600 mt-3">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-500 mt-3">{{ $kasMasuk->count() }} transaksi</p>
+            {{-- Card Pengeluaran --}}
+            <div class="bg-white p-6 rounded-2xl shadow-soft border border-stone-100 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-rounded text-6xl text-rose-600">trending_down</span>
                 </div>
-
-                <div class="bg-white border-l-4 border-red-500 rounded-xl p-5 shadow-sm w-full">
-                    <p class="text-gray-600 text-sm">Total Kas Keluar</p>
-                    <p class="text-xl font-semibold text-rose-600 mt-3">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-500 mt-3">{{ $kasKeluar->count() }} transaksi</p>
-                </div>
-
-                <div class="bg-white border-l-4 border-blue-500 rounded-xl p-5 shadow-sm w-full">
-                    <p class="text-gray-600 text-sm">Selisih / Saldo</p>
-                    <p class="text-xl font-semibold text-blue-600 mt-3">Rp {{ number_format($selisihKas, 0, ',', '.') }}</p>
-                    <p class="text-xs text-gray-500 mt-3">{{ $selisihKas >= 0 ? 'Surplus' : 'Defisit' }}</p>
+                <div class="flex flex-col gap-1 relative z-10">
+                    <div class="flex items-center gap-2 text-rose-600 mb-2">
+                        <span class="p-1.5 bg-rose-100 rounded-lg material-symbols-rounded text-lg">arrow_downward</span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Total Keluar</span>
+                    </div>
+                    <span class="text-3xl font-extrabold text-stone-800 tracking-tight">
+                        Rp {{ number_format($totalKeluar, 0, ',', '.') }}
+                    </span>
+                    <span class="text-xs text-stone-500 font-medium mt-1">
+                        {{ $kasKeluar->count() }} transaksi tercatat
+                    </span>
                 </div>
             </div>
 
-            {{-- Card Kas Masuk --}}
-            <div class="bg-white border-t-4 border-green-500 p-6 rounded-xl shadow-sm mb-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="material-symbols-outlined text-green-600 text-2xl">trending_up</span>
-                    <h3 class="text-lg font-semibold text-green-700">Rincian Kas Masuk</h3>
+            {{-- Card Saldo --}}
+            <div class="bg-gradient-to-br from-brand-500 to-brand-600 p-6 rounded-2xl shadow-glow text-white relative overflow-hidden">
+                <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+                <div class="absolute top-4 right-4 bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                     <span class="material-symbols-rounded text-xl">account_balance_wallet</span>
                 </div>
-                <p class="text-sm text-gray-500 mb-4">Daftar transaksi pemasukan</p>
 
-                <table class="min-w-[600px] sm:min-w-full text-sm border border-gray-100 rounded-lg table-fixed">
-                    <thead class="bg-gray-50 text-gray-800 border-b border-gray-100">
+                <div class="flex flex-col gap-1 relative z-10">
+                    <span class="text-brand-100 text-xs font-bold uppercase tracking-wider mb-2">Sisa Saldo</span>
+                    <span class="text-3xl font-extrabold tracking-tight">
+                        Rp {{ number_format($selisihKas, 0, ',', '.') }}
+                    </span>
+                    <div class="flex items-center gap-1 mt-1 text-xs font-medium text-brand-50">
+                        @if($selisihKas >= 0)
+                            <span class="bg-white/20 px-2 py-0.5 rounded text-white">Surplus</span>
+                        @else
+                            <span class="bg-rose-500/50 px-2 py-0.5 rounded text-white border border-rose-400/30">Defisit</span>
+                        @endif
+                        <span>Periode ini</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 4. TABEL GABUNGAN (Saldo Running) --}}
+        <div class="bg-white rounded-2xl shadow-soft border border-stone-200 overflow-hidden">
+            <div class="p-5 sm:p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600">
+                        <span class="material-symbols-rounded">receipt_long</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-stone-800">Semua Transaksi</h3>
+                        <p class="text-xs text-stone-500">Mutasi rekening lengkap</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-stone-500 uppercase bg-stone-50 border-b border-stone-200 font-bold tracking-wider">
                         <tr>
-                            <th class="px-4 py-2 text-left">Tanggal</th>
-                            <th class="px-4 py-2 text-left">Kategori</th>
-                            <th class="px-4 py-2 text-left">Keterangan</th>
-                            <th class="px-4 py-2 text-left">Metode Pembayaran</th>
-                            <th class="px-4 py-2 text-right">Jumlah</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Tanggal</th>
+                            <th class="px-6 py-4">Keterangan</th>
+                            <th class="px-6 py-4">Kategori</th>
+                            <th class="px-6 py-4 text-center">Metode</th>
+                            <th class="px-6 py-4 text-right">Masuk</th>
+                            <th class="px-6 py-4 text-right">Keluar</th>
+                            <th class="px-6 py-4 text-right">Saldo</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @forelse($kasMasuk as $m)
-                            <tr class="border-b hover:bg-green-50 transition">
-                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($m->tanggal_transaksi)->format('d M Y') }}</td>
-                                <td class="px-4 py-2">
-                                    <span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">{{ $m->kategori }}</span>
-                                </td>
-                                <td class="px-4 py-2">{{ $m->keterangan ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $m->metode_pembayaran }}</td>
-                                <td class="px-4 py-2 text-right">Rp {{ number_format($m->total,0,',','.') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="5" class="text-center py-4 text-gray-500">Tidak ada data kas masuk</td></tr>
-                        @endforelse
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-green-50 font-medium">
-                            <td colspan="4" class="px-4 py-2 text-right">Total Kas Masuk</td>
-                            <td class="px-4 py-2 text-right text-green-600">Rp {{ number_format($totalMasuk,0,',','.') }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            {{-- Card Kas Keluar --}}
-            <div class="bg-white border-t-4 border-red-500 p-6 rounded-xl shadow-sm mb-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="material-symbols-outlined text-red-600 text-2xl">trending_down</span>
-                    <h3 class="text-lg font-semibold text-red-700">Rincian Kas Keluar</h3>
-                </div>
-                <p class="text-sm text-gray-500 mb-4">Daftar transaksi pengeluaran</p>
-
-                <table class="min-w-[700px] sm:min-w-full text-sm border border-gray-100 rounded-lg table-fixed">
-                    <thead class="bg-gray-50 text-gray-800 border-b border-gray-100">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Tanggal</th>
-                            <th class="px-4 py-2 text-left">Kategori</th>
-                            <th class="px-4 py-2 text-left">Keterangan</th>
-                            <th class="px-4 py-2 text-left">Metode Pembayaran</th>
-                            <th class="px-4 py-2 text-left">Penerima</th>
-                            <th class="px-4 py-2 text-right">Jumlah</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($kasKeluar as $k)
-                            <tr class="border-b hover:bg-red-50 transition">
-                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($k->tanggal)->format('d M Y') }}</td>
-                                <td class="px-4 py-2"><span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">{{ $k->kategori }}</span></td>
-                                <td class="px-4 py-2">{{ $k->deskripsi ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $k->metode_pembayaran }}</td>
-                                <td class="px-4 py-2">{{ $k->penerima}}</td>
-                                <td class="px-4 py-2 text-right">Rp {{ number_format($k->nominal,0,',','.') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="text-center py-4 text-gray-500">Tidak ada data kas keluar</td></tr>
-                        @endforelse
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-red-50 font-medium">
-                            <td colspan="5" class="px-4 py-2 text-right">Total Kas Keluar</td>
-                            <td class="px-4 py-2 text-right text-red-600">Rp {{ number_format($totalKeluar,0,',','.') }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            {{-- Tabel Gabungan --}}
-            <div class="bg-white border-t-4 border-blue-500 p-6 rounded-xl shadow-md mb-6 overflow-x-auto">
-                <h3 class="text-xl font-semibold text-gray-600 mb-3">Semua Transaksi</h3>
-                <table class="min-w-[700px] sm:min-w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-                    <thead class="bg-gray text-black border-b border-gray-300">
-                        <tr>
-                            <th class="px-4 py-2 text-left border-b border-gray-300">Tanggal</th>
-                            <th class="px-4 py-2 text-left border-b border-gray-300">Keterangan</th>
-                            <th class="px-4 py-2 text-left border-b border-gray-300">Kategori</th>
-                            <th class="px-4 py-2 text-left border-b border-gray-300">Metode</th>
-                            <th class="px-4 py-2 text-right border-b border-gray-300">Kas Masuk</th>
-                            <th class="px-4 py-2 text-right border-b border-gray-300">Kas Keluar</th>
-                            <th class="px-4 py-2 text-right border-b border-gray-300">Saldo</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-stone-100">
                         @forelse($laporan as $item)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($item['tanggal'])->format('d M Y') }}</td>
-                                <td class="px-4 py-2">{{ $item['keterangan'] ?? $item['deskripsi'] ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $item['kategori'] }}</td>
-                                <td class="px-4 py-2">{{ $item['metode_pembayaran'] }}</td>
-                                <td class="px-4 py-2 text-right text-green-600">
-                                    {{ $item['kas_masuk'] > 0 ? 'Rp '.number_format($item['kas_masuk'],0,',','.') : '-' }}
+                            <tr class="hover:bg-brand-50/30 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap text-stone-600 font-medium">
+                                    {{ \Carbon\Carbon::parse($item['tanggal'])->format('d M Y') }}
                                 </td>
-                                <td class="px-4 py-2 text-right text-red-600">
-                                    {{ $item['kas_keluar'] > 0 ? 'Rp '.number_format($item['kas_keluar'],0,',','.') : '-' }}
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-stone-700">{{ $item['keterangan'] ?? $item['deskripsi'] ?? '-' }}</div>
+                                    @if(isset($item['penerima']))
+                                        <div class="text-xs text-stone-400">Penerima: {{ $item['penerima'] }}</div>
+                                    @endif
                                 </td>
-                                <td class="px-4 py-2 text-right font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border
+                                        {{ $item['kas_masuk'] > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100' }}">
+                                        {{ $item['kategori'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap text-stone-500 text-xs">
+                                    {{ $item['metode_pembayaran'] }}
+                                </td>
+                                <td class="px-6 py-4 text-right whitespace-nowrap text-emerald-600 font-bold">
+                                    {{ $item['kas_masuk'] > 0 ? '+ '.number_format($item['kas_masuk'],0,',','.') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-right whitespace-nowrap text-rose-600 font-bold">
+                                    {{ $item['kas_keluar'] > 0 ? '- '.number_format($item['kas_keluar'],0,',','.') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-right whitespace-nowrap font-bold text-stone-800 bg-stone-50/50 group-hover:bg-brand-50/50">
                                     Rp {{ number_format($item['saldo'],0,',','.') }}
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center py-4 text-gray-500">Tidak ada data</td></tr>
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-stone-400">
+                                    <span class="material-symbols-rounded text-4xl mb-2 opacity-50">inbox</span>
+                                    <p>Tidak ada data transaksi untuk periode ini.</p>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            {{-- Ringkasan Total --}}
-            <div class="border border-blue-300 rounded-xl p-5 mt-8 bg-white shadow-sm">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-                    <p class="text-gray-600">Total Pemasukan</p>
-                    <p class="text-green-600">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</p>
+        {{-- 5. DETAIL KAS MASUK & KELUAR (Grid 2 Kolom) --}}
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+            {{-- Tabel Kas Masuk --}}
+            <div class="bg-white rounded-2xl shadow-soft border border-stone-200 overflow-hidden flex flex-col h-full">
+                <div class="p-5 border-b border-stone-100 flex items-center gap-3 bg-emerald-50/30">
+                    <span class="material-symbols-rounded text-emerald-500">trending_up</span>
+                    <h3 class="font-bold text-stone-800">Rincian Pemasukan</h3>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-                    <p class="text-gray-600">Total Pengeluaran</p>
-                    <p class="text-red-600">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</p>
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-stone-500 uppercase bg-stone-50 font-semibold">
+                            <tr>
+                                <th class="px-4 py-3">Tanggal</th>
+                                <th class="px-4 py-3">Sumber</th>
+                                <th class="px-4 py-3 text-right">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            @forelse($kasMasuk->take(5) as $m)
+                                <tr class="hover:bg-emerald-50/20 transition">
+                                    <td class="px-4 py-3 whitespace-nowrap text-stone-600">{{ \Carbon\Carbon::parse($m->tanggal_transaksi)->format('d/m/Y') }}</td>
+                                    <td class="px-4 py-3 text-stone-700 font-medium truncate max-w-[150px]">{{ $m->keterangan ?? $m->kategori }}</td>
+                                    <td class="px-4 py-3 text-right text-emerald-600 font-bold">Rp {{ number_format($m->total,0,',','.') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="px-4 py-6 text-center text-stone-400 text-xs">Data kosong</td></tr>
+                            @endforelse
+                        </tbody>
+                        @if($kasMasuk->count() > 5)
+                            <tfoot class="bg-stone-50">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-2 text-center text-xs">
+                                        <a href="{{ route('kas-masuk.index') }}" class="text-emerald-600 hover:text-emerald-700 font-bold hover:underline">Lihat Semua ({{ $kasMasuk->count() }})</a>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        @endif
+                    </table>
                 </div>
-                <hr class="my-2 border-gray-300">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                    <p class="text-gray-700">Selisih</p>
-                    <p class="text-blue-600">Rp {{ number_format($selisihKas, 0, ',', '.') }}</p>
+            </div>
+
+            {{-- Tabel Kas Keluar --}}
+            <div class="bg-white rounded-2xl shadow-soft border border-stone-200 overflow-hidden flex flex-col h-full">
+                <div class="p-5 border-b border-stone-100 flex items-center gap-3 bg-rose-50/30">
+                    <span class="material-symbols-rounded text-rose-500">trending_down</span>
+                    <h3 class="font-bold text-stone-800">Rincian Pengeluaran</h3>
+                </div>
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-stone-500 uppercase bg-stone-50 font-semibold">
+                            <tr>
+                                <th class="px-4 py-3">Tanggal</th>
+                                <th class="px-4 py-3">Keperluan</th>
+                                <th class="px-4 py-3 text-right">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            @forelse($kasKeluar->take(5) as $k)
+                                <tr class="hover:bg-rose-50/20 transition">
+                                    <td class="px-4 py-3 whitespace-nowrap text-stone-600">{{ \Carbon\Carbon::parse($k->tanggal)->format('d/m/Y') }}</td>
+                                    <td class="px-4 py-3 text-stone-700 font-medium truncate max-w-[150px]">{{ $k->deskripsi ?? $k->kategori }}</td>
+                                    <td class="px-4 py-3 text-right text-rose-600 font-bold">Rp {{ number_format($k->nominal,0,',','.') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="px-4 py-6 text-center text-stone-400 text-xs">Data kosong</td></tr>
+                            @endforelse
+                        </tbody>
+                        @if($kasKeluar->count() > 5)
+                            <tfoot class="bg-stone-50">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-2 text-center text-xs">
+                                        <a href="{{ route('kas-keluar.index') }}" class="text-rose-600 hover:text-rose-700 font-bold hover:underline">Lihat Semua ({{ $kasKeluar->count() }})</a>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        @endif
+                    </table>
                 </div>
             </div>
 
         </div>
+
     </div>
+
+    {{-- Script Auto Submit Filter --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const selects = document.querySelectorAll('.auto-submit');
+            selects.forEach(select => {
+                select.addEventListener('change', () => {
+                    document.getElementById('filterForm').submit();
+                });
+            });
+        });
+    </script>
 </x-app-layout>

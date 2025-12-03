@@ -17,22 +17,23 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     /** =========================
-     *  DASHBOARD (REAL DATA)
+     * DASHBOARD (REAL DATA)
      * ========================= */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /** =========================
-     *  KAS MASUK
+     * KAS MASUK
      * ========================= */
+    // URUTAN PENTING: Define route statis ('/create' atau '/tambah') sebelum route dinamis ('/{id}')
     Route::get('/kas-masuk', [KasMasukController::class, 'index'])->name('kas-masuk.index');
-    Route::get('/kas-masuk/tambah', [KasMasukController::class, 'create'])->name('kas-masuk.create');
+    Route::get('/kas-masuk/tambah', [KasMasukController::class, 'create'])->name('kas-masuk.create'); // Statis
     Route::post('/kas-masuk', [KasMasukController::class, 'store'])->name('kas-masuk.store');
-    Route::get('/kas-masuk/{id}/edit', [KasMasukController::class, 'edit'])->name('kas-masuk.edit');
+    Route::get('/kas-masuk/{id}/edit', [KasMasukController::class, 'edit'])->name('kas-masuk.edit'); // Dinamis
     Route::put('/kas-masuk/{id}', [KasMasukController::class, 'update'])->name('kas-masuk.update');
     Route::delete('/kas-masuk/{id}', [KasMasukController::class, 'destroy'])->name('kas-masuk.destroy');
 
     /** =========================
-     *  KAS KELUAR
+     * KAS KELUAR
      * ========================= */
     Route::get('/kas-keluar', [KasKeluarController::class, 'index'])->name('kas-keluar.index');
     Route::get('/kas-keluar/tambah', [KasKeluarController::class, 'create'])->name('kas-keluar.create');
@@ -42,19 +43,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/kas-keluar/{id}', [KasKeluarController::class, 'destroy'])->name('kas-keluar.destroy');
 
     /** =========================
-     *  BARANG
+     * BARANG
      * ========================= */
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
 
     /** =========================
-     *  LAPORAN
+     * LAPORAN
      * ========================= */
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf');
     Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
 
     /** =========================
-     *  PROFIL
+     * PROFIL
      * ========================= */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -63,19 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class);
 
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
-
     Route::post('/pos/cart/add', [PosController::class, 'addToCart'])->name('pos.cart.add');
     Route::post('/pos/cart/plus', [PosController::class, 'qtyPlus'])->name('pos.cart.plus');
     Route::post('/pos/cart/minus', [PosController::class, 'qtyMinus'])->name('pos.cart.minus');
     Route::post('/pos/cart/remove', [PosController::class, 'removeItem'])->name('pos.cart.remove');
-
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
-
-
-;
-
-
-
 
 });
 

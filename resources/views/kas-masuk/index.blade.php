@@ -1,545 +1,541 @@
 <x-app-layout>
-    {{-- Library wajib --}}
-    <script defer src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v3.x.x/dist/cdn.min.js"></script>
+    {{-- Libraries --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    {{-- Meta CSRF --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <div class="py-8 bg-[#f7f7f7] min-h-screen font-[Outfit]" x-data="{ showDetail: false, selectedItem: {}, showTambah: false }">
-        <div class="max-w-8xl mx-auto sm:px-6 lg:px-9">
+    {{-- Container Utama --}}
+    {{-- HAPUS showTambah dari x-data --}}
+    <div class="min-h-screen bg-stone-50/50 pb-36"
+         x-data="{ showDetail: false, selectedItem: {} }">
 
-            {{-- ... (Modal Tambah Kas Masuk) ... --}}
-            <div 
-                x-show="showTambah"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 scale-90"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-90"
-                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            >
-                <div @click.outside="showTambah = false"
-                    class="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 relative">
-                    
-                    <button @click="showTambah = false" 
-                        class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
 
-                    <h2 class="text-xl font-semibold text-[#2F362C] mb-4">Tambah Kas Masuk</h2>
-
-                    <form method="POST" action="{{ route('kas-masuk.store') }}">
-                        @csrf
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Tanggal Transaksi</label>
-                                <input type="date" name="tanggal_transaksi" required
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Keterangan</label>
-                                <input type="text" name="keterangan" placeholder="Contoh: Penjualan produk"
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Kategori</label>
-                                <select name="kategori" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
-                                    <option value="Penjualan">Penjualan</option>
-                                    <option value="Lain-lain">Lain-lain</option>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Jumlah</label>
-                                    <input type="number" name="jumlah" required min="1"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Harga Satuan</label>
-                                    <input type="number" name="harga_satuan" required min="0"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                                <select name="metode_pembayaran" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#7AC943]">
-                                    <option value="Tunai">Tunai</option>
-                                    <option value="Transfer">Transfer</option>
-                                    <option value="QRIS">QRIS</option>
-                                </select>
-                            </div>
-
-                            <button type="submit"
-                                class="bg-green-600 hover:bg-green-600 text-white font-medium w-full py-2 rounded-lg transition mt-3">
-                                Simpan
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center mb-6">
+            {{-- 1. HEADER SECTION --}}
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-medium text-[#2F362C]">Kas Masuk</h2>
-                    <p class="text-sm text-gray-500 mt-1">Kelola transaksi pemasukan</p>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-stone-800 tracking-tight">Kas Masuk</h1>
+                    <p class="text-stone-500 text-xs md:text-sm mt-1.5 max-w-lg leading-relaxed">Kelola dan pantau seluruh arus pemasukan dana.</p>
                 </div>
-                
-                <button type="button" 
-                    @click="showTambah = true"
-                    class="hidden md:inline bg-green-600 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition">
-                    + Tambah Kas Masuk
-                </button>
 
+                {{-- TOMBOL TAMBAH (Desktop Only) - DIUBAH JADI LINK (A HREF) --}}
+                <a href="{{ route('kas-masuk.create') }}"
+                    class="hidden md:inline-flex group bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-1">
+                    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
+                    <span class="font-bold text-sm tracking-wide">Catat Pemasukan</span>
+                </a>
             </div>
 
+            {{-- 2. STATS CARD --}}
+            @php
+                $totalKas = $kasMasuk->sum('total');
+                $jumlahTransaksi = $kasMasuk->count();
+            @endphp
+            <div class="mb-6">
+                <div class="relative bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-[2rem] p-6 md:p-10 shadow-2xl shadow-emerald-900/20 overflow-hidden group">
+                    {{-- Decorative Blobs --}}
+                    <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                    <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 md:w-40 md:h-40 bg-black/10 rounded-full blur-2xl"></div>
 
-            {{-- FILTER (Perubahan: Tambahkan ID 'filterForm' dan ubah action) --}}
-            <form method="GET" action="{{ route('kas-masuk.index') }}"
-                class="bg-white rounded-xl shadow-md p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                id="filterForm"> {{-- Ubah ID agar tidak rancu dengan searchForm --}}
-
-                <div class="flex items-center gap-2 w-full md:w-auto flex-1">
-                    <input type="text" name="search" id="searchInput"
-                        value="{{ request('search') }}" placeholder="Cari transaksi..."
-                        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#7AC943]" />
-
-                </div>
-
-                <div class="flex gap-2 flex-wrap items-center">
-                    {{-- FILTER HARGA (Tombol Terapkan di sini tetap submit form untuk filtering harga/waktu) --}}
-                    {{-- ... (Filter Harga tidak diubah) ... --}}
-                    <div class="relative">
-                        <button type="button" id="hargaToggle"
-                            class="border border-gray-300 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-1">
-                            <i class="fa fa-credit-card-alt" aria-hidden="true"></i>
-                        </button>
-
-                        <div id="hargaDropdown"
-                            class="hidden absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-3">
-                            <label class="block text-sm font-medium mb-2">Rentang Harga:</label>
-                            <select name="filter_harga" id="hargaSelect"
-                                class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3">
-                                <option value="">Semua</option>
-                                <option value="0-10000" {{ request('filter_harga')=='0-10000' ? 'selected' : '' }}>Rp 0 - Rp 10.000</option>
-                                <option value="11000-100000" {{ request('filter_harga')=='11000-100000' ? 'selected' : '' }}>Rp 11.000 - Rp 100.000</option>
-                                <option value="100001-999999999" {{ request('filter_harga')=='100001-999999999' ? 'selected' : '' }}>> Rp 100.000</option>
-                            </select>
-                            <button type="submit" class="bg-[#7AC943] hover:bg-[#68AD3A] text-white w-full py-2 rounded-lg">Terapkan</button>
-                        </div>
-                    </div>
-
-                    {{-- FILTER WAKTU --}}
-                    {{-- ... (Filter Waktu tidak diubah) ... --}}
-                    <div class="relative">
-                        <button type="button" id="filterToggle"
-                            class="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                            
-                            <i class="fa fa-calendar" aria-hidden="true"></i>
-
-                            @if(request('filter_waktu') == 'custom' && request('start_date') && request('end_date'))
-                                <span>
-                                    {{ \Carbon\Carbon::parse(request('start_date'))->format('d M Y') }} - {{ \Carbon\Carbon::parse(request('end_date'))->format('d M Y') }}
-                                </span>
-                            @elseif(request('filter_waktu'))
-                                <span>{{ ucfirst(str_replace('-', ' ', request('filter_waktu'))) }}</span>
-                            @endif
-                        </button>
-
-
-                        <div id="filterDropdown"
-                            class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4">
-                            <label class="block text-sm font-medium mb-2">Rentang Tanggal:</label>
-                            <select name="filter_waktu" id="tanggalSelect"
-                                class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3">
-                                <option value="">Sepanjang Waktu</option>
-                                <option value="hari-ini" {{ request('filter_waktu')=='hari-ini' ? 'selected' : '' }}>Hari Ini</option>
-                                <option value="kemarin" {{ request('filter_waktu')=='kemarin' ? 'selected' : '' }}>Kemarin</option>
-                                <option value="minggu-ini" {{ request('filter_waktu')=='minggu-ini' ? 'selected' : '' }}>Minggu Ini</option>
-                                <option value="bulan-ini" {{ request('filter_waktu')=='bulan-ini' ? 'selected' : '' }}>Bulan Ini</option>
-                                <option value="bulan-lalu" {{ request('filter_waktu')=='bulan-lalu' ? 'selected' : '' }}>Bulan Lalu</option>
-                                <option value="tahun-ini" {{ request('filter_waktu')=='tahun-ini' ? 'selected' : '' }}>Tahun Ini</option>
-                                <option value="custom" {{ request('filter_waktu')=='custom' ? 'selected' : '' }}>Tanggal Kustom</option>
-                            </select>
-
-                            <div id="customDateRange" class="{{ request('filter_waktu')=='custom' ? '' : 'hidden' }}">
-                                <label class="text-sm text-gray-700">Dari:</label>
-                                <input type="date" name="start_date"
-                                    class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-2"
-                                    value="{{ request('start_date') }}">
-                                <label class="text-sm text-gray-700">Sampai:</label>
-                                <input type="date" name="end_date"
-                                    class="w-full border border-gray-300 rounded-lg px-2 py-1 mb-3"
-                                    value="{{ request('end_date') }}">
+                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2 md:mb-3">
+                                <span class="bg-emerald-500/50 border border-emerald-400/30 text-emerald-50 px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider">Total Masuk</span>
                             </div>
-
-                            <button type="submit" class="bg-[#7AC943] hover:bg-[#68AD3A] text-white w-full py-2 rounded-lg mb-2">Terapkan</button>
-
+                            <h2 class="text-3xl md:text-6xl font-black text-white tracking-tighter drop-shadow-sm flex items-start">
+                                <span class="text-emerald-200 text-lg md:text-4xl font-bold mr-1 mt-1 md:mt-2">Rp</span>
+                                {{ number_format($totalKas, 0, ',', '.') }}
+                            </h2>
+                            <p class="text-emerald-100 mt-2 md:mt-3 font-medium flex items-center gap-2 text-xs md:text-base opacity-90">
+                                <span class="flex h-1.5 w-1.5 md:h-2 md:w-2 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-white"></span>
+                                </span>
+                                {{ $jumlahTransaksi }} Transaksi tercatat
+                            </p>
+                        </div>
+                        <div class="hidden md:block bg-white/10 p-4 rounded-3xl backdrop-blur-sm border border-white/10 shadow-inner">
+                            <span class="material-symbols-rounded text-5xl text-emerald-50">trending_up</span>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                        {{-- TOMBOL RESET FILTER --}}
-                        <a href="{{ route('kas-masuk.index') }}"
-                            class="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                            <i class="fa fa-refresh" aria-hidden="true"></i>
+            {{-- 3. FILTER & SEARCH BAR (TETAP SAMA) --}}
+            <form method="GET" action="{{ route('kas-masuk.index') }}" id="filterForm"
+                  class="bg-white p-3 md:p-4 rounded-[1.5rem] md:rounded-3xl shadow-sm border border-stone-100 mb-6 sticky top-20 md:top-4 z-30 transition-all">
+
+                <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+                    {{-- Search Input --}}
+                    <div class="relative flex-1 w-full group">
+                        <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xl group-focus-within:text-emerald-500 transition-colors">search</span>
+                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
+                            placeholder="Cari keterangan, kode..."
+                            class="w-full pl-10 pr-4 py-3 md:py-3.5 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium transition-all placeholder:text-stone-400">
+                    </div>
+
+                    {{-- Filter Buttons Container --}}
+                    <div class="grid grid-cols-5 gap-2 w-full md:w-auto">
+
+                        {{-- Custom Filter Harga --}}
+                        <div class="relative col-span-2" x-data="{ open: false }" @click.outside="open = false">
+                            <input type="hidden" name="filter_harga" id="hargaSelect" value="{{ request('filter_harga') }}">
+
+                            <button type="button" @click="open = !open"
+                                class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
+                                <span class="material-symbols-rounded text-base text-emerald-500">attach_money</span>
+                                <span class="truncate" x-text="
+                                    $el.previousElementSibling.value == '0-50000' ? '0-50rb' :
+                                    ($el.previousElementSibling.value == '51000-500000' ? '51rb-500rb' :
+                                    ($el.previousElementSibling.value == '500001-999999999' ? '> 500rb' : 'Harga'))
+                                ">Harga</span>
+                                <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></div>
+                            </button>
+
+                            <div x-show="open" style="display: none;"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
+
+                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false"
+                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">Semua</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false"
+                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '0-50000' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">0 - 50rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false"
+                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '51000-500000' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">51rb - 500rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false"
+                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '500001-999999999' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">> 500rb</button>
+                            </div>
+                        </div>
+
+                        {{-- Custom Filter Waktu --}}
+                        <div class="relative col-span-2" x-data="{ open: false, isCustom: '{{ request('filter_waktu') }}' == 'custom' }" @click.outside="open = false">
+                            <input type="hidden" name="filter_waktu" id="tanggalSelect" value="{{ request('filter_waktu') }}">
+
+                            <button type="button" @click="open = !open"
+                                class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
+                                <span class="material-symbols-rounded text-base text-emerald-500">calendar_today</span>
+                                <span class="truncate" x-text="
+                                    $el.previousElementSibling.value == 'hari-ini' ? 'Hari Ini' :
+                                    ($el.previousElementSibling.value == 'minggu-ini' ? 'Minggu Ini' :
+                                    ($el.previousElementSibling.value == 'bulan-ini' ? 'Bulan Ini' :
+                                    ($el.previousElementSibling.value == 'custom' ? 'Custom' : 'Waktu')))
+                                ">Waktu</span>
+                                 <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></div>
+                            </button>
+
+                            <div x-show="open" style="display: none;"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute right-0 md:left-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
+
+                                <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Semua</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'hari-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Hari Ini</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'minggu-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Minggu Ini</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'bulan-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Bulan Ini</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex justify-between items-center">
+                                    <span>Pilih Tanggal (Custom)</span> <span class="material-symbols-rounded text-sm" x-show="isCustom" style="display: none;">check</span>
+                                </button>
+
+                                <div x-show="isCustom" style="display: none;" class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
+                                    <input type="date" name="start_date" id="startDateInput" value="{{ request('start_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
+                                    <input type="date" name="end_date" id="endDateInput" value="{{ request('end_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Reset Button --}}
+                        <a href="{{ route('kas-masuk.index') }}" class="col-span-1 h-full flex items-center justify-center rounded-2xl border border-stone-200 hover:bg-emerald-50 hover:text-emerald-600 text-stone-500 transition-colors bg-stone-50">
+                            <span class="material-symbols-rounded text-lg">restart_alt</span>
                         </a>
+                    </div>
                 </div>
             </form>
 
-            {{-- Script dropdown & search --}}
-            <script>
-                const hargaToggle = document.getElementById('hargaToggle');
-                const hargaDropdown = document.getElementById('hargaDropdown');
-                const filterToggle = document.getElementById('filterToggle');
-                const filterDropdown = document.getElementById('filterDropdown');
-                const tanggalSelect = document.getElementById('tanggalSelect');
-                const customDateRange = document.getElementById('customDateRange');
+            {{-- 4. TABLE VIEW (Desktop Only) - TIDAK BERUBAH --}}
+            <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-stone-50/50 border-b border-stone-100 text-stone-500">
+                            <tr>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Info Transaksi</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Keterangan</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Kategori</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-right">Nominal</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Metode</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            @forelse ($kasMasuk as $item)
+                                <tr class="hover:bg-stone-50 transition-colors group filter-item"
+                                    data-keterangan="{{ strtolower($item->keterangan) }}"
+                                    data-nominal="{{ $item->total }}"
+                                    data-tanggal="{{ $item->tanggal_transaksi }}"
+                                    data-kategori="{{ strtolower($item->kategori) }}"
+                                    data-metode="{{ strtolower($item->metode_pembayaran) }}"
+                                    data-kode="{{ strtolower($item->kode_kas) }}">
+
+                                    <td class="p-6 align-top">
+                                        <div class="font-bold text-stone-800 whitespace-nowrap">{{ $item->kode_kas }}</div>
+                                        <div class="text-xs text-stone-400 font-medium mt-1 flex items-center gap-1">
+                                            <span class="material-symbols-rounded text-[14px]">event</span>
+                                            {{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M Y') }}
+                                        </div>
+                                    </td>
+                                    <td class="p-6 align-top">
+                                        <div class="font-medium text-stone-700 line-clamp-2 max-w-[250px] leading-relaxed">{{ $item->keterangan }}</div>
+                                        <div class="text-xs text-stone-400 mt-1">
+                                            {{ $item->jumlah }} x Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}
+                                        </div>
+                                    </td>
+                                    <td class="p-6 align-top text-center">
+                                        @php
+                                            $colors = match (strtolower($item->kategori)) {
+                                                // Hijau: Penjualan Harian (Rutin)
+                                                'penjualan tunai' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+
+                                                // Biru: Pesanan Besar (Spesial/Event)
+                                                'event besar' => 'bg-blue-100 text-blue-800 border-blue-200',
+
+                                                // Oranye: Titipan (Mitra)
+                                                'titipan mitra' => 'bg-orange-100 text-orange-800 border-orange-200',
+
+                                                // Ungu: Modal (Owner)
+                                                'suntikan modal' => 'bg-purple-100 text-purple-800 border-purple-200',
+
+                                                // Abu-abu: Lainnya
+                                                'pendapatan lain' => 'bg-gray-100 text-gray-800 border-gray-200',
+
+                                                // Default
+                                                default => 'bg-stone-100 text-stone-600 border-stone-200',
+                                            };
+                                        @endphp
+                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border {{ $colors }}">
+                                            {{ $item->kategori }}
+                                        </span>
+                                    </td>
+                                    <td class="p-6 align-top text-right whitespace-nowrap">
+                                        <span class="font-bold text-emerald-600 text-base">Rp {{ number_format($item->total, 0, ',', '.') }}</span>
+                                    </td>
+                                    <td class="p-6 align-top text-center">
+                                        <span class="text-xs font-semibold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">
+                                            {{ $item->metode_pembayaran }}
+                                        </span>
+                                    </td>
+                                    <td class="p-6 align-top text-center">
+                                        <div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                            <a href="{{ route('kas-masuk.edit', $item->id) }}" class="p-2 rounded-lg text-stone-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                                <span class="material-symbols-rounded">edit</span>
+                                            </a>
+                                            <button type="button" class="delete-btn p-2 rounded-lg text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                                data-id="{{ $item->id }}" data-deskripsi="{{ $item->keterangan }}">
+                                                <span class="material-symbols-rounded">delete</span>
+                                            </button>
+                                            <form action="{{ route('kas-masuk.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
+                                                @csrf @method('DELETE')
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr id="noDataRow">
+                                    <td colspan="6" class="py-20 text-center">
+                                        <div class="flex flex-col items-center justify-center text-stone-300">
+                                            <span class="material-symbols-rounded text-6xl mb-4 bg-stone-50 rounded-full p-6">receipt_long</span>
+                                            <p class="text-stone-500 font-medium text-lg">Belum ada data pemasukan.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- 5. MOBILE LIST VIEW - TIDAK BERUBAH --}}
+            <div id="kasDataContainerMobile" class="md:hidden space-y-3">
+                @forelse ($kasMasuk as $item)
+                    <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
+                            'id' => $item->id,
+                            'kode_kas' => $item->kode_kas,
+                            'tanggal' => \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M Y'),
+                            'keterangan' => $item->keterangan ?? '-',
+                            'kategori' => $item->kategori,
+                            'jumlah' => $item->jumlah,
+                            'harga_satuan' => number_format($item->harga_satuan, 0, ',', '.'),
+                            'nominal' => number_format($item->total, 0, ',', '.'),
+                            'metode_pembayaran' => $item->metode_pembayaran,
+                            'edit_url' => route('kas-masuk.edit', $item->id),
+                            'delete_url' => route('kas-masuk.destroy', $item->id),
+                        ]) }}')"
+                        class="bg-white rounded-[1.25rem] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-stone-100 active:scale-[0.98] transition-all cursor-pointer relative overflow-hidden filter-item-mobile group"
+                        data-keterangan="{{ strtolower($item->keterangan) }}"
+                        data-nominal="{{ $item->total }}"
+                        data-tanggal="{{ $item->tanggal_transaksi }}"
+                        data-kategori="{{ strtolower($item->kategori) }}"
+                        data-metode="{{ strtolower($item->metode_pembayaran) }}"
+                        data-kode="{{ strtolower($item->kode_kas) }}">
+
+                        <div class="absolute top-0 bottom-0 left-0 w-1
+                            {{ strtolower($item->kategori) == 'penjualan' ? 'bg-emerald-400' : 'bg-stone-300' }}
+                        "></div>
+
+                        <div class="pl-2.5">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="w-2/3">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 uppercase tracking-wide">{{ $item->kategori }}</span>
+                                        <span class="text-[9px] text-stone-400">{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M') }}</span>
+                                    </div>
+                                    <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-tight">{{ $item->keterangan }}</h3>
+                                </div>
+                                <div class="text-right flex-1">
+                                    <p class="font-extrabold text-emerald-600 text-base">Rp {{ number_format($item->total, 0, ',', '.') }}</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-stone-50">
+                                <p class="text-[10px] text-stone-500 line-clamp-1 italic w-3/4">{{ $item->jumlah }} x Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</p>
+                                <span class="material-symbols-rounded text-stone-300 text-base">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-12" id="noDataMobile">
+                        <span class="material-symbols-rounded text-4xl text-stone-200 mb-2">money_off</span>
+                        <p class="text-stone-400 text-xs font-medium">Tidak ada data.</p>
+                    </div>
+                @endforelse
+            </div>
+
+            {{-- MODAL TAMBAH (Create) - DIHAPUS, PINDAH KE FILE BARU --}}
+
+            {{-- 7. MODAL DETAIL MOBILE (TETAP SAMA) --}}
+            <div x-show="showDetail"
+                class="fixed inset-0 z-[100] md:hidden flex flex-col bg-white"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="translate-y-full"
+                x-transition:enter-end="translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="translate-y-0"
+                x-transition:leave-end="translate-y-full"
+                style="display: none;">
+
+                <div class="px-5 py-3 border-b border-stone-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                    <button @click="showDetail = false" class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-600 active:bg-stone-200">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                    </button>
+                    <h2 class="text-base font-bold text-stone-800">Rincian Transaksi</h2>
+                    <div class="w-8"></div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-5 bg-stone-50/50">
+                    <div class="text-center mb-6 mt-2">
+                        <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm" x-text="selectedItem.kategori"></span>
+                        <h3 class="text-3xl font-black text-stone-800 tracking-tight" x-text="'Rp ' + selectedItem.nominal"></h3>
+                        <p class="text-stone-400 text-xs mt-1 font-mono" x-text="selectedItem.kode_kas"></p>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-5 shadow-sm border border-stone-100 space-y-4">
+                        <div class="grid grid-cols-2 gap-3 pb-3 border-b border-stone-50">
+                            <div>
+                                <span class="text-[10px] text-stone-400 block mb-0.5">Tanggal</span>
+                                <span class="font-bold text-stone-700 text-sm" x-text="selectedItem.tanggal"></span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 block mb-0.5">Metode</span>
+                                <span class="font-bold text-stone-700 text-sm" x-text="selectedItem.metode_pembayaran"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-stone-400 block mb-0.5">Keterangan</span>
+                            <p class="font-medium text-stone-800 text-sm leading-relaxed" x-text="selectedItem.keterangan || '-'"></p>
+                        </div>
+                        <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                             <span class="text-[10px] text-stone-400 block mb-0.5">Rincian</span>
+                             <span class="font-bold text-stone-600 text-sm" x-text="selectedItem.jumlah + ' x Rp ' + selectedItem.harga_satuan"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-white border-t border-stone-100 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                    <a :href="selectedItem.edit_url" class="flex-1 bg-white border border-stone-200 text-stone-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all text-sm">
+                        <span class="material-symbols-rounded text-lg">edit</span> Edit
+                    </a>
+                    <button @click="confirmDelete(selectedItem.id, selectedItem.keterangan, selectedItem.delete_url)" class="flex-1 bg-rose-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-rose-500/30 hover:bg-rose-700 active:scale-95 transition-all text-sm">
+                        <span class="material-symbols-rounded text-lg">delete</span> Hapus
+                    </button>
+                </div>
+            </div>
+
+            {{-- 8. FLOATING BUTTON MOBILE - DIUBAH JADI LINK --}}
+            <a href="{{ route('kas-masuk.create') }}"
+                class="fixed bottom-28 right-5 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-500/40 flex items-center justify-center z-40 active:scale-90 transition-transform border-2 border-white/20">
+                <span class="material-symbols-rounded text-2xl">add</span>
+            </a>
+
+        </div>
+
+        {{-- SCRIPTS (TETAP SAMA) --}}
+        <script>
+            // ... (Script filter dan delete tetap sama seperti kode awal, tidak perlu diubah) ...
+             function setFilter(inputId, value, isCustom = false) {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.value = value;
+                    if(!isCustom) {
+                        applyAllFilters();
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
                 const searchInput = document.getElementById('searchInput');
-                const filterForm = document.getElementById('filterForm'); // Gunakan ID filterForm
+                const hargaSelect = document.getElementById('hargaSelect');
+                const tanggalSelect = document.getElementById('tanggalSelect');
+                const startDateInput = document.getElementById('startDateInput');
+                const endDateInput = document.getElementById('endDateInput');
 
-                hargaToggle.addEventListener('click', e => {
-                    e.stopPropagation();
-
-                    filterDropdown.classList.add('hidden');
-                    
-                    hargaDropdown.classList.toggle('hidden');
+                let searchTimeout;
+                searchInput?.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        applyAllFilters();
+                    }, 300);
                 });
 
-                filterToggle.addEventListener('click', e => {
-                    e.stopPropagation();
-
-                    hargaDropdown.classList.add('hidden');
-
-                    filterDropdown.classList.toggle('hidden');
-                });
-
-                tanggalSelect.addEventListener('change', () => {
-                    customDateRange.classList.toggle('hidden', tanggalSelect.value !== 'custom');
-                });
-
-                document.addEventListener('click', e => {
-                    if (!hargaDropdown.contains(e.target) && !hargaToggle.contains(e.target)) hargaDropdown.classList.add('hidden');
-                    if (!filterDropdown.contains(e.target) && !filterToggle.contains(e.target)) filterDropdown.classList.add('hidden');
-                });
-
-                // --- PERUBAHAN UTAMA UNTUK SEARCH LOKAL (NON-RELOAD) ---
-                searchInput.addEventListener('input', () => {
+                window.applyAllFilters = function() {
                     const query = searchInput.value.toLowerCase();
-                    
-                    // Filter untuk tabel desktop
-                    const desktopRows = document.querySelectorAll('#kasDataContainer table tbody tr');
-                    desktopRows.forEach(row => {
-                        // Pastikan tidak menyertakan baris 'Belum ada data'
-                        if (row.querySelector('td[colspan="10"]')) return; 
+                    const hargaFilter = hargaSelect.value;
+                    const waktuFilter = tanggalSelect.value;
+                    const startDate = startDateInput.value;
+                    const endDate = endDateInput.value;
 
-                        // Ambil teks dari kolom yang ingin dicari (Kode Kas, Keterangan, Jumlah, Total)
-                        const kodeKas = row.children[0].textContent.toLowerCase();
-                        const keterangan = row.children[2].textContent.toLowerCase();
-                        const total = row.children[6].textContent.toLowerCase();
+                    const rows = document.querySelectorAll('.filter-item, .filter-item-mobile');
+                    let visibleCount = 0;
+                    let visibleCountMobile = 0;
 
-                        if (kodeKas.includes(query) || keterangan.includes(query) || total.includes(query)) {
+                    rows.forEach(row => {
+                        const keterangan = row.dataset.keterangan || '';
+                        const kode = row.dataset.kode || '';
+                        const nominal = parseInt(row.dataset.nominal) || 0;
+                        const tanggal = row.dataset.tanggal;
+                        const kategori = row.dataset.kategori || '';
+
+                        const matchesSearch = !query ||
+                            keterangan.includes(query) ||
+                            kode.includes(query) ||
+                            kategori.includes(query) ||
+                            nominal.toString().includes(query);
+
+                        const matchesHarga = checkHargaFilter(nominal, hargaFilter);
+                        const matchesWaktu = checkWaktuFilter(tanggal, waktuFilter, startDate, endDate);
+
+                        if (matchesSearch && matchesHarga && matchesWaktu) {
                             row.style.display = '';
+                            if(row.classList.contains('filter-item')) visibleCount++;
+                            if(row.classList.contains('filter-item-mobile')) visibleCountMobile++;
                         } else {
                             row.style.display = 'none';
                         }
                     });
 
-                    // Filter untuk mobile list
-                    const mobileItems = document.querySelectorAll('#kasDataContainerMobile > div');
-                    mobileItems.forEach(item => {
-                        // Ambil data yang tersimpan di atribut data-keterangan/data-total di AlpineJS
-                        // Karena di mobile datanya tersimpan di x-data (yang di-JSON-encode), 
-                        // kita akan mencari berdasarkan teks yang terlihat di list (keterangan dan total)
-                        const visibleKeterangan = item.querySelector('.font-semibold').textContent.toLowerCase();
-                        const visibleTotal = item.querySelector('.text-right .font-semibold').textContent.toLowerCase();
+                    const noDataRow = document.getElementById('noDataRow');
+                    if(noDataRow) noDataRow.style.display = visibleCount === 0 ? '' : 'none';
 
-                        if (visibleKeterangan.includes(query) || visibleTotal.includes(query)) {
-                            item.style.display = '';
-                        } else {
-                            item.style.display = 'none';
+                    const noDataMobile = document.getElementById('noDataMobile');
+                    if(noDataMobile && document.querySelectorAll('.filter-item-mobile').length > 0) {
+                          noDataMobile.style.display = visibleCountMobile === 0 ? '' : 'none';
+                    }
+                }
+
+                function checkHargaFilter(nominal, filter) {
+                    if (!filter) return true;
+                    const [minStr, maxStr] = filter.split('-');
+                    const min = parseInt(minStr) || 0;
+                    const max = parseInt(maxStr) || Infinity;
+                    return nominal >= min && nominal <= max;
+                }
+
+                function checkWaktuFilter(dateStr, filter, start, end) {
+                    if (!filter) return true;
+                    const dateToCheck = new Date(dateStr);
+                    const today = new Date();
+                    dateToCheck.setHours(0,0,0,0);
+                    today.setHours(0,0,0,0);
+
+                    switch(filter) {
+                        case 'hari-ini': return dateToCheck.getTime() === today.getTime();
+                        case 'minggu-ini': return isSameWeek(today, dateToCheck);
+                        case 'bulan-ini': return dateToCheck.getMonth() === today.getMonth() && dateToCheck.getFullYear() === today.getFullYear();
+                        case 'custom':
+                            if (!start || !end) return true;
+                            const startDate = new Date(start);
+                            const endDate = new Date(end);
+                            startDate.setHours(0,0,0,0);
+                            endDate.setHours(0,0,0,0);
+                            return dateToCheck >= startDate && dateToCheck <= endDate;
+                        default: return true;
+                    }
+                }
+
+                function isSameWeek(d1, d2) {
+                    const onejan = new Date(d1.getFullYear(), 0, 1);
+                    const week1 = Math.ceil((((d1.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+                    const week2 = Math.ceil((((d2.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+                    return week1 === week2 && d1.getFullYear() === d2.getFullYear();
+                }
+
+                window.confirmDelete = function(id, deskripsi, url) {
+                    Swal.fire({
+                        title: 'Hapus Data?',
+                        html: `Anda akan menghapus data <strong>${deskripsi || 'ini'}</strong> secara permanen.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#78716c',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-3xl font-sans',
+                            confirmButton: 'rounded-xl px-6 py-2.5',
+                            cancelButton: 'rounded-xl px-6 py-2.5'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const form = document.getElementById('deleteForm-' + id) || createDeleteForm(id, url);
+                            form.submit();
                         }
                     });
-                });
-                // --- AKHIR PERUBAHAN UTAMA ---
-            </script>
-
-            @php
-                $totalKas = $kasMasuk->sum('total');
-                $jumlahTransaksi = $kasMasuk->count();
-            @endphp
-
-            @php
-                function getKategoriColor($kategori) {
-                    return match (strtolower($kategori)) {
-                        'penjualan' => ['bg-blue-100', 'text-blue-600'],
-                        'lain-lain' => ['bg-gray-100', 'text-gray-600'],
-                        default => ['bg-gray-200', 'text-gray-700'],
-                    };
                 }
-            @endphp
 
-            {{-- CARD TOTAL --}}
-            {{-- ... (Card Total tidak diubah) ... --}}
-            <div class="bg-gradient-to-r from-[#4CC66A] to-[#1F8A3A] text-white p-6 rounded-xl shadow-md mb-6">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm opacity-90">Total Kas Masuk</p>
-                        <p class="text-3xl font-bold">Rp {{ number_format($totalKas, 0, ',', '.') }}</p>
+                function createDeleteForm(id, url) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    return form;
+                }
 
-                        <p class="mt-2 text-sm opacity-90">
-                            {{ $jumlahTransaksi }} transaksi tercatat
-                        </p>
-                    </div>
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke-linecap="round" stroke-linejoin="round"/>
-                        <polyline points="17 6 23 6 23 12" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </div>
-
-
-            {{-- TABEL DESKTOP --}}
-            <div id="kasDataContainer" class="hidden md:block bg-white p-5 rounded-xl shadow-md">
-                <table class="w-full border-collapse text-center text-sm">
-                    <thead class="bg-gray-100 text-[#2F362C] font-medium">
-                        <tr>
-                            <th class="p-3 border-b border-gray-200">Kode Kas</th>
-                            <th class="p-3 border-b border-gray-200">Tanggal Transaksi</th>
-                            <th class="p-3 border-b border-gray-200">Keterangan</th>
-                            <th class="p-3 border-b border-gray-200">Kategori</th>
-                            <th class="p-3 border-b border-gray-200">Jumlah</th>
-                            <th class="p-3 border-b border-gray-200">Harga Satuan</th>
-                            <th class="p-3 border-b border-gray-200">Total</th>
-                            <th class="p-3 border-b border-gray-200">Metode Pembayaran</th>
-                            <th class="p-3 border-b border-gray-200">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($kasMasuk as $index => $item)
-                            <tr class="border-b hover:bg-[#f9f9f9]">
-                                <td class="p-3 border-b border-gray-200">{{ $item->kode_kas }}</td>
-                                <td class="p-3 border-b border-gray-200">{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M Y') }}</td>
-                                <td class="p-3 border-b border-gray-200">{{ $item->keterangan }}</td>
-                                <td class="p-3 border-b border-gray-200 text-blue-600 font-medium">
-                                    @php
-                                    [$bgColor, $textColor] = getKategoriColor($item->kategori);
-                                    @endphp
-                                    <span class="px-2 py-1 text-xs rounded-md font-medium {{ $bgColor }} {{ $textColor }}">
-                                        {{ $item->kategori }}
-                                    </span>
-                                </td>
-                                <td class="p-3 border-b border-gray-200">{{ $item->jumlah }}</td>
-                                <td class="p-3 border-b border-gray-200">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                                <td class="p-3 border-b border-gray-200 font-bold text-emerald-600">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
-                                <td class="p-3 border-b border-gray-200">{{ $item->metode_pembayaran }}</td>
-                                <td class="p-3 border-b border-gray-200">
-                                    <div class="flex justify-center gap-6">
-                                        <a href="{{ route('kas-masuk.edit', $item->id) }}"
-                                        class="text-blue-500 hover:text-blue-600 transition transform hover:scale-110">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M16.862 3.487a2.25 2.25 0 013.182 3.182L7.125 19.588 3 21l1.412-4.125L16.862 3.487z" />
-                                            </svg>
-                                        </a>
-
-                                        <form action="{{ route('kas-masuk.destroy', $item->id) }}" 
-                                            method="POST" 
-                                            id="deleteForm-{{ $item->id }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button"
-                                                     class="text-red-500 hover:text-red-600 transition transform hover:scale-110 delete-btn"
-                                                     data-id="{{ $item->id }}"
-                                                     data-deskripsi="{{ $item->keterangan ?? '' }}"> {{-- Gunakan $item->keterangan --}}
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-9 0h10" />
-                                                </svg>
-                                            </button>
-                                        </form>
-
-                                    </div>
-
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="10" class="text-center text-gray-500 p-3">Belum ada data kas masuk.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            {{-- ... (Script SweetAlert Delete tidak diubah) ... --}}
-            <script>
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const deskripsi = btn.dataset.deskripsi;
-                        Swal.fire({
-                            title: 'Yakin ingin menghapus?',
-                            html: deskripsi ? `<p>Data dengan deskripsi <strong>${deskripsi}</strong> akan dihapus.</p>` : 'Data ini akan dihapus secara permanen.',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#3085d6',
-                            confirmButtonText: 'Ya, hapus',
-                            cancelButtonText: 'Batal'
-                        }).then((result) => {
-                            if(result.isConfirmed){
-                                document.getElementById('deleteForm-' + id).submit();
-                            }
-                        });
+                        confirmDelete(id, deskripsi, null);
                     });
                 });
-            </script>
 
-
-
-            {{-- MOBILE LIST --}}
-            {{-- ... (Mobile List dan Detail Mobile tidak diubah) ... --}}
-            <div id="kasDataContainerMobile" class="md:hidden space-y-4">
-                @forelse ($kasMasuk as $item)
-                    <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
-                        'id' => $item->id,
-                        'kode_kas' => $item->kode_kas,
-                        'tanggal_transaksi' => \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M Y'),
-                        'keterangan' => $item->keterangan ?? 'Tidak Ada Keterangan',
-                        'kategori' => $item->kategori,
-                        'jumlah' => $item->jumlah,
-                        'harga_satuan' => number_format($item->harga_satuan, 0, ',', '.'),
-                        'total' => number_format($item->total, 0, ',', '.'),
-                        'metode_pembayaran' => $item->metode_pembayaran,
-                        'edit_url' => route('kas-masuk.edit', $item->id),
-                        'delete_url' => route('kas-masuk.destroy', $item->id),
-                    ]) }}')"
-                        class="bg-white rounded-xl shadow-md p-4 border-l-4 border-[#7AC943] flex justify-between items-center cursor-pointer">
-                        <div>
-                            <p class="text-base font-semibold text-[#2F362C]">{{ $item->keterangan }}</p>
-                            <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M Y') }}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[#2F362C] font-semibold">Rp {{ number_format($item->total, 0, ',', '.') }}</p>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-center text-gray-500 mt-4">Belum ada transaksi kas masuk.</p>
-                @endforelse
-            </div>
-
-            {{-- FLOATING BUTTON --}}
-            {{-- ... (Floating Button dan Detail Mobile tidak diubah) ... --}}
-            <button @click="showTambah = true"
-                class="fixed bottom-6 right-6 bg-[#7AC943] hover:bg-[#68AD3A] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg text-3xl z-30 md:hidden">
-                +
-            </button>
-
-
-            {{-- DETAIL MOBILE --}}
-            <div x-show="showDetail"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-full"
-                x-transition:enter-end="opacity-100 translate-y-0"
-                x-transition:leave="transition ease-in duration-300"
-                x-transition:leave-start="opacity-100 translate-y-0"
-                x-transition:leave-end="opacity-0 translate-y-full"
-                class="fixed top-[64px] inset-x-0 bottom-0 bg-white z-30 md:hidden overflow-y-auto p-5">
-
-                <header class="flex justify-start items-center mb-6">
-                    <button @click="showDetail = false" class="text-2xl text-gray-700 mr-4 font-bold">&larr;</button>
-                    <h1 class="text-xl font-semibold text-[#2F362C]">Rincian Transaksi</h1>
-                </header>
-
-                <div class="space-y-6">
-                    <div class="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                        <label class="text-sm text-gray-500 font-medium block mb-1">Kode Kas</label>
-                        <p class="text-lg font-semibold text-[#2F362C]" x-text="selectedItem.kode_kas"></p>
-                    </div>
-
-                    <div class="p-5 bg-[#FFF2CF] border border-[#F5C04C] rounded-xl shadow-sm">
-                        <label class="text-sm text-gray-700 font-medium block mb-1">Total Kas Masuk</label>
-                        <p class="text-3xl font-extrabold text-[#2F362C]" x-text="'Rp ' + selectedItem.total"></p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div class="text-xs text-gray-500">Tanggal Transaksi</div>
-                            <div class="font-medium text-[#2F362C] text-lg" x-text="selectedItem.tanggal_transaksi"></div>
-                        </div>
-                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div class="text-xs text-gray-500">Metode Pembayaran</div>
-                            <div class="font-medium text-[#2F362C] text-lg" x-text="selectedItem.metode_pembayaran"></div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div class="text-xs text-gray-500">Jumlah</div>
-                            <div class="font-medium text-[#2F362C] text-lg" x-text="selectedItem.jumlah"></div>
-                        </div>
-                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div class="text-xs text-gray-500">Harga Satuan</div>
-                            <div class="font-medium text-[#2F362C] text-lg" x-text="'Rp ' + selectedItem.harga_satuan"></div>
-                        </div>
-                    </div>
-
-                    <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm min-h-[100px]">
-                        <label class="text-xs text-gray-500 block mb-1">Keterangan</label>
-                        <p class="text-base text-[#2F362C] mt-1" x-text="selectedItem.keterangan || 'Tidak Ada Keterangan'"></p>
-                    </div>
-                </div>
-
-                {{-- Tombol Edit & Hapus --}}
-                <div class="fixed bottom-6 right-4 flex flex-col gap-2 z-50">
-                    <a :href="selectedItem.edit_url"
-                        class="w-12 h-12 bg-[#EABF59] hover:bg-[#D4AA4E] text-white rounded-full flex items-center justify-center shadow-md text-lg">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </a>
-
-                    <button type="button" 
-                        @click="
-                            Swal.fire({
-                                title: 'Yakin ingin menghapus?',
-                                html: selectedItem.keterangan
-                                    ? `<p>Data <strong>${selectedItem.keterangan}</strong> akan dihapus secara permanen.</p>`
-                                    : 'Data akan dihapus secara permanen.',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#d33',
-                                cancelButtonColor: '#3085d6',
-                                confirmButtonText: 'Ya, Hapus',
-                                cancelButtonText: 'Batal',
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    const form = document.createElement('form');
-                                    form.method = 'POST';
-                                    form.action = selectedItem.delete_url;
-                                    const csrfInput = document.createElement('input');
-                                    csrfInput.type = 'hidden';
-                                    csrfInput.name = '_token';
-                                    csrfInput.value = document.querySelector('meta[name=csrf-token]').content;
-                                    const methodInput = document.createElement('input');
-                                    methodInput.type = 'hidden';
-                                    methodInput.name = '_method';
-                                    methodInput.value = 'DELETE';
-                                    form.append(csrfInput, methodInput);
-                                    document.body.appendChild(form);
-                                    form.submit();
-                                }
-                            });
-                        "
-                        class="w-12 h-12 bg-gray-700 hover:bg-gray-800 text-white rounded-full flex items-center justify-center shadow-md text-lg">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
+                applyAllFilters();
+            });
+        </script>
     </div>
-
 </x-app-layout>

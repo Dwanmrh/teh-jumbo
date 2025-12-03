@@ -167,7 +167,7 @@
         <td class="header-title">Laporan Keuangan</td>
 
         <td class="header-logo">
-            <img src="{{ public_path('assets/images/logo_teh.png') }}">
+            <img src="{{ public_path('assets/images/logo-teh.png') }}">
             <span>Teh Solo Jumbo</span>
         </td>
     </tr>

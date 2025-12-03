@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\KasKeluar;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Carbon\CarbonInterface; // <--- 1. TAMBAHKAN INI
 
 class KasKeluarController extends Controller
 {
@@ -39,9 +40,10 @@ class KasKeluarController extends Controller
                     $query->whereDate('tanggal', $now->copy()->subDay()->toDateString());
                     break;
                 case 'minggu-ini':
+                    // PERBAIKAN DI SINI: Gunakan CarbonInterface
                     $query->whereBetween('tanggal', [
-                        $now->copy()->startOfWeek(Carbon::MONDAY),
-                        $now->copy()->endOfWeek(Carbon::SUNDAY),
+                        $now->copy()->startOfWeek(CarbonInterface::MONDAY),
+                        $now->copy()->endOfWeek(CarbonInterface::SUNDAY),
                     ]);
                     break;
                 case 'bulan-ini':

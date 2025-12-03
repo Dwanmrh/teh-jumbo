@@ -11,9 +11,6 @@
          */
         public function up(): void
         {
-            Schema::table('kas_masuk', function (Blueprint $table) {
-                $table->foreignId('user_id')->nullable()->after('id')->constrained()->onDelete('cascade');
-            });
 
             Schema::table('kas_keluar', function (Blueprint $table) {
                 $table->foreignId('user_id')->nullable()->after('id')->constrained()->onDelete('cascade');

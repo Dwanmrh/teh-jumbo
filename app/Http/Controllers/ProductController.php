@@ -1,77 +1,108 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
-        $products = Product::where('user_id', $userId)->get();
+        $userId = Auth::id();
+
+        // Ambil produk milik user yang sedang login saja
+        $products = Product::where('user_id', $userId)->latest()->get();
 
         return view('products.index', [
-            'totalProduk' => Product::where('user_id', $userId)->count(),
-            'totalStok' => Product::where('user_id', $userId)->sum('stok'),
-            'nilaiStok' => Product::where('user_id', $userId)->sum(\DB::raw('harga * stok')),
-            'stokRendah' => Product::where('user_id', $userId)->where('stok', '<=', 5)->count(),
             'products' => $products,
+            'totalProduk' => $products->count(),
+            'totalStok' => $products->sum('stok'),
+            // Menghitung potensi omset (Harga Jual * Stok)
+            'nilaiStok' => $products->sum(function($p) {
+                return $p->harga * $p->stok;
+            }),
+            // Menghitung stok rendah (di bawah atau sama dengan 10)
+            'stokRendah' => $products->where('stok', '<=', 10)->count(),
         ]);
     }
 
-    public function store(Request $r)
+    public function store(Request $request)
     {
-        $data = $r->all();
+        // 1. Validasi Input
+        $val = $request->validate([
+            'nama' => 'required|string|max:255',
+            'kategori' => 'required|string',
+            'ukuran' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'modal' => 'required|numeric|min:0', // Validasi Modal
+            'stok' => 'required|integer|min:0',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-        if ($r->hasFile('foto')) {
-            $data['foto'] = $r->file('foto')->store('produk', 'public');
+        // 2. Tambahkan User ID
+        $val['user_id'] = Auth::id();
+
+        // 3. Handle Upload Foto
+        if ($request->hasFile('foto')) {
+            $val['foto'] = $request->file('foto')->store('produk', 'public');
         }
 
-        $data['user_id'] = \Illuminate\Support\Facades\Auth::id();
-        Product::create($data);
-        return redirect()->route('products.index');
+        // 4. Simpan ke Database
+        Product::create($val);
+
+        return redirect()->route('products.index')->with('success', 'Menu berhasil ditambahkan!');
     }
 
-
-    public function edit(Product $product)
+    public function update(Request $request, Product $product)
     {
-        return view('products.edit', compact('product'));
-    }
-
-    public function update(Request $r, Product $product)
-    {
-        $data = $r->all();
-
-        if ($r->hasFile('foto')) {
-            $data['foto'] = $r->file('foto')->store('produk', 'public');
+        // Pastikan hanya pemilik yang bisa update
+        if ($product->user_id !== Auth::id()) {
+            abort(403);
         }
 
-        $product->update($data);
-        return redirect()->route('products.index');
-    }
+        // 1. Validasi Input
+        $val = $request->validate([
+            'nama' => 'required|string|max:255',
+            'kategori' => 'required|string',
+            'ukuran' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'modal' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
+        // 2. Handle Ganti Foto
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada (agar storage tidak penuh)
+            if ($product->foto && Storage::disk('public')->exists($product->foto)) {
+                Storage::disk('public')->delete($product->foto);
+            }
+            // Simpan foto baru
+            $val['foto'] = $request->file('foto')->store('produk', 'public');
+        }
+
+        // 3. Update Database
+        $product->update($val);
+
+        return redirect()->route('products.index')->with('success', 'Menu berhasil diperbarui!');
+    }
 
     public function destroy(Product $product)
     {
+        if ($product->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Hapus foto fisik saat data dihapus
+        if ($product->foto && Storage::disk('public')->exists($product->foto)) {
+            Storage::disk('public')->delete($product->foto);
+        }
+
         $product->delete();
-        return back();
+        return back()->with('success', 'Menu dihapus.');
     }
-
-    public function stockOpname(Request $request)
-    {
-        $product = Product::findOrFail($request->product_id);
-
-        $selisih = $request->physical_stock - $product->stok;
-
-        $product->update([
-            'stok' => $request->physical_stock
-        ]);
-
-        // simpan riwayat jika mau
-        // StockHistory::create([...]);
-
-        return back()->with('success', 'Stock opname berhasil.');
-    }
-
 }

@@ -10,9 +10,11 @@ class KasMasuk extends Model
 {
     use HasFactory;
 
-    protected $table = 'kas_masuk'; // nama tabel di database
-    protected $keyType = 'string';  // karena pakai UUID (string)
-    public $incrementing = false;   // non auto-increment
+    protected $table = 'kas_masuk';
+
+    // Konfigurasi UUID
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = [
         'kode_kas',
@@ -26,23 +28,29 @@ class KasMasuk extends Model
         'user_id',
     ];
 
-    /**
-     * Event listener saat membuat data baru
-     */
+    protected $casts = [
+        'tanggal_transaksi' => 'datetime',
+        'jumlah' => 'integer',
+        'harga_satuan' => 'decimal:2',
+        'total' => 'decimal:2',
+    ];
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
-            // Buat UUID
-            $model->id = (string) Str::uuid();
+            // 1. Generate UUID jika belum ada
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
 
-            // Hitung total otomatis
+            // 2. Hitung Total otomatis (Backup)
             if ($model->jumlah && $model->harga_satuan) {
                 $model->total = $model->jumlah * $model->harga_satuan;
             }
 
-            // Generate kode kas masuk otomatis (KM-001, KM-002, dst)
+            // 3. Generate Kode Otomatis: KM-001
             $latest = self::orderBy('created_at', 'desc')->first();
             $number = 1;
 

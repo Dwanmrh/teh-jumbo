@@ -5,19 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\KasMasuk;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class KasMasukController extends Controller
 {
-    /**
-     * Menampilkan semua data kas masuk.
-     */
     public function index(Request $request)
     {
-        $query = KasMasuk::where('user_id', \Illuminate\Support\Facades\Auth::id());
-        $tz = 'Asia/Jakarta';
-        $now = Carbon::now($tz);
+        $query = KasMasuk::where('user_id', Auth::id());
+        $now = Carbon::now('Asia/Jakarta');
 
-        // 🔍 Filter search (tambahkan kode_kas)
+        // 1. Filter Search
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('kode_kas', 'like', "%{$request->search}%")
@@ -26,27 +24,18 @@ class KasMasukController extends Controller
             });
         }
 
-        // Filter waktu
+        // 2. Filter Waktu
         if ($request->filter_waktu) {
             switch ($request->filter_waktu) {
                 case 'hari-ini':
                     $query->whereDate('tanggal_transaksi', $now->toDateString());
                     break;
-                case 'kemarin':
-                    $query->whereDate('tanggal_transaksi', $now->copy()->subDay()->toDateString());
-                    break;
                 case 'minggu-ini':
                     $query->whereBetween('tanggal_transaksi', [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()]);
                     break;
                 case 'bulan-ini':
-                    $query->whereMonth('tanggal_transaksi', $now->month);
-                    break;
-                case 'bulan-lalu': // ➡️ Tambahan: bulan lalu
-                    $lastMonth = $now->copy()->subMonth();
-                    $query->whereBetween('tanggal_transaksi', [$lastMonth->copy()->startOfMonth(), $lastMonth->copy()->endOfMonth()]);
-                    break;
-                case 'tahun-ini':
-                    $query->whereYear('tanggal_transaksi', $now->year);
+                    $query->whereMonth('tanggal_transaksi', $now->month)
+                          ->whereYear('tanggal_transaksi', $now->year);
                     break;
                 case 'custom':
                     if ($request->start_date && $request->end_date) {
@@ -59,7 +48,7 @@ class KasMasukController extends Controller
             }
         }
 
-        // Filter harga
+        // 3. Filter Harga
         if ($request->filter_harga) {
             $range = explode('-', $request->filter_harga);
             if (count($range) === 2) {
@@ -67,12 +56,10 @@ class KasMasukController extends Controller
             }
         }
 
-        $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->get();
-
+        $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->paginate(10); // Gunakan Paginate
 
         return view('kas-masuk.index', compact('kasMasuk'));
     }
-
 
     public function create()
     {
@@ -81,52 +68,98 @@ class KasMasukController extends Controller
 
     public function store(Request $request)
     {
+        // VALIDASI INPUT
         $validated = $request->validate([
             'tanggal_transaksi' => 'required|date',
-            'keterangan' => 'required|string|max:255',
-            'kategori' => 'required|string|max:255',
-            'jumlah' => 'required|numeric|min:1',
-            'harga_satuan' => 'required|numeric|min:0',
+            'keterangan'        => 'nullable|string|max:255',
+            'kategori'          => 'required|string|max:255',
+            'jumlah'            => 'required|numeric|min:1',
+            'harga_satuan'      => 'required|numeric|min:0',
             'metode_pembayaran' => 'required|string|max:255',
+        ], [
+            // Custom Pesan Error Bahasa Indonesia
+            'jumlah.required' => 'Jumlah Qty wajib diisi.',
+            'harga_satuan.required' => 'Harga satuan wajib diisi.',
+            'tanggal_transaksi.required' => 'Tanggal transaksi harus dipilih.',
         ]);
 
-        $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
-        $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
-        KasMasuk::create($validated);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil ditambahkan.');
+            $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
+            $validated['user_id'] = Auth::id();
+
+            // Fallback keterangan jika kosong
+            $validated['keterangan'] = $validated['keterangan'] ?? '-';
+
+            KasMasuk::create($validated);
+
+            DB::commit();
+
+            return redirect()->route('kas-masuk.index')
+                ->with('success', 'Data kas masuk berhasil disimpan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Kembali ke halaman create dengan input sebelumnya + pesan error
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
+        }
     }
 
     public function edit($id)
     {
-        $kasMasuk = KasMasuk::findOrFail($id);
+        $kasMasuk = KasMasuk::where('user_id', Auth::id())->findOrFail($id);
         return view('kas-masuk.edit', compact('kasMasuk'));
     }
 
     public function update(Request $request, $id)
     {
-        $kasMasuk = KasMasuk::findOrFail($id);
-
         $validated = $request->validate([
             'tanggal_transaksi' => 'required|date',
-            'keterangan' => 'required|string|max:255',
-            'kategori' => 'required|string|max:255',
-            'jumlah' => 'required|numeric|min:1',
-            'harga_satuan' => 'required|numeric|min:0',
+            'keterangan'        => 'nullable|string|max:255',
+            'kategori'          => 'required|string|max:255',
+            'jumlah'            => 'required|numeric|min:1',
+            'harga_satuan'      => 'required|numeric|min:0',
             'metode_pembayaran' => 'required|string|max:255',
         ]);
 
-        $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
-        $kasMasuk->update($validated);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil diperbarui.');
+            $kasMasuk = KasMasuk::where('user_id', Auth::id())->findOrFail($id);
+
+            $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
+
+            // Fallback keterangan
+            $validated['keterangan'] = $validated['keterangan'] ?? '-';
+
+            $kasMasuk->update($validated);
+
+            DB::commit();
+
+            return redirect()->route('kas-masuk.index')
+                ->with('success', 'Data berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        $kasMasuk = KasMasuk::findOrFail($id);
-        $kasMasuk->delete();
+        try {
+            $kasMasuk = KasMasuk::where('user_id', Auth::id())->findOrFail($id);
+            $kasMasuk->delete();
 
-        return redirect()->route('kas-masuk.index')->with('success', 'Kas masuk berhasil dihapus.');
+            return redirect()->route('kas-masuk.index')
+                ->with('success', 'Data berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('kas-masuk.index')
+                ->with('error', 'Gagal menghapus data.');
+        }
     }
 }

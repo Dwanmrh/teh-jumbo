@@ -6,30 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('kas_masuk', function (Blueprint $table) {
-            $table->uuid('id')->primay();
+            $table->uuid('id')->primary();
             $table->string('kode_kas')->unique();
-            $table->date('tanggal_transaksi');      // tanggal transaksi
-            $table->text('keterangan');
+            $table->date('tanggal_transaksi');
+
+            // PERBAIKAN: Menambahkan nullable() agar tidak wajib diisi
+            $table->text('keterangan')->nullable();
+
             $table->string('kategori');
-            $table->string('metode_pembayaran');            // nama barang / menu yang dijual
-            $table->integer('jumlah');              // jumlah item
-            $table->decimal('harga_satuan', 15, 2); // harga per item
-            $table->decimal('total', 15, 2);        // total = jumlah * harga_satuan
+            $table->string('metode_pembayaran');
+            $table->integer('jumlah');
+            $table->decimal('harga_satuan', 15, 2);
+            $table->decimal('total', 15, 2);
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('kas-masuk');
+        Schema::dropIfExists('kas_masuk');
     }
 };

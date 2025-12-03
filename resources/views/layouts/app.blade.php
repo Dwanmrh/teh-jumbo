@@ -5,78 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Teh Solo Admin') }}</title>
 
-    {{-- Icons Sidebar --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {{-- Fonts: Outfit (Modern Sans) --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Scripts -->
+    {{-- Scripts --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Custom Style Fix -->
+    {{-- Tailwind Config (Fallback) --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa',
+                            300: '#fdba74', 400: '#fb923c', 500: '#f97316',
+                            600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 4px 20px 0px rgba(249, 115, 22, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
-        body {
-            background-color: #f9fafb !important;
-            font-family: 'Outfit', sans-serif;
-        }
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Outfit', sans-serif; }
 
-        /* ===== Dashboard Card Styling ===== */
-        .dashboard-card {
-            background-color: #ffffff !important;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+        /* Scrollbar Halus */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
 
-        .dashboard-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        .dashboard-card.green-border { border-left: 4px solid #8BC34A; }
-        .dashboard-card.red-border { border-left: 4px solid #E57373; }
-        .dashboard-card.blue-border { border-left: 4px solid #4FC3F7; }
-        .dashboard-card.purple-border { border-left: 4px solid #BA68C8; }
-
-        /* ===== Section Background ===== */
-        .section-bg {
-            background-color: #f0f4f8;
-            border-radius: 10px;
-            padding: 16px;
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
         }
     </style>
 </head>
 
-<body class="antialiased" x-data="{ sidebarOpen: false }" @sidebar-toggle.window="sidebarOpen = $event.detail">
+<body class="font-sans antialiased bg-stone-50 text-stone-800 selection:bg-brand-500 selection:text-white">
 
-    <div class="min-h-screen flex flex-col transition-all duration-300 ease-in-out">
+    <div class="min-h-screen flex flex-col relative">
 
-        {{-- Navbar & Sidebar --}}
+        {{-- Include Navigation --}}
         @include('layouts.navigation')
 
-        {{-- Konten utama --}}
-        <div
-            id="mainContent"
-            class="flex-1 transition-all duration-300 ease-in-out px-4 sm:px-6 lg:px-8"
-            :class="sidebarOpen ? 'ml-64' : 'ml-0'">
+        {{-- Main Content --}}
+        {{-- UPDATE: pb-28 di mobile agar tidak tertutup nav bar bawah, sm:pb-10 di desktop --}}
+        <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-32 sm:pb-10">
+            {{ $slot }}
+        </main>
 
-            @isset($header)
-                <header class="bg-[#FAFAFA] border-b border-gray-200 mb-4 rounded-md mt-2">
-                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+        {{-- Footer --}}
+        {{-- UPDATE: mb-20 di mobile --}}
+        <footer class="py-6 text-center text-xs text-stone-400 mb-20 sm:mb-0">
+            <div class="flex flex-col items-center gap-1">
+                <p>&copy; {{ date('Y') }} <span class="font-bold text-brand-600">Teh Solo de Jumbo Fibonacci</span>.</p>
+                <p class="opacity-70">Excellence in every cup.</p>
+            </div>
+        </footer>
 
-            <main class="pt-2 pb-6">
-                {{ $slot }}
-            </main>
-        </div>
     </div>
+
 </body>
 </html>

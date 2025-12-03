@@ -9,17 +9,19 @@ class Product extends Model
     protected $table = 'products';
 
     protected $fillable = [
+        'user_id',   // Wajib ada
         'nama',
         'kategori',
+        'ukuran',    // Tambahan sesuai Index
         'harga',
+        'modal',     // Tambahan sesuai Index
         'stok',
         'foto',
-        'user_id',
     ];
 
-    public function stockHistories()
+    // Relasi ke User (Opsional tapi bagus untuk struktur)
+    public function user()
     {
-        return $this->hasMany(StockHistory::class);
+        return $this->belongsTo(User::class);
     }
-
 }
