@@ -11,12 +11,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {{-- Icons: Material Symbols Rounded --}}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
     {{-- Scripts --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Tailwind Config (Fallback) --}}
+    {{-- Tailwind Config (Fallback / CDN Development) --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -65,14 +67,14 @@
         @include('layouts.navigation')
 
         {{-- Main Content --}}
-        {{-- UPDATE: pb-28 di mobile agar tidak tertutup nav bar bawah, sm:pb-10 di desktop --}}
+        {{-- UPDATE: pb-32 di mobile agar tidak tertutup nav bar bawah, sm:pb-10 di desktop --}}
         <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-32 sm:pb-10">
             {{ $slot }}
         </main>
 
         {{-- Footer --}}
-        {{-- UPDATE: mb-20 di mobile --}}
-        <footer class="py-6 text-center text-xs text-stone-400 mb-20 sm:mb-0">
+        {{-- UPDATE: mb-24 di mobile --}}
+        <footer class="py-6 text-center text-xs text-stone-400 mb-24 sm:mb-0">
             <div class="flex flex-col items-center gap-1">
                 <p>&copy; {{ date('Y') }} <span class="font-bold text-brand-600">Teh Solo de Jumbo Fibonacci</span>.</p>
                 <p class="opacity-70">Excellence in every cup.</p>

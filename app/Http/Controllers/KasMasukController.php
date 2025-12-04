@@ -56,7 +56,14 @@ class KasMasukController extends Controller
             }
         }
 
-        $kasMasuk = $query->orderBy('tanggal_transaksi', 'desc')->paginate(10); // Gunakan Paginate
+        $kasMasuk = $query
+            ->orderByRaw("CASE
+                WHEN keterangan LIKE '%POS%' THEN 0
+                ELSE 1
+            END")
+            ->orderBy('tanggal_transaksi', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view('kas-masuk.index', compact('kasMasuk'));
     }

@@ -1,159 +1,91 @@
-@php
-    // helper lokal (closure) — tidak mendefinisikan fungsi global
-    $get = function($row, $keys, $default = '-') {
-        foreach ((array) $keys as $k) {
-            $v = data_get($row, $k);
-            if (!is_null($v) && $v !== '') return $v;
-        }
-        return $default;
-    };
-
-    $formatRp = function($val) {
-        if ($val === null || $val === '') return '-';
-        if (!is_numeric($val)) {
-            // jika sudah string berformat, coba bersihkan lalu parse
-            $n = preg_replace('/[^\d\-.,]/', '', $val);
-            $n = str_replace(',', '.', $n);
-            return is_numeric($n) ? 'Rp ' . number_format((float)$n, 0, ',', '.') : $val;
-        }
-        return 'Rp ' . number_format($val, 0, ',', '.');
-    };
-@endphp
-
-<h3 style="font-weight:bold">RINGKASAN KEUANGAN</h3>
 <table>
-    <tr><td>Total Masuk</td><td>{{ $formatRp($totalMasuk ?? 0) }}</td></tr>
-    <tr><td>Total Keluar</td><td>{{ $formatRp($totalKeluar ?? 0) }}</td></tr>
-    <tr><td>Selisih Kas</td><td>{{ $formatRp($selisihKas ?? 0) }}</td></tr>
-</table>
+    {{-- HEADER LAPORAN --}}
+    <tr>
+        <td colspan="8" style="font-size: 16px; font-weight: bold; text-align: center; height: 30px; vertical-align: middle;">
+            LAPORAN KEUANGAN TEH SOLO JUMBO
+        </td>
+    </tr>
+    <tr>
+        <td colspan="8" style="text-align: center; color: #666666;">
+            Periode: {{ $selectedBulan ? \Carbon\Carbon::create()->month((int)$selectedBulan)->translatedFormat('F') : 'Semua Bulan' }} {{ $selectedTahun ?: 'Semua Tahun' }}
+        </td>
+    </tr>
+    <tr></tr> {{-- Empty Row --}}
 
-<br><br>
+    {{-- SUMMARY SECTION --}}
+    <tr>
+        <td colspan="2" style="font-weight: bold; border: 1px solid #000000; background-color: #f3f4f6;">RINGKASAN</td>
+        <td colspan="6"></td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #e5e7eb;">Saldo Awal</td>
+        <td style="border: 1px solid #e5e7eb; font-weight: bold; text-align: right;">{{ $saldoAwal }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #e5e7eb;">Total Pemasukan</td>
+        <td style="border: 1px solid #e5e7eb; font-weight: bold; color: #059669; text-align: right;">{{ $totalMasuk }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #e5e7eb;">Total Pengeluaran</td>
+        <td style="border: 1px solid #e5e7eb; font-weight: bold; color: #e11d48; text-align: right;">{{ $totalKeluar }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000000; background-color: #1c1917; color: #ffffff;">Saldo Akhir</td>
+        <td style="border: 1px solid #000000; background-color: #1c1917; color: #ffffff; font-weight: bold; text-align: right;">{{ $saldoAkhir }}</td>
+    </tr>
+    <tr></tr> {{-- Empty Row --}}
 
-<h3 style="font-weight:bold">LAPORAN KAS MASUK</h3>
-<table>
+    {{-- TABLE HEADER --}}
     <thead>
-        <tr>
-            <th>Tanggal</th>
-            <th>Kode Kas</th>
-            <th>Keterangan</th>
-            <th>Kategori</th>
-            <th>Metode</th>
-            <th>Masuk</th>
-        </tr>
+    <tr>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 15px;">TANGGAL</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 12px;">KODE</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 35px;">KETERANGAN</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 20px;">PENERIMA/DARI</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 15px;">KATEGORI</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #065f46;">MASUK</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #9f1239;">KELUAR</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 20px;">SALDO</th>
+    </tr>
     </thead>
+
+    {{-- TABLE BODY --}}
     <tbody>
-        @php $sumMasuk = 0; @endphp
-        @foreach($kasMasuk as $row)
-            @php
-                $tanggal = $get($row, ['tanggal_transaksi','tanggal']);
-                $kode = $get($row, ['kode_kas']);
-                $ket = $get($row, ['keterangan','deskripsi']);
-                $kategori = $get($row, ['kategori']);
-                $metode = $get($row, ['metode_pembayaran','metode']);
-                $masukRaw = data_get($row, 'total') ?? data_get($row, 'jumlah') ?? 0;
-                $masukVal = is_numeric($masukRaw) ? (float)$masukRaw : floatval(preg_replace('/[^\d\-\.]/','',$masukRaw));
-                $sumMasuk += $masukVal;
-            @endphp
-            <tr>
-                <td>{{ $tanggal }}</td>
-                <td>{{ $kode }}</td>
-                <td>{{ $ket }}</td>
-                <td>{{ $kategori }}</td>
-                <td>{{ $metode }}</td>
-                <td>{{ $formatRp($masukVal) }}</td>
-            </tr>
-        @endforeach
+        {{-- Row Saldo Awal --}}
+        @if($saldoAwal != 0)
         <tr>
-            <td colspan="5" style="font-weight:bold">TOTAL MASUK</td>
-            <td style="font-weight:bold;color:green">{{ $formatRp($sumMasuk) }}</td>
+            <td style="border: 1px solid #d1d5db; text-align: center; color: #9ca3af;">-</td>
+            <td style="border: 1px solid #d1d5db; text-align: center; color: #9ca3af;">AWAL</td>
+            <td style="border: 1px solid #d1d5db; font-style: italic; color: #4b5563;">Saldo Awal Periode</td>
+            <td style="border: 1px solid #d1d5db;">-</td>
+            <td style="border: 1px solid #d1d5db;">-</td>
+            <td style="border: 1px solid #d1d5db; text-align: right;">0</td>
+            <td style="border: 1px solid #d1d5db; text-align: right;">0</td>
+            <td style="border: 1px solid #d1d5db; text-align: right; font-weight: bold;">{{ $saldoAwal }}</td>
         </tr>
-    </tbody>
-</table>
+        @endif
 
-<br><br>
-
-<h3 style="font-weight:bold">LAPORAN KAS KELUAR</h3>
-<table>
-    <thead>
+        @foreach($laporan as $item)
         <tr>
-            <th>Tanggal</th>
-            <th>Kode Kas</th>
-            <th>Kategori</th>
-            <th>Deskripsi</th>
-            <th>Metode</th>
-            <th>Penerima</th>
-            <th>Keluar</th>
-        </tr>
-    </thead>
-    <tbody>
-        @php $sumKeluar = 0; @endphp
-        @foreach($kasKeluar as $row)
-            @php
-                $tanggal = $get($row, ['tanggal','tanggal_transaksi']);
-                $kode = $get($row, ['kode_kas']);
-                $kategori = $get($row, ['kategori']);
-                $desc = $get($row, ['deskripsi','keterangan']);
-                $metode = $get($row, ['metode_pembayaran','metode']);
-                $penerima = $get($row, ['penerima']);
-                $keluarRaw = data_get($row, 'nominal') ?? data_get($row, 'jumlah') ?? 0;
-                $keluarVal = is_numeric($keluarRaw) ? (float)$keluarRaw : floatval(preg_replace('/[^\d\-\.]/','',$keluarRaw));
-                $sumKeluar += $keluarVal;
-            @endphp
-            <tr>
-                <td>{{ $tanggal }}</td>
-                <td>{{ $kode }}</td>
-                <td>{{ $kategori }}</td>
-                <td>{{ $desc }}</td>
-                <td>{{ $metode }}</td>
-                <td>{{ $penerima }}</td>
-                <td>{{ $formatRp($keluarVal) }}</td>
-            </tr>
-        @endforeach
-        <tr>
-            <td colspan="6" style="font-weight:bold">TOTAL KELUAR</td>
-            <td style="font-weight:bold;color:red">{{ $formatRp($sumKeluar) }}</td>
-        </tr>
-    </tbody>
-</table>
+            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['tanggal']->format('d/m/Y') }}</td>
+            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['kode'] }}</td>
+            <td style="border: 1px solid #d1d5db;">{{ $item['keterangan'] }}</td>
+            <td style="border: 1px solid #d1d5db;">{{ $item['penerima'] !== '-' ? $item['penerima'] : '' }}</td>
+            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['kategori'] }}</td>
 
-<br><br>
+            {{-- Masuk Column --}}
+            <td style="border: 1px solid #d1d5db; text-align: right; {{ $item['masuk'] > 0 ? 'color: #059669; font-weight:bold;' : 'color: #d1d5db;' }}">
+                {{ $item['masuk'] }}
+            </td>
 
-<h3 style="font-weight:bold">SEMUA TRANSAKSI</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Tanggal</th>
-            <th>Keterangan</th>
-            <th>Kategori</th>
-            <th>Metode</th>
-            <th>Masuk</th>
-            <th>Keluar</th>
-            <th>Saldo</th>
+            {{-- Keluar Column --}}
+            <td style="border: 1px solid #d1d5db; text-align: right; {{ $item['keluar'] > 0 ? 'color: #e11d48; font-weight:bold;' : 'color: #d1d5db;' }}">
+                {{ $item['keluar'] }}
+            </td>
+
+            {{-- Saldo Column --}}
+            <td style="border: 1px solid #d1d5db; text-align: right; font-weight: bold;">{{ $item['saldo'] }}</td>
         </tr>
-    </thead>
-    <tbody>
-        @php $running = 0; @endphp
-        @foreach($laporan as $row)
-            @php
-                $tanggal = $get($row, ['tanggal','tanggal_transaksi']);
-                $ket = $get($row, ['keterangan','deskripsi']);
-                $kategori = $get($row, ['kategori']);
-                $metode = $get($row, ['metode','metode_pembayaran']);
-                $masukRaw = data_get($row,'kas_masuk') ?? data_get($row,'total') ?? 0;
-                $keluarRaw = data_get($row,'kas_keluar') ?? data_get($row,'nominal') ?? 0;
-                $masuk = is_numeric($masukRaw) ? (float)$masukRaw : floatval(preg_replace('/[^\d\-\.]/','',$masukRaw));
-                $keluar = is_numeric($keluarRaw) ? (float)$keluarRaw : floatval(preg_replace('/[^\d\-\.]/','',$keluarRaw));
-                $running += ($masuk - $keluar);
-            @endphp
-            <tr>
-                <td>{{ $tanggal }}</td>
-                <td>{{ $ket }}</td>
-                <td>{{ $kategori }}</td>
-                <td>{{ $metode }}</td>
-                <td>{{ $masuk>0 ? $formatRp($masuk) : '-' }}</td>
-                <td>{{ $keluar>0 ? $formatRp($keluar) : '-' }}</td>
-                <td>{{ $formatRp($running) }}</td>
-            </tr>
         @endforeach
     </tbody>
 </table>

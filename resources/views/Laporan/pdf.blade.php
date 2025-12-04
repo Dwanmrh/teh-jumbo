@@ -1,288 +1,259 @@
-<style>
-    body {
-        font-family: 'DejaVu Sans', sans-serif;
-        font-size: 12px;
-        color: #2f2f2f;
-        padding: 28px;
-        background: #ffffff;
-    }
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Laporan Keuangan - Teh Solo Jumbo</title>
+    <style>
+        /* Reset & Base Fonts */
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #44403c; /* Stone-700 */
+            font-size: 10pt;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
 
-    /* ===================== HEADER ===================== */
+        /* Helpers */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .font-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; letter-spacing: -0.5px; }
 
-    .header-table {
-        width: 100%;
-        margin-bottom: 15px;
-    }
+        /* Colors matching Index Blade */
+        .text-emerald { color: #059669; }
+        .bg-emerald-light { background-color: #ecfdf5; }
+        .text-rose { color: #e11d48; }
+        .bg-rose-light { background-color: #fff1f2; }
+        .text-stone { color: #78716c; }
+        .bg-stone { background-color: #f5f5f4; }
 
-    .header-title {
-        font-size: 24px;
-        font-weight: 800;
-        color: #2f3e33;
-        text-align: left;
-    }
+        /* Header */
+        .header {
+            border-bottom: 2px solid #44403c;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 20pt;
+            margin: 0;
+            color: #1c1917; /* Stone-900 */
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            font-size: 10pt;
+            color: #78716c;
+            margin-top: 5px;
+        }
+        .meta-data {
+            position: absolute;
+            top: 0;
+            right: 0;
+            text-align: right;
+            font-size: 9pt;
+            color: #78716c;
+        }
 
-    .header-logo {
-        text-align: right;
-        white-space: nowrap;
-    }
+        /* Summary Cards (Simulated with Table) */
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px 0;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background-color: #f5f5f4;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e7e5e4;
+        }
+        .summary-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #78716c;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .summary-value {
+            font-size: 14pt;
+            font-weight: bold;
+            display: block;
+        }
 
-    .header-logo img {
-        width: 55px;
-        vertical-align: middle;
-    }
+        /* Main Table */
+        .table-container {
+            width: 100%;
+        }
+        table.main {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        table.main th {
+            background-color: #fafaf9;
+            color: #57534e;
+            padding: 10px 8px;
+            text-transform: uppercase;
+            font-size: 7pt;
+            letter-spacing: 0.5px;
+            border-top: 1px solid #e7e5e4;
+            border-bottom: 1px solid #e7e5e4;
+        }
+        table.main td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f5f5f4;
+            vertical-align: top;
+        }
+        table.main tr:last-child td {
+            border-bottom: 2px solid #e7e5e4;
+        }
 
-    .header-logo span {
-        font-size: 15px;
-        font-weight: 700;
-        color: #2f3e33;
-        margin-left: 5px;
-        vertical-align: middle;
-    }
+        /* Badges */
+        .badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
 
-    hr.line {
-        border: 0;
-        border-top: 1.6px solid #bfbfbf;
-        margin: 5px 0 25px 0;
-    }
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 0;
+            border-top: 1px solid #e7e5e4;
+            font-size: 8pt;
+            color: #a8a29e;
+            text-align: center;
+        }
+        .page-number:after { content: counter(page); }
+    </style>
+</head>
+<body>
 
-    /* ===================== SECTION TITLES ===================== */
-    .section-title {
-        font-size: 17px;
-        font-weight: 700;
-        color: #2f3e33;
-        margin-bottom: 12px;
-    }
+    <div class="header">
+        <h1>Laporan Keuangan</h1>
+        <div class="subtitle">Teh Solo de Jumbo Fibonacci</div>
 
-    /* ===================== SUMMARY ===================== */
-    .summary-box {
-        width: 100%;
-        border-radius: 8px;
-        padding: 15px 18px;
-        background: #f8fdf7;
-        border: 1px solid #d6e8d6;
-        margin-bottom: 25px;
-    }
-
-    .summary-item {
-        margin-bottom: 6px;
-        font-size: 13px;
-    }
-
-    .summary-item span {
-        font-weight: bold;
-    }
-
-    /* ===================== TABLES ===================== */
-    .table-container {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 25px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    th, td {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-
-    th {
-        font-weight: bold;
-        border-bottom: 1px solid #d0d0d0;
-    }
-
-    td {
-        border-bottom: 1px solid #efefef;
-    }
-
-    tr:nth-child(even) td {
-        background: #fafafa;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* Kas Masuk (Green) */
-    table.kas-masuk th {
-        background: #d4f5d4;
-        color: #264326;
-    }
-
-    /* Kas Keluar (Red) */
-    table.kas-keluar th {
-        background: #ffcccc;
-        color: #7a1a1a;
-    }
-
-    /* TOTAL ROW COLORS */
-    .total-row {
-        font-weight: bold;
-        background: #e6ffe6 !important;
-        border-top: 2px solid #b4e6b4;
-    }
-
-    .total-row-red {
-        font-weight: bold;
-        background: #ffd6d6 !important;
-        border-top: 2px solid #ffb5b5;
-    }
-
-    /* PRINT INFO */
-    .print-info {
-        text-align: left;
-        font-size: 11px;
-        color: #666;
-        margin-bottom: 10px;
-        margin-top: -2px;
-    }
-
-    /* ===================== FOOTER ===================== */
-
-    .footer {
-        margin-top: 40px;
-        text-align: center;
-        font-size: 11px;
-        color: #777;
-        border-top: 1px solid #ccc;
-        padding-top: 8px;
-        position: fixed;
-        bottom: 10px;
-        left: 0;
-        right: 0;
-    }
-
-</style>
-
-
-
-<!-- =================== HEADER =================== -->
-<table class="header-table">
-    <tr>
-        <td class="header-title">Laporan Keuangan</td>
-
-        <td class="header-logo">
-            <img src="{{ public_path('assets/images/logo-teh.png') }}">
-            <span>Teh Solo Jumbo</span>
-        </td>
-    </tr>
-</table>
-
-<hr class="line">
-
-
-
-<!-- =================== RINGKASAN =================== -->
-<div class="section-title">Ringkasan Keuangan</div>
-
-<div class="summary-box">
-    <div class="summary-item">
-        Total Masuk : <span>Rp {{ number_format($totalMasuk, 0, ',', '.') }}</span>
+        <div class="meta-data">
+            <div>
+                <strong>Periode:</strong>
+                @if($selectedBulan) {{ \Carbon\Carbon::create()->month((int)$selectedBulan)->translatedFormat('F') }} @endif
+                {{ $selectedTahun ?: 'Semua Tahun' }}
+            </div>
+            <div style="margin-top: 4px;">Generated: {{ date('d M Y, H:i') }}</div>
+        </div>
     </div>
-    <div class="summary-item">
-        Total Keluar : <span>Rp {{ number_format($totalKeluar, 0, ',', '.') }}</span>
-    </div>
-    <div class="summary-item">
-        Selisih Kas : <span>Rp {{ number_format($selisihKas, 0, ',', '.') }}</span>
-    </div>
-</div>
 
-<hr class="line">
+    <table class="summary-table">
+        <tr>
+            <td width="33%">
+                <div class="summary-card" style="background-color: #ecfdf5; border-color: #a7f3d0;">
+                    <span class="summary-label text-emerald">Total Pemasukan</span>
+                    <span class="summary-value text-emerald">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</span>
+                </div>
+            </td>
+            <td width="33%">
+                <div class="summary-card" style="background-color: #fff1f2; border-color: #fecdd3;">
+                    <span class="summary-label text-rose">Total Pengeluaran</span>
+                    <span class="summary-value text-rose">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</span>
+                </div>
+            </td>
+            <td width="33%">
+                <div class="summary-card" style="background-color: #1c1917; border-color: #000;">
+                    <span class="summary-label" style="color: #a8a29e;">Saldo Akhir</span>
+                    <span class="summary-value" style="color: #fff;">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
 
-
-
-<!-- =================== KAS MASUK =================== -->
-<div class="section-title">Laporan Kas Masuk</div>
-
-<div class="print-info">
-    Dicetak pada: {{ now()->format('d M Y H:i') }}
-</div>
-
-<div class="table-container">
-    <table class="kas-masuk">
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Kategori</th>
-                <th>Keterangan</th>
-                <th>Metode</th>
-                <th>Masuk</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $totalMasukTabel = 0; @endphp
-
-            @foreach ($laporan as $row)
-                @if ($row['kas_masuk'] > 0)
-                @php $totalMasukTabel += $row['kas_masuk']; @endphp
+    <div class="table-container">
+        <h3 style="margin-bottom: 10px; font-size: 11pt; color: #1c1917;">Mutasi Rekening</h3>
+        <table class="main">
+            <thead>
                 <tr>
-                    <td>{{ $row['tanggal'] }}</td>
-                    <td>{{ $row['kategori'] }}</td>
-                    <td>{{ $row['keterangan'] }}</td>
-                    <td>{{ $row['metode_pembayaran'] }}</td>
-                    <td>{{ number_format($row['kas_masuk']) }}</td>
+                    <th width="12%" class="text-left">Tanggal</th>
+                    <th width="10%" class="text-left">Kode</th>
+                    <th width="28%" class="text-left">Keterangan</th>
+                    <th width="12%" class="text-center">Kategori</th>
+                    <th width="13%" class="text-right">Masuk</th>
+                    <th width="13%" class="text-right">Keluar</th>
+                    <th width="12%" class="text-right">Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if($saldoAwal != 0)
+                <tr class="bg-stone">
+                    <td colspan="3" class="text-stone" style="padding-left: 8px;">
+                        <em>Bawaan Periode Lalu</em>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" style="background-color: #e7e5e4; color: #57534e;">AWAL</span>
+                    </td>
+                    <td class="text-right text-stone">-</td>
+                    <td class="text-right text-stone">-</td>
+                    <td class="text-right font-bold font-mono">
+                        Rp {{ number_format($saldoAwal, 0, ',', '.') }}
+                    </td>
                 </tr>
                 @endif
-            @endforeach
 
-            <tr class="total-row">
-                <td colspan="4">TOTAL MASUK</td>
-                <td>Rp {{ number_format($totalMasukTabel, 0, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-
-
-<!-- =================== KAS KELUAR =================== -->
-<div class="section-title">Laporan Kas Keluar</div>
-
-<div class="table-container">
-    <table class="kas-keluar">
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Kategori</th>
-                <th>Keterangan</th>
-                <th>Metode</th>
-                <th>Penerima</th>
-                <th>Keluar</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @php $totalKeluarTabel = 0; @endphp
-
-            @foreach ($laporan as $row)
-                @if ($row['kas_keluar'] > 0)
-                @php $totalKeluarTabel += $row['kas_keluar']; @endphp
+                @forelse($laporan as $item)
                 <tr>
-                    <td>{{ $row['tanggal'] }}</td>
-                    <td>{{ $row['kategori'] }}</td>
-                    <td>{{ $row['deskripsi'] }}</td>
-                    <td>{{ $row['metode_pembayaran'] }}</td>
-                    <td>{{ $row['penerima'] }}</td>
-                    <td>{{ number_format($row['kas_keluar']) }}</td>
+                    <td>
+                        <div class="font-bold">{{ $item['tanggal']->format('d/m/Y') }}</div>
+                    </td>
+                    <td>
+                        <span style="background-color: #f5f5f4; padding: 2px 4px; border-radius: 3px; font-size: 8pt; color: #78716c;">
+                            {{ $item['kode'] }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight: bold; color: #44403c;">{{ $item['keterangan'] }}</div>
+                        @if($item['penerima'] != '-')
+                            <div style="font-size: 8pt; color: #a8a29e; margin-top: 2px;">
+                                <span style="font-family: sans-serif;">&rarr;</span> {{ $item['penerima'] }}
+                            </div>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        <span class="badge {{ $item['type'] == 'masuk' ? 'bg-emerald-light text-emerald' : 'bg-rose-light text-rose' }}">
+                            {{ $item['kategori'] }}
+                        </span>
+                    </td>
+                    <td class="text-right font-mono {{ $item['masuk'] > 0 ? 'text-emerald font-bold' : 'text-stone' }}">
+                        {{ $item['masuk'] > 0 ? number_format($item['masuk'], 0, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-right font-mono {{ $item['keluar'] > 0 ? 'text-rose font-bold' : 'text-stone' }}">
+                        {{ $item['keluar'] > 0 ? number_format($item['keluar'], 0, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-right font-bold font-mono text-stone" style="color: #1c1917;">
+                        {{ number_format($item['saldo'], 0, ',', '.') }}
+                    </td>
                 </tr>
-                @endif
-            @endforeach
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 30px; color: #a8a29e;">
+                        Tidak ada data transaksi untuk periode ini.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-            <tr class="total-row-red">
-                <td colspan="5">TOTAL KELUAR</td>
-                <td>Rp {{ number_format($totalKeluarTabel, 0, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <div class="footer">
+        Dicetak oleh Sistem Administrasi Teh Solo de Jumbo &bull; Halaman <span class="page-number"></span>
+    </div>
 
-
-<!-- =================== FOOTER =================== -->
-<div class="footer">
-    © {{ date('Y') }} Teh Solo Jumbo — Laporan keuangan dicetak otomatis oleh sistem.
-</div>
+</body>
+</html>

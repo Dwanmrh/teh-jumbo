@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teh Solo de Jumbo Fibonacci</title>
+    <title>{{ config('app.name', 'Teh Solo de Jumbo Fibonacci') }}</title>
 
-    {{-- Fonts --}}
+    {{-- Fonts: Outfit --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+    {{-- Icons --}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    {{-- Tailwind & Config (Disamakan dengan App Layout) --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -18,11 +21,21 @@
                 extend: {
                     fontFamily: { sans: ['Outfit', 'sans-serif'] },
                     colors: {
-                        brand: { 500: '#F5A623', 600: '#F38C00', 700: '#D67600', dark: '#0A2E57' }
+                        brand: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa',
+                            300: '#fdba74', 400: '#fb923c', 500: '#f97316',
+                            600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12'
+                        },
+                        stone: {
+                            50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4',
+                            300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c',
+                            600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917'
+                        }
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'blob': 'blob 7s infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
                     },
                     keyframes: {
                         float: {
@@ -34,32 +47,63 @@
                             '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
                             '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                             '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
                 }
             }
         }
     </script>
+    <style>
+        .bg-pattern {
+            background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fafaf9 0.5px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            opacity: 0.05;
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+    </style>
 </head>
-<body class="bg-white font-sans text-gray-800 antialiased overflow-x-hidden selection:bg-brand-500 selection:text-white">
+<body class="bg-stone-50 font-sans text-stone-800 antialiased overflow-x-hidden selection:bg-brand-500 selection:text-white relative">
+
+    {{-- Latar Belakang Dekoratif (Sama seperti Guest Layout) --}}
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="absolute inset-0 bg-pattern"></div>
+        {{-- Blob Kiri Atas --}}
+        <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-brand-200/20 rounded-full blur-[100px] animate-blob mix-blend-multiply"></div>
+        {{-- Blob Kanan Bawah --}}
+        <div class="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-brand-300/20 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
+    </div>
 
     {{-- Navbar --}}
-    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-sm transition-all">
+    <nav class="fixed w-full z-50 bg-white/70 backdrop-blur-md border-b border-white/50 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16 sm:h-20">
+            <div class="flex justify-between items-center h-20">
+                {{-- Logo --}}
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('assets/images/logo-teh.png') }}" alt="Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full shadow-sm">
-                    <div class="flex flex-col leading-none">
-                        <span class="font-bold text-lg sm:text-xl text-gray-900">Teh Solo</span>
-                        <span class="text-[10px] sm:text-xs font-semibold text-brand-600 tracking-widest uppercase">Jumbo Fibonacci</span>
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute inset-0 bg-brand-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
+                        <img src="{{ asset('assets/images/logo-teh.png') }}" alt="Logo" class="relative w-10 h-10 sm:w-11 sm:h-11 object-contain group-hover:-rotate-6 transition-transform duration-300">
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="font-bold text-xl text-stone-900 tracking-tight">Teh Solo</span>
+                        <span class="text-[10px] font-bold text-brand-600 tracking-[0.2em] uppercase">Jumbo Fibonacci</span>
                     </div>
                 </div>
+
+                {{-- Menu Kanan --}}
                 <div class="flex items-center gap-4">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-gray-700 hover:text-brand-600">Dashboard</a>
+                        <a href="{{ url('/dashboard') }}" class="font-semibold text-stone-600 hover:text-brand-600 transition-colors">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-600 hover:text-brand-600 px-3 hidden sm:block">Masuk</a>
-                        <a href="{{ route('register') }}" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold rounded-full shadow-lg shadow-brand-500/30 transition-all transform hover:-translate-y-0.5">
+                        <a href="{{ route('login') }}" class="font-medium text-stone-500 hover:text-stone-900 px-4 py-2 hidden sm:block transition-colors">Masuk</a>
+                        <a href="{{ route('register') }}"
+                           class="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-bold rounded-full shadow-lg shadow-stone-900/20 transition-all transform hover:-translate-y-0.5 hover:shadow-xl">
                             Daftar
                         </a>
                     @endauth
@@ -69,72 +113,125 @@
     </nav>
 
     {{-- Hero Section --}}
-    {{-- UPDATE: pt-28 (mobile) vs pt-40 (desktop) agar tidak terlalu turun di HP --}}
-    <section class="relative pt-28 pb-10 sm:pt-40 lg:pt-48 lg:pb-32 overflow-hidden flex items-center min-h-screen sm:min-h-[90vh]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative w-full h-full">
+    <section class="relative pt-32 pb-16 sm:pt-40 lg:pt-48 lg:pb-32 flex items-center min-h-[90vh] z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
-            <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center h-full">
-
-                {{-- 1. Konten Teks --}}
-                <div class="text-center lg:text-left relative z-20 order-2 lg:order-1 flex flex-col items-center lg:items-start">
+                {{-- 1. Konten Teks (Kiri) --}}
+                <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left animate-fade-in-up">
 
                     {{-- Badge --}}
-                    <div class="inline-flex items-center gap-2 px-3 py-1 mb-4 sm:mb-6 text-[10px] sm:text-xs font-bold tracking-widest text-brand-700 uppercase bg-orange-50 rounded-full border border-orange-100 shadow-sm">
-                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-brand-500 animate-pulse"></span>
-                        The Authentic Taste
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-6 text-xs font-bold tracking-widest text-brand-700 uppercase bg-white border border-brand-100 rounded-full shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                        The Authentic Taste of Java
                     </div>
 
-                    {{-- Headline Responsive --}}
-                    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6 leading-[1.15]">
+                    {{-- Headline --}}
+                    <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-stone-900 mb-6 leading-[1.1] tracking-tight">
                         Segarnya <br class="hidden lg:block">
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-yellow-500 relative">
+                        <span class="relative whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-600 text-glow">
                             Teh Solo Asli
-                            <svg class="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-brand-200 -z-10" viewBox="0 0 200 9" fill="none"><path d="M2.00025 6.99997C25.7501 5.51786 102.398 2.37896 197.995 2.05352" stroke="currentColor" stroke-width="3"/></svg>
+                            {{-- Garis bawah dekoratif --}}
+                            <svg class="absolute w-full h-3 -bottom-1 left-0 text-brand-300 -z-10 opacity-60" viewBox="0 0 200 9" fill="none"><path d="M2.00025 6.99997C25.7501 5.51786 102.398 2.37896 197.995 2.05352" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
                         </span>
                     </h1>
 
-                    <p class="text-base sm:text-lg lg:text-xl text-gray-500 mb-8 sm:mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                        Racikan istimewa <span class="font-semibold text-brand-700">Teh Solo de Jumbo Fibonacci</span>. Aroma melati, rasa sepat yang pas, dan manis gula asli.
+                    <p class="text-lg text-stone-500 mb-10 leading-relaxed max-w-lg">
+                        Nikmati racikan istimewa <span class="font-bold text-stone-800">Teh Solo de Jumbo Fibonacci</span>. Aroma melati yang khas, rasa sepat yang pas, dan manis gula asli.
                     </p>
 
-                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <a href="{{ route('login') }}" class="inline-flex justify-center items-center px-8 py-3.5 text-sm sm:text-base font-bold text-white bg-brand-600 rounded-full hover:bg-brand-700 shadow-xl shadow-brand-500/30 w-full sm:w-auto transition-transform hover:-translate-y-1">
+                    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        <a href="{{ route('login') }}"
+                           class="inline-flex justify-center items-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-full hover:from-brand-600 hover:to-brand-700 shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-1 w-full sm:w-auto">
+                            <span class="material-symbols-rounded mr-2">shopping_bag</span>
                             Pesan Sekarang
                         </a>
-                        <a href="#about" class="inline-flex justify-center items-center px-8 py-3.5 text-sm sm:text-base font-bold text-gray-700 bg-white border-2 border-gray-100 rounded-full hover:border-brand-200 hover:text-brand-600 w-full sm:w-auto transition-colors">
+                        <a href="#"
+                           class="inline-flex justify-center items-center px-8 py-4 text-base font-bold text-stone-600 bg-white border border-stone-200 rounded-full hover:bg-stone-50 hover:border-stone-300 hover:text-stone-900 transition-all w-full sm:w-auto shadow-sm">
                             Lihat Menu
                         </a>
                     </div>
                 </div>
 
-                {{-- 2. Konten Gambar --}}
-                <div class="relative order-1 lg:order-2 flex justify-center items-center pb-6 lg:pb-0">
+                {{-- 2. Konten Gambar (Kanan) --}}
+                <div class="lg:col-span-5 relative flex justify-center items-center mt-10 lg:mt-0">
 
-                    {{-- Blob Shape Responsive --}}
-                    <div class="relative z-0 animate-float">
-                        <div class="w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] lg:w-[500px] lg:h-[500px] bg-gradient-to-br from-orange-100 via-amber-200 to-orange-300 opacity-90 shadow-2xl shadow-orange-200/50"
-                             style="border-radius: 45% 55% 70% 30% / 30% 30% 70% 70%;">
+                    {{-- Blob Belakang Gambar --}}
+                    <div class="absolute z-0 animate-float">
+                        <div class="w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-gradient-to-tr from-brand-100 to-orange-50 rounded-full blur-2xl opacity-80"></div>
+                    </div>
+
+                    {{-- Gambar Produk --}}
+                    <div class="relative z-10 transform transition-transform hover:scale-105 duration-500">
+                        {{-- Placeholder jika gambar tidak ada, gunakan style ini --}}
+                        <img src="{{ asset('assets/images/teh-jumbo-polos.jpg') }}"
+                             alt="Teh Jumbo Segar"
+                             class="w-[200px] sm:w-[300px] lg:w-[380px] object-contain drop-shadow-[0_20px_40px_rgba(249,115,22,0.25)]">
+
+                        {{-- Floating Badge 1 --}}
+                        <div class="absolute top-10 right-0 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg border border-white/50 animate-float" style="animation-delay: 1s;">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-rounded text-green-600">eco</span>
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-stone-400 font-bold uppercase">Aroma</span>
+                                    <span class="text-xs font-bold text-stone-800">Melati Asli</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Floating Badge 2 --}}
+                        <div class="absolute bottom-10 -left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg border border-white/50 animate-float" style="animation-delay: 2s;">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-rounded text-brand-600">verified</span>
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-stone-400 font-bold uppercase">Gula</span>
+                                    <span class="text-xs font-bold text-stone-800">100% Murni</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Product Image Responsive --}}
-                    {{-- UPDATE: Ukuran gambar w-[180px] (mobile) naik ke w-[400px] (desktop) --}}
-                    <img src="{{ asset('assets/images/tehJumbo.png') }}"
-                         alt="Teh Jumbo Segar"
-                         class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] sm:w-[280px] lg:w-[400px] drop-shadow-2xl z-10 hover:scale-105 transition-transform duration-500 ease-out">
+            </div>
+        </div>
+    </section>
 
-                    {{-- Label Floating --}}
-                    <div class="absolute top-[15%] right-[10%] z-20 bg-white/90 backdrop-blur text-brand-700 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg rotate-12 animate-pulse">
-                        100% Gula Asli
+    {{-- Features / USP Section (Tambahan agar halaman lebih berisi) --}}
+    <section class="py-20 bg-white relative z-10 border-t border-stone-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-6 rounded-3xl bg-stone-50 border border-stone-100 hover:shadow-lg hover:shadow-brand-500/5 transition-all group">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:bg-brand-500 group-hover:text-white transition-colors text-brand-500">
+                        <span class="material-symbols-rounded text-3xl">water_drop</span>
                     </div>
+                    <h3 class="text-lg font-bold text-stone-900 mb-2">Air Berkualitas</h3>
+                    <p class="text-sm text-stone-500">Menggunakan air mineral pilihan yang dimasak dengan suhu sempurna untuk ekstraksi teh terbaik.</p>
+                </div>
+                 <div class="p-6 rounded-3xl bg-stone-50 border border-stone-100 hover:shadow-lg hover:shadow-brand-500/5 transition-all group">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:bg-brand-500 group-hover:text-white transition-colors text-brand-500">
+                        <span class="material-symbols-rounded text-3xl">spa</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-stone-900 mb-2">Daun Teh Pilihan</h3>
+                    <p class="text-sm text-stone-500">Campuran daun teh hitam dan melati premium dari perkebunan terbaik di Jawa Tengah.</p>
+                </div>
+                 <div class="p-6 rounded-3xl bg-stone-50 border border-stone-100 hover:shadow-lg hover:shadow-brand-500/5 transition-all group">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:bg-brand-500 group-hover:text-white transition-colors text-brand-500">
+                        <span class="material-symbols-rounded text-3xl">local_cafe</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-stone-900 mb-2">Racikan Ginastel</h3>
+                    <p class="text-sm text-stone-500">Legit, Panas, dan Kental. Cita rasa otentik Solo yang tidak bisa Anda temukan di tempat lain.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="bg-white border-t border-gray-100 py-6">
+    <footer class="bg-stone-50 border-t border-stone-200 py-8 relative z-10">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-gray-400 text-xs sm:text-sm">© {{ date('Y') }} Teh Solo de Jumbo Fibonacci.</p>
+            <div class="flex justify-center items-center gap-2 mb-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                 <img src="{{ asset('assets/images/logo-teh.png') }}" alt="Logo" class="h-8 w-8">
+                 <span class="font-bold text-stone-700">Teh Solo</span>
+            </div>
+            <p class="text-stone-400 text-xs sm:text-sm">© {{ date('Y') }} <span class="font-bold text-brand-600">Teh Solo de Jumbo Fibonacci</span>. Excellence in every cup.</p>
         </div>
     </footer>
 

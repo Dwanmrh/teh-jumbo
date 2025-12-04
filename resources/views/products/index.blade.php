@@ -256,15 +256,18 @@
 
                 {{-- Stok --}}
                 <div>
-                    <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">Stok Cup / Wadah</label>
+                    <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">
+                        Sisa Stok (Porsi / Cup)
+                    </label>
                     <div class="flex items-center gap-3">
                         <input type="number" name="stok" required
                             class="w-full bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-800 focus:bg-white transition-all"
                             placeholder="0">
-                        <span class="font-bold text-stone-400">Pcs</span>
+                        <span class="font-bold text-stone-400 text-xs uppercase">Item</span>
                     </div>
-                    <p class="text-[10px] text-orange-600 mt-2 font-medium">
-                        *Hitung berdasarkan jumlah fisik gelas plastik yang tersedia.
+                    <p class="text-[10px] text-orange-600 mt-2 font-medium leading-snug">
+                        *Jika Minuman: Hitung sisa gelas fisik.<br>
+                        *Jika Topping: Hitung sisa wadah atau perkiraan porsi.
                     </p>
                 </div>
 
@@ -388,14 +391,21 @@
                     </p>
                 </div>
 
-                {{-- Stok --}}
+                {{-- Stok (Edit) - Updated to Universal Labeling --}}
                 <div>
-                    <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">Stok Cup / Wadah</label>
+                    <label class="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-2">
+                        Sisa Stok (Porsi / Cup)
+                    </label>
                     <div class="flex items-center gap-3">
                         <input type="number" id="editStok" name="stok" required
                             class="w-full bg-stone-50 border border-stone-200 rounded-2xl px-5 py-4 font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-800 focus:bg-white transition-all">
-                        <span class="font-bold text-stone-400">Pcs</span>
+                        {{-- Ganti "Pcs" jadi "Item" agar konsisten --}}
+                        <span class="font-bold text-stone-400 text-xs uppercase">Item</span>
                     </div>
+                    {{-- Tambahkan Helper Text yang sama --}}
+                    <p class="text-[9px] text-stone-400 mt-2 leading-relaxed">
+                        *Update jumlah fisik yang tersedia saat ini.
+                    </p>
                 </div>
 
                 {{-- File Upload --}}

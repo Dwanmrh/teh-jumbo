@@ -26,6 +26,9 @@ class KasMasuk extends Model
         'harga_satuan',
         'total',
         'user_id',
+        // Update Baru:
+        'detail_items',
+        'kembalian'
     ];
 
     protected $casts = [
@@ -33,6 +36,8 @@ class KasMasuk extends Model
         'jumlah' => 'integer',
         'harga_satuan' => 'decimal:2',
         'total' => 'decimal:2',
+        'kembalian' => 'decimal:2',
+        'detail_items' => 'array', // Otomatis convert JSON <-> Array
     ];
 
     protected static function boot()
@@ -45,20 +50,24 @@ class KasMasuk extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
 
-            // 2. Hitung Total otomatis (Backup)
-            if ($model->jumlah && $model->harga_satuan) {
+            // 2. Hitung Total otomatis (Backup jika null, meski biasanya diisi controller)
+            if ($model->jumlah && $model->harga_satuan && !$model->total) {
                 $model->total = $model->jumlah * $model->harga_satuan;
             }
 
-            // 3. Generate Kode Otomatis: KM-001
-            $latest = self::orderBy('created_at', 'desc')->first();
-            $number = 1;
+            // 3. Generate Kode Otomatis: KM-001 (POS punya kode sendiri di controller)
+            // Logic ini akan override jika kode_kas belum diisi controller.
+            // Karena di PosController kita isi manual 'POS-...', bagian ini aman.
+            if (empty($model->kode_kas)) {
+                $latest = self::orderBy('created_at', 'desc')->first();
+                $number = 1;
 
-            if ($latest && preg_match('/KM-(\d+)/', $latest->kode_kas, $matches)) {
-                $number = intval($matches[1]) + 1;
+                if ($latest && preg_match('/KM-(\d+)/', $latest->kode_kas, $matches)) {
+                    $number = intval($matches[1]) + 1;
+                }
+
+                $model->kode_kas = 'KM-' . str_pad($number, 3, '0', STR_PAD_LEFT);
             }
-
-            $model->kode_kas = 'KM-' . str_pad($number, 3, '0', STR_PAD_LEFT);
         });
     }
 }

@@ -62,12 +62,13 @@
 <div class="h-[64px] sm:h-[72px]"></div>
 
 @php
+// UPDATE: Urutan menu disesuaikan dengan alur kerja (Dashboard > Kasir > Keuangan > Produk > Laporan)
 $navLinks = [
     ['route' => 'dashboard', 'icon' => 'grid_view', 'label' => 'Dashboard'],
     ['route' => 'pos.index', 'icon' => 'point_of_sale', 'label' => 'POS / Kasir'],
-    ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
     ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Kas Masuk'],
     ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Kas Keluar'],
+    ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
     ['route' => 'laporan.index', 'icon' => 'description', 'label' => 'Laporan'],
 ];
 @endphp
@@ -89,9 +90,8 @@ $navLinks = [
 </div>
 
 {{-- 3. MENU NAVIGASI (Mobile - Floating Glass Dock) --}}
-{{-- UPDATE: Menggunakan left-1/2 dan -translate-x-1/2 agar PRESISI di tengah (True Center) --}}
-<div class="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 transition-all duration-300">
-    <div class="bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl shadow-stone-300/40 rounded-[2rem] px-2 py-3 flex justify-between items-center relative w-full">
+<div class="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-6 transition-all duration-300">
+    <div class="bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl shadow-stone-300/40 rounded-[2rem] px-1 py-2 flex justify-between items-center relative w-full">
         @foreach($navLinks as $link)
             @php $isActive = request()->routeIs($link['route']); @endphp
             <a href="{{ route($link['route']) }}"
@@ -99,12 +99,12 @@ $navLinks = [
                       {{ $isActive ? '-translate-y-2' : '' }}">
 
                 @if($isActive)
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-brand-500/10 rounded-full blur-md"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-brand-500/10 rounded-full blur-md"></div>
                 @endif
 
-                <div class="relative z-10 p-2 rounded-2xl transition-all duration-300
-                            {{ $isActive ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/40 scale-110' : 'text-stone-400 group-hover:text-brand-600 bg-transparent' }}">
-                    <span class="material-symbols-rounded text-[24px] leading-none">
+                <div class="relative z-10 p-2 rounded-full transition-all duration-300
+                            {{ $isActive ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/40 scale-105' : 'text-stone-400 group-hover:text-brand-600 bg-transparent' }}">
+                    <span class="material-symbols-rounded text-[22px] leading-none">
                         {{ $link['icon'] }}
                     </span>
                 </div>

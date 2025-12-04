@@ -1,117 +1,43 @@
 <x-app-layout>
+    <div class="space-y-8">
 
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #f7f7f7;
-        }
-
-        .card-custom {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            padding: 24px;
-            border-left: 5px solid #7AC943; /* warna hijau khas dashboard */
-        }
-
-        h3 {
-            color: #2F362C;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        label {
-            color: #2F362C;
-            font-weight: 500;
-        }
-
-        input, select {
-            font-family: 'Outfit', sans-serif;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            padding: 8px 10px;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #F5C04C;
-            box-shadow: 0 0 0 2px rgba(245, 192, 76, 0.3);
-        }
-
-        .btn-main {
-            background-color: #7AC943;
-            color: white;
-            font-weight: 600;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        .btn-main:hover {
-            background-color: #6ab53b;
-        }
-
-        .btn-danger {
-            background-color: #E74C3C;
-            color: white;
-            font-weight: 600;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .section-title {
-            background-color: #F5C04C;
-            color: #2F362C;
-            padding: 8px 14px;
-            border-radius: 6px 6px 0 0;
-            font-weight: 600;
-        }
-
-        .dark\:bg-gray-800 {
-            background-color: #fff !important;
-        }
-
-        .dark\:text-gray-200 {
-            color: #2F362C !important;
-        }
-    </style>
-
-    <div class="py-12" style="background-color: #f7f7f7;">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-
-            {{-- Informasi Profil --}}
-            <div class="card-custom">
-                <div class="section-title">Informasi Akun</div>
-                <div class="mt-4">
-                    @include('profile.partials.update-profile-information-form')
+        {{-- Header Halaman --}}
+        <div class="relative overflow-hidden bg-white rounded-3xl p-6 sm:p-10 shadow-soft border border-stone-100">
+            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 tracking-tight">
+                        Pengaturan Akun
+                    </h2>
+                    <p class="mt-1 text-stone-500 text-sm sm:text-base">
+                        Kelola informasi profil, keamanan, dan privasi akun Anda.
+                    </p>
+                </div>
+                <div class="h-12 w-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600">
+                    <span class="material-symbols-rounded text-3xl">manage_accounts</span>
                 </div>
             </div>
+            {{-- Dekorasi Latar Belakang --}}
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl"></div>
+        </div>
 
-            {{-- Ubah Password --}}
-            <div class="card-custom">
-                <div class="section-title">Ubah Password</div>
-                <div class="mt-4">
-                    @include('profile.partials.update-password-form')
-                </div>
+        {{-- Grid Layout untuk Form --}}
+        <div class="space-y-6 sm:space-y-8">
+
+            {{-- 1. Update Profile Info --}}
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-soft border border-stone-100">
+                @include('profile.partials.update-profile-information-form')
             </div>
 
-            {{-- Hapus Akun --}}
-            <div class="card-custom">
-                <div class="section-title" style="background-color:#E74C3C; color:white;">Hapus Akun</div>
-                <div class="mt-4">
-                    @include('profile.partials.delete-user-form')
-                </div>
+            {{-- 2. Update Password --}}
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-soft border border-stone-100">
+                @include('profile.partials.update-password-form')
             </div>
 
+            {{-- 3. Delete Account --}}
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-soft border border-red-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                @include('profile.partials.delete-user-form')
+            </div>
         </div>
     </div>
 </x-app-layout>

@@ -7,251 +7,151 @@ use App\Models\KasMasuk;
 use App\Models\KasKeluar;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use PDF;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LaporanExport;
-
 
 class LaporanController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
-
-        // Ambil list tahun
-        $listTahun = collect([
-            ...DB::table('kas_masuk')
-                ->where('user_id', $userId)
-                ->select(DB::raw('YEAR(tanggal_transaksi) as tahun'))
-                ->pluck('tahun')
-                ->toArray(),
-
-            ...DB::table('kas_keluar')
-                ->where('user_id', $userId)
-                ->select(DB::raw('YEAR(tanggal) as tahun'))
-                ->pluck('tahun')
-                ->toArray(),
-        ])->unique()->sortDesc()->values();
-
-        // --- QUERY KAS MASUK ---
-        $kasMasuk = DB::table('kas_masuk')
-            ->where('user_id', $userId)
-            ->when($request->tahun, fn($q) => $q->whereYear('tanggal_transaksi', $request->tahun))
-            ->when($request->bulan, fn($q) => $q->whereMonth('tanggal_transaksi', $request->bulan))
-            ->get();
-
-        // --- QUERY KAS KELUAR ---
-        $kasKeluar = DB::table('kas_keluar')
-            ->where('user_id', $userId)
-            ->when($request->tahun, fn($q) => $q->whereYear('tanggal', $request->tahun))
-            ->when($request->bulan, fn($q) => $q->whereMonth('tanggal', $request->bulan))
-            ->get();
-
-        // Hitung total
-        $totalMasuk = $kasMasuk->sum('total');
-        $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas = $totalMasuk - $totalKeluar;
-
-        // Gabungan laporan
-        $laporan = $kasMasuk->map(function ($m) {
-            return [
-                'tanggal' => $m->tanggal_transaksi,
-                'keterangan' => $m->keterangan,
-                'kategori' => $m->kategori ?? '-',
-                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
-                'kas_masuk' => $m->total,
-                'kas_keluar' => 0,
-                'saldo' => $m->total,
-            ];
-        })->merge(
-                $kasKeluar->map(function ($k) {
-                    return [
-                        'tanggal' => $k->tanggal,
-                        'deskripsi' => $k->deskripsi,
-                        'kategori' => $k->kategori ?? '-',
-                        'metode_pembayaran' => $k->metode_pembayaran ?? '-',
-                        'penerima' => $k->penerima ?? '-',
-                        'kas_masuk' => 0,
-                        'kas_keluar' => $k->nominal,
-                        'saldo' => -$k->nominal,
-                    ];
-                })
-            )->sortByDesc('tanggal')->values();
-
-        // KIRIM SEMUA DATA KE VIEW
-        return view('laporan.index', compact(
-            'kasMasuk',
-            'kasKeluar',
-            'totalMasuk',
-            'totalKeluar',
-            'selisihKas',
-            'laporan',
-            'listTahun'
-        ));
+        $data = $this->getLaporanData($request);
+        return view('laporan.index', $data);
     }
 
     public function exportPdf(Request $request)
     {
-        // ambil data yang sama persis seperti di index
-        $data = $this->getFilteredLaporan($request);
-
-        $pdf = PDF::loadView('laporan.pdf', $data)->setPaper('A4', 'portrait');
-        return $pdf->download('laporan-keuangan.pdf');
+        $data = $this->getLaporanData($request);
+        $pdf = Pdf::loadView('laporan.pdf', $data);
+        $pdf->setPaper('a4', 'portrait');
+        $filename = 'Laporan_Keuangan_' . date('d_m_Y_His') . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function exportExcel(Request $request)
     {
-        $filterType = $request->get('filter_type');
-        $filterValue = $request->get('filter_value');
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
-        $userId = \Illuminate\Support\Facades\Auth::id();
-
-        $kasMasukQuery = KasMasuk::where('user_id', $userId);
-        $kasKeluarQuery = KasKeluar::where('user_id', $userId);
-
-        // --- FILTER ---
-        if ($filterType === 'harian' && $filterValue) {
-            $kasMasukQuery->whereDate('tanggal_transaksi', $filterValue);
-            $kasKeluarQuery->whereDate('tanggal', $filterValue);
-        } elseif ($filterType === 'bulanan' && $filterValue) {
-            $month = Carbon::parse($filterValue)->month;
-            $year = Carbon::parse($filterValue)->year;
-            $kasMasukQuery->whereMonth('tanggal_transaksi', $month)->whereYear('tanggal_transaksi', $year);
-            $kasKeluarQuery->whereMonth('tanggal', $month)->whereYear('tanggal', $year);
-        } elseif ($filterType === 'rentang' && $startDate && $endDate) {
-            $start = Carbon::parse($startDate)->startOfDay();
-            $end = Carbon::parse($endDate)->endOfDay();
-            $kasMasukQuery->whereBetween('tanggal_transaksi', [$start, $end]);
-            $kasKeluarQuery->whereBetween('tanggal', [$start, $end]);
-        }
-
-        $kasMasuk = $kasMasukQuery->orderBy('tanggal_transaksi', 'desc')->get();
-        $kasKeluar = $kasKeluarQuery->orderBy('tanggal', 'desc')->get();
-
-        $totalMasuk = $kasMasuk->sum('total');
-        $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas = $totalMasuk - $totalKeluar;
-
-        // --- GABUNG LAPORAN ---
-        $laporan = collect();
-
-        foreach ($kasMasuk as $m) {
-            $laporan->push([
-                'tanggal' => $m->tanggal_transaksi,
-                'keterangan' => $m->keterangan ?? '-',
-                'kategori' => $m->kategori ?? '-',
-                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
-                'kas_masuk' => $m->total,
-                'kas_keluar' => 0,
-            ]);
-        }
-
-        foreach ($kasKeluar as $k) {
-            $laporan->push([
-                'tanggal' => $k->tanggal,
-                'deskripsi' => $k->deskripsi ?? '-',
-                'kategori' => $k->kategori ?? '-',
-                'metode_pembayaran' => $k->metode_pembayaran ?? '-',
-                'penerima' => $k->penerima ?? '-',
-                'kas_masuk' => 0,
-                'kas_keluar' => $k->nominal,
-            ]);
-        }
-
-        $laporan = $laporan->sortByDesc('tanggal')->values();
-
-        $saldo = 0;
-        $laporan = $laporan->map(function ($item) use (&$saldo) {
-            $saldo += ($item['kas_masuk'] - $item['kas_keluar']);
-            $item['saldo'] = $saldo;
-            return $item;
-        });
-
-        // --- DOWNLOAD EXCEL ---
-        return Excel::download(
-            new LaporanExport($laporan, $kasMasuk, $kasKeluar, $totalMasuk, $totalKeluar, $selisihKas),
-            'laporan-keuangan.xlsx'
-        );
+        $data = $this->getLaporanData($request);
+        $filename = 'Laporan_Keuangan_' . date('d_m_Y_His') . '.xlsx';
+        return Excel::download(new LaporanExport(
+            $data['laporan'],
+            $data['saldoAwal'],
+            $data['totalMasuk'],
+            $data['totalKeluar'],
+            $data['saldoAkhir']
+        ), $filename);
     }
 
-
-    private function getFilteredLaporan(Request $request)
+    private function getLaporanData(Request $request)
     {
-        $tahun = $request->get('tahun');
-        $bulan = $request->get('bulan');
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        $userId = Auth::id();
 
-        $kasMasukQuery = KasMasuk::where('user_id', $userId);
-        $kasKeluarQuery = KasKeluar::where('user_id', $userId);
+        // --- 1. LOGIKA FILTER CERDAS ---
+        $bulan = $request->filled('bulan') ? (int)$request->bulan : null;
+        $tahun = $request->filled('tahun') ? (int)$request->tahun : null;
 
-        // FILTER TAHUN
+        // Jika halaman dibuka pertama kali (tanpa filter), default ke Tahun Ini
+        if (!$bulan && !$tahun) {
+            $tahun = (int)date('Y');
+        }
+
+        // Jika user pilih Bulan tapi Kosongkan Tahun, otomatis set Tahun Ini
+        if ($bulan && empty($tahun)) {
+            $tahun = (int)date('Y');
+        }
+
+        // --- 2. AMBIL LIST TAHUN (Untuk Dropdown) ---
+        $tahunMasuk = DB::table('kas_masuk')->where('user_id', $userId)->selectRaw('YEAR(tanggal_transaksi) as year')->pluck('year');
+        $tahunKeluar = DB::table('kas_keluar')->where('user_id', $userId)->selectRaw('YEAR(tanggal) as year')->pluck('year');
+
+        // FIX ERROR COLLECTION: Gabung, Unik, Sort, dan paksa jadi ARRAY PHP BIASA
+        $listTahun = $tahunMasuk->merge($tahunKeluar)
+                        ->unique()
+                        ->sortDesc()
+                        ->values()
+                        ->toArray(); // <-- PENTING: Mengubah Collection jadi Array
+
+        // --- 3. QUERY DATA ---
+        $queryMasuk = KasMasuk::where('user_id', $userId);
+        $queryKeluar = KasKeluar::where('user_id', $userId);
+        $saldoAwal = 0;
+
+        // Logic Saldo Awal & Filter
         if ($tahun) {
-            $kasMasukQuery->whereYear('tanggal_transaksi', $tahun);
-            $kasKeluarQuery->whereYear('tanggal', $tahun);
+            // Tentukan tanggal batas bawah
+            $startMonth = $bulan ? $bulan : 1;
+            $startDate = Carbon::createFromDate($tahun, $startMonth, 1)->startOfMonth();
+
+            $prevMasuk = KasMasuk::where('user_id', $userId)->where('tanggal_transaksi', '<', $startDate)->sum('total');
+            $prevKeluar = KasKeluar::where('user_id', $userId)->where('tanggal', '<', $startDate)->sum('nominal');
+            $saldoAwal = $prevMasuk - $prevKeluar;
+
+            // Apply Filter ke Query Utama
+            $queryMasuk->whereYear('tanggal_transaksi', $tahun);
+            $queryKeluar->whereYear('tanggal', $tahun);
+
+            if ($bulan) {
+                $queryMasuk->whereMonth('tanggal_transaksi', $bulan);
+                $queryKeluar->whereMonth('tanggal', $bulan);
+            }
         }
 
-        // FILTER BULAN
-        if ($bulan) {
-            $kasMasukQuery->whereMonth('tanggal_transaksi', $bulan);
-            $kasKeluarQuery->whereMonth('tanggal', $bulan);
-        }
+        $kasMasuk = $queryMasuk->orderBy('tanggal_transaksi', 'asc')->get();
+        $kasKeluar = $queryKeluar->orderBy('tanggal', 'asc')->get();
 
-        // Ambil data
-        $kasMasuk = $kasMasukQuery->orderBy('tanggal_transaksi', 'desc')->get();
-        $kasKeluar = $kasKeluarQuery->orderBy('tanggal', 'desc')->get();
-
-        // Hitung total
+        // --- 4. DATA PROCESSING ---
         $totalMasuk = $kasMasuk->sum('total');
         $totalKeluar = $kasKeluar->sum('nominal');
-        $selisihKas = $totalMasuk - $totalKeluar;
+        $saldoAkhir = $saldoAwal + $totalMasuk - $totalKeluar;
 
-        // Gabungkan laporan
-        $laporan = collect();
-
+        // Gabungkan
+        $merged = collect();
         foreach ($kasMasuk as $m) {
-            $laporan->push([
-                'tanggal' => $m->tanggal_transaksi,
-                'keterangan' => $m->keterangan ?? '-',
-                'kategori' => $m->kategori ?? '-',
-                'metode_pembayaran' => $m->metode_pembayaran ?? '-',
-                'kas_masuk' => $m->total,
-                'kas_keluar' => 0,
+            $merged->push([
+                'tanggal' => Carbon::parse($m->tanggal_transaksi),
+                'type' => 'masuk',
+                'keterangan' => $m->keterangan,
+                'kategori' => $m->kategori ?? 'Umum',
+                'kode' => $m->kode_kas,
+                'masuk' => $m->total,
+                'keluar' => 0,
+                'penerima' => '-'
             ]);
         }
-
         foreach ($kasKeluar as $k) {
-            $laporan->push([
-                'tanggal' => $k->tanggal,
-                'deskripsi' => $k->deskripsi ?? '-',
-                'kategori' => $k->kategori ?? '-',
-                'metode_pembayaran' => $k->metode_pembayaran ?? '-',
-                'penerima' => $k->penerima ?? '-',
-                'kas_masuk' => 0,
-                'kas_keluar' => $k->nominal,
+            $merged->push([
+                'tanggal' => Carbon::parse($k->tanggal),
+                'type' => 'keluar',
+                'keterangan' => $k->deskripsi ?? $k->kategori,
+                'kategori' => $k->kategori ?? 'Umum',
+                'kode' => $k->kode_kas,
+                'masuk' => 0,
+                'keluar' => $k->nominal,
+                'penerima' => $k->penerima
             ]);
         }
 
-        // URUT TANGGAL TERBARU DULU
-        $laporan = $laporan->sortByDesc('tanggal')->values();
+        // Sorting & Running Balance
+        $laporan = $merged->sortBy(function ($item) {
+            return $item['tanggal']->timestamp;
+        })->values();
 
-        // Hitung saldo berjalan
-        $saldo = 0;
-        $laporan = $laporan->map(function ($item) use (&$saldo) {
-            $saldo += ($item['kas_masuk'] - $item['kas_keluar']);
-            $item['saldo'] = $saldo;
+        $runningBalance = $saldoAwal;
+        $laporan = $laporan->map(function ($item) use (&$runningBalance) {
+            $runningBalance = $runningBalance + $item['masuk'] - $item['keluar'];
+            $item['saldo'] = $runningBalance;
             return $item;
         });
 
         return [
             'laporan' => $laporan,
-            'kasMasuk' => $kasMasuk,
-            'kasKeluar' => $kasKeluar,
+            'listTahun' => $listTahun, // Ini sekarang sudah pasti Array
+            'saldoAwal' => $saldoAwal,
             'totalMasuk' => $totalMasuk,
             'totalKeluar' => $totalKeluar,
-            'selisihKas' => $selisihKas,
+            'saldoAkhir' => $saldoAkhir,
+            'selectedBulan' => $bulan,
+            'selectedTahun' => $tahun,
         ];
     }
-
-
 }

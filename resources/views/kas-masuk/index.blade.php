@@ -8,7 +8,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- Container Utama --}}
-    {{-- HAPUS showTambah dari x-data --}}
     <div class="min-h-screen bg-stone-50/50 pb-36"
          x-data="{ showDetail: false, selectedItem: {} }">
 
@@ -21,7 +20,6 @@
                     <p class="text-stone-500 text-xs md:text-sm mt-1.5 max-w-lg leading-relaxed">Kelola dan pantau seluruh arus pemasukan dana.</p>
                 </div>
 
-                {{-- TOMBOL TAMBAH (Desktop Only) - DIUBAH JADI LINK (A HREF) --}}
                 <a href="{{ route('kas-masuk.create') }}"
                     class="hidden md:inline-flex group bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-1">
                     <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
@@ -36,7 +34,6 @@
             @endphp
             <div class="mb-6">
                 <div class="relative bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-[2rem] p-6 md:p-10 shadow-2xl shadow-emerald-900/20 overflow-hidden group">
-                    {{-- Decorative Blobs --}}
                     <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
                     <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 md:w-40 md:h-40 bg-black/10 rounded-full blur-2xl"></div>
 
@@ -64,12 +61,11 @@
                 </div>
             </div>
 
-            {{-- 3. FILTER & SEARCH BAR (TETAP SAMA) --}}
+            {{-- 3. FILTER & SEARCH BAR --}}
             <form method="GET" action="{{ route('kas-masuk.index') }}" id="filterForm"
                   class="bg-white p-3 md:p-4 rounded-[1.5rem] md:rounded-3xl shadow-sm border border-stone-100 mb-6 sticky top-20 md:top-4 z-30 transition-all">
 
                 <div class="flex flex-col md:flex-row gap-2 md:gap-3">
-                    {{-- Search Input --}}
                     <div class="relative flex-1 w-full group">
                         <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xl group-focus-within:text-emerald-500 transition-colors">search</span>
                         <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
@@ -77,63 +73,38 @@
                             class="w-full pl-10 pr-4 py-3 md:py-3.5 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium transition-all placeholder:text-stone-400">
                     </div>
 
-                    {{-- Filter Buttons Container --}}
                     <div class="grid grid-cols-5 gap-2 w-full md:w-auto">
-
                         {{-- Custom Filter Harga --}}
                         <div class="relative col-span-2" x-data="{ open: false }" @click.outside="open = false">
                             <input type="hidden" name="filter_harga" id="hargaSelect" value="{{ request('filter_harga') }}">
-
                             <button type="button" @click="open = !open"
                                 class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
                                 <span class="material-symbols-rounded text-base text-emerald-500">attach_money</span>
-                                <span class="truncate" x-text="
-                                    $el.previousElementSibling.value == '0-50000' ? '0-50rb' :
-                                    ($el.previousElementSibling.value == '51000-500000' ? '51rb-500rb' :
-                                    ($el.previousElementSibling.value == '500001-999999999' ? '> 500rb' : 'Harga'))
-                                ">Harga</span>
+                                <span class="truncate" x-text="$el.previousElementSibling.value == '0-50000' ? '0-50rb' : ($el.previousElementSibling.value == '51000-500000' ? '51rb-500rb' : ($el.previousElementSibling.value == '500001-999999999' ? '> 500rb' : 'Harga'))">Harga</span>
                                 <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></div>
                             </button>
 
                             <div x-show="open" style="display: none;"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
                                 class="absolute left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
-
-                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">Semua</button>
-                                <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '0-50000' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">0 - 50rb</button>
-                                <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '51000-500000' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">51rb - 500rb</button>
-                                <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors {{ request('filter_harga') == '500001-999999999' ? 'bg-emerald-50 text-emerald-700' : 'text-stone-600' }}">> 500rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Semua</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">0 - 50rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">51rb - 500rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">> 500rb</button>
                             </div>
                         </div>
 
                         {{-- Custom Filter Waktu --}}
                         <div class="relative col-span-2" x-data="{ open: false, isCustom: '{{ request('filter_waktu') }}' == 'custom' }" @click.outside="open = false">
                             <input type="hidden" name="filter_waktu" id="tanggalSelect" value="{{ request('filter_waktu') }}">
-
                             <button type="button" @click="open = !open"
                                 class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
                                 <span class="material-symbols-rounded text-base text-emerald-500">calendar_today</span>
-                                <span class="truncate" x-text="
-                                    $el.previousElementSibling.value == 'hari-ini' ? 'Hari Ini' :
-                                    ($el.previousElementSibling.value == 'minggu-ini' ? 'Minggu Ini' :
-                                    ($el.previousElementSibling.value == 'bulan-ini' ? 'Bulan Ini' :
-                                    ($el.previousElementSibling.value == 'custom' ? 'Custom' : 'Waktu')))
-                                ">Waktu</span>
+                                <span class="truncate" x-text="$el.previousElementSibling.value == 'hari-ini' ? 'Hari Ini' : ($el.previousElementSibling.value == 'minggu-ini' ? 'Minggu Ini' : ($el.previousElementSibling.value == 'bulan-ini' ? 'Bulan Ini' : ($el.previousElementSibling.value == 'custom' ? 'Custom' : 'Waktu')))">Waktu</span>
                                  <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></div>
                             </button>
 
                             <div x-show="open" style="display: none;"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
                                 class="absolute right-0 md:left-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
-
                                 <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Semua</button>
                                 <button type="button" onclick="setFilter('tanggalSelect', 'hari-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Hari Ini</button>
                                 <button type="button" onclick="setFilter('tanggalSelect', 'minggu-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors">Minggu Ini</button>
@@ -141,7 +112,6 @@
                                 <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex justify-between items-center">
                                     <span>Pilih Tanggal (Custom)</span> <span class="material-symbols-rounded text-sm" x-show="isCustom" style="display: none;">check</span>
                                 </button>
-
                                 <div x-show="isCustom" style="display: none;" class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
                                     <input type="date" name="start_date" id="startDateInput" value="{{ request('start_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
                                     <input type="date" name="end_date" id="endDateInput" value="{{ request('end_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
@@ -157,7 +127,7 @@
                 </div>
             </form>
 
-            {{-- 4. TABLE VIEW (Desktop Only) - TIDAK BERUBAH --}}
+            {{-- 4. TABLE VIEW (Desktop Only) --}}
             <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -191,32 +161,25 @@
                                     <td class="p-6 align-top">
                                         <div class="font-medium text-stone-700 line-clamp-2 max-w-[250px] leading-relaxed">{{ $item->keterangan }}</div>
                                         <div class="text-xs text-stone-400 mt-1">
-                                            {{ $item->jumlah }} x Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}
+                                            @if($item->jumlah > 0 && $item->harga_satuan > 0)
+                                                {{ $item->jumlah }} x Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}
+                                            @else
+                                                -
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="p-6 align-top text-center">
                                         @php
-                                            $colors = match (strtolower($item->kategori)) {
-                                                // Hijau: Penjualan Harian (Rutin)
-                                                'penjualan tunai' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-
-                                                // Biru: Pesanan Besar (Spesial/Event)
-                                                'event besar' => 'bg-blue-100 text-blue-800 border-blue-200',
-
-                                                // Oranye: Titipan (Mitra)
-                                                'titipan mitra' => 'bg-orange-100 text-orange-800 border-orange-200',
-
-                                                // Ungu: Modal (Owner)
-                                                'suntikan modal' => 'bg-purple-100 text-purple-800 border-purple-200',
-
-                                                // Abu-abu: Lainnya
-                                                'pendapatan lain' => 'bg-gray-100 text-gray-800 border-gray-200',
-
-                                                // Default
+                                            $kategoriLower = strtolower($item->kategori);
+                                            $badgeClass = match (true) {
+                                                str_contains($kategoriLower, 'penjualan') => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                                str_contains($kategoriLower, 'event') || str_contains($kategoriLower, 'besar') => 'bg-blue-100 text-blue-800 border-blue-200',
+                                                str_contains($kategoriLower, 'mitra') || str_contains($kategoriLower, 'titipan') => 'bg-orange-100 text-orange-800 border-orange-200',
+                                                str_contains($kategoriLower, 'modal') || str_contains($kategoriLower, 'suntikan') => 'bg-purple-100 text-purple-800 border-purple-200',
                                                 default => 'bg-stone-100 text-stone-600 border-stone-200',
                                             };
                                         @endphp
-                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border {{ $colors }}">
+                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border shadow-sm {{ $badgeClass }}">
                                             {{ $item->kategori }}
                                         </span>
                                     </td>
@@ -258,7 +221,7 @@
                 </div>
             </div>
 
-            {{-- 5. MOBILE LIST VIEW - TIDAK BERUBAH --}}
+            {{-- 5. MOBILE LIST VIEW --}}
             <div id="kasDataContainerMobile" class="md:hidden space-y-3">
                 @forelse ($kasMasuk as $item)
                     <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
@@ -282,15 +245,38 @@
                         data-metode="{{ strtolower($item->metode_pembayaran) }}"
                         data-kode="{{ strtolower($item->kode_kas) }}">
 
-                        <div class="absolute top-0 bottom-0 left-0 w-1
-                            {{ strtolower($item->kategori) == 'penjualan' ? 'bg-emerald-400' : 'bg-stone-300' }}
-                        "></div>
+                        {{-- PERBAIKAN: Menambahkan logic $badgeClass di scope Mobile --}}
+                        @php
+                            $kategoriLower = strtolower($item->kategori);
+
+                            // 1. Warna Garis Kiri
+                            $borderClass = match (true) {
+                                str_contains($kategoriLower, 'penjualan') => 'bg-emerald-400',
+                                str_contains($kategoriLower, 'event') => 'bg-blue-400',
+                                str_contains($kategoriLower, 'mitra') => 'bg-orange-400',
+                                str_contains($kategoriLower, 'modal') => 'bg-purple-400',
+                                default => 'bg-stone-300',
+                            };
+
+                            // 2. Warna Badge (Fix Error Undefined Variable)
+                            $badgeClass = match (true) {
+                                str_contains($kategoriLower, 'penjualan') => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                str_contains($kategoriLower, 'event') || str_contains($kategoriLower, 'besar') => 'bg-blue-100 text-blue-800 border-blue-200',
+                                str_contains($kategoriLower, 'mitra') || str_contains($kategoriLower, 'titipan') => 'bg-orange-100 text-orange-800 border-orange-200',
+                                str_contains($kategoriLower, 'modal') || str_contains($kategoriLower, 'suntikan') => 'bg-purple-100 text-purple-800 border-purple-200',
+                                default => 'bg-stone-100 text-stone-600 border-stone-200',
+                            };
+                        @endphp
+
+                        <div class="absolute top-0 bottom-0 left-0 w-1 {{ $borderClass }}"></div>
 
                         <div class="pl-2.5">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="w-2/3">
                                     <div class="flex items-center gap-1.5 mb-1">
-                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 uppercase tracking-wide">{{ $item->kategori }}</span>
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border shadow-sm {{ $badgeClass }}">
+                                            {{ $item->kategori }}
+                                        </span>
                                         <span class="text-[9px] text-stone-400">{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d M') }}</span>
                                     </div>
                                     <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-tight">{{ $item->keterangan }}</h3>
@@ -313,9 +299,7 @@
                 @endforelse
             </div>
 
-            {{-- MODAL TAMBAH (Create) - DIHAPUS, PINDAH KE FILE BARU --}}
-
-            {{-- 7. MODAL DETAIL MOBILE (TETAP SAMA) --}}
+            {{-- 7. MODAL DETAIL MOBILE --}}
             <div x-show="showDetail"
                 class="fixed inset-0 z-[100] md:hidden flex flex-col bg-white"
                 x-transition:enter="transition ease-out duration-300"
@@ -336,7 +320,16 @@
 
                 <div class="flex-1 overflow-y-auto p-5 bg-stone-50/50">
                     <div class="text-center mb-6 mt-2">
-                        <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm" x-text="selectedItem.kategori"></span>
+                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm border"
+                            :class="{
+                                'bg-emerald-100 text-emerald-800 border-emerald-200': (selectedItem.kategori || '').toLowerCase().includes('penjualan'),
+                                'bg-blue-100 text-blue-800 border-blue-200': (selectedItem.kategori || '').toLowerCase().includes('event'),
+                                'bg-orange-100 text-orange-800 border-orange-200': (selectedItem.kategori || '').toLowerCase().includes('mitra'),
+                                'bg-purple-100 text-purple-800 border-purple-200': (selectedItem.kategori || '').toLowerCase().includes('modal'),
+                                'bg-stone-100 text-stone-600 border-stone-200': !['penjualan', 'event', 'mitra', 'modal'].some(x => (selectedItem.kategori || '').toLowerCase().includes(x))
+                            }"
+                            x-text="selectedItem.kategori">
+                        </span>
                         <h3 class="text-3xl font-black text-stone-800 tracking-tight" x-text="'Rp ' + selectedItem.nominal"></h3>
                         <p class="text-stone-400 text-xs mt-1 font-mono" x-text="selectedItem.kode_kas"></p>
                     </div>
@@ -373,7 +366,7 @@
                 </div>
             </div>
 
-            {{-- 8. FLOATING BUTTON MOBILE - DIUBAH JADI LINK --}}
+            {{-- 8. FLOATING BUTTON MOBILE --}}
             <a href="{{ route('kas-masuk.create') }}"
                 class="fixed bottom-28 right-5 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-500/40 flex items-center justify-center z-40 active:scale-90 transition-transform border-2 border-white/20">
                 <span class="material-symbols-rounded text-2xl">add</span>
@@ -381,9 +374,8 @@
 
         </div>
 
-        {{-- SCRIPTS (TETAP SAMA) --}}
+        {{-- SCRIPTS --}}
         <script>
-            // ... (Script filter dan delete tetap sama seperti kode awal, tidak perlu diubah) ...
              function setFilter(inputId, value, isCustom = false) {
                 const input = document.getElementById(inputId);
                 if (input) {

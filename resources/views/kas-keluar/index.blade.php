@@ -2,10 +2,6 @@
     {{-- Libraries --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    {{-- Meta CSRF --}}
-    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- Container Utama --}}
     <div class="min-h-screen bg-stone-50/50 pb-36"
@@ -20,7 +16,7 @@
                     <p class="text-stone-500 text-xs md:text-sm mt-1.5 max-w-lg leading-relaxed">Kelola dan pantau seluruh arus pengeluaran operasional.</p>
                 </div>
 
-                {{-- TOMBOL TAMBAH (Desktop Only) --}}
+                {{-- TOMBOL TAMBAH (Desktop) --}}
                 <a href="{{ route('kas-keluar.create') }}"
                    class="hidden md:inline-flex group bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1">
                     <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
@@ -44,10 +40,14 @@
                             <div class="flex items-center gap-2 mb-2 md:mb-3">
                                 <span class="bg-rose-500/50 border border-rose-400/30 text-rose-50 px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider">Total Keluar</span>
                             </div>
-                            <h2 class="text-3xl md:text-6xl font-black text-white tracking-tighter drop-shadow-sm flex items-start">
-                                <span class="text-rose-200 text-lg md:text-4xl font-bold mr-1 mt-1 md:mt-2">Rp</span>
+
+                            {{-- Dynamic Font Size Logic --}}
+                            <h2 class="font-black text-white tracking-tighter drop-shadow-sm flex items-start transition-all duration-300"
+                                :class="'{{ strlen((string)$totalKas) }}' > 9 ? 'text-3xl md:text-5xl' : 'text-4xl md:text-6xl'">
+                                <span class="text-rose-200 text-lg md:text-3xl font-bold mr-1 mt-1 md:mt-2">Rp</span>
                                 {{ number_format($totalKas, 0, ',', '.') }}
                             </h2>
+
                             <p class="text-rose-100 mt-2 md:mt-3 font-medium flex items-center gap-2 text-xs md:text-base opacity-90">
                                 <span class="flex h-1.5 w-1.5 md:h-2 md:w-2 relative">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-200 opacity-75"></span>
@@ -76,13 +76,12 @@
                             class="w-full pl-10 pr-4 py-3 md:py-3.5 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-sm font-medium transition-all placeholder:text-stone-400">
                     </div>
 
-                    {{-- Filter Buttons Container (Grid di Mobile, Auto di Desktop) --}}
+                    {{-- Filter Buttons --}}
                     <div class="grid grid-cols-5 gap-2 w-full md:w-auto">
 
-                        {{-- Custom Filter Harga --}}
+                        {{-- Filter Harga --}}
                         <div class="relative col-span-2" x-data="{ open: false }" @click.outside="open = false">
                             <input type="hidden" name="filter_harga" id="hargaSelect" value="{{ request('filter_harga') }}">
-
                             <button type="button" @click="open = !open"
                                 class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
                                 <span class="material-symbols-rounded text-base text-rose-500">attach_money</span>
@@ -95,34 +94,18 @@
                             </button>
 
                             <div x-show="open" style="display: none;"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
-                                class="absolute left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
-
-                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_harga') == '' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    Semua
-                                </button>
-                                <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_harga') == '0-50000' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    0 - 50rb
-                                </button>
-                                <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_harga') == '51000-500000' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    51rb - 500rb
-                                </button>
-                                <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_harga') == '500001-999999999' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    > 500rb
-                                </button>
+                                 x-transition.opacity.duration.200ms
+                                 class="absolute right-0 md:left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
+                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Semua</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">0 - 50rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">51rb - 500rb</button>
+                                <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">> 500rb</button>
                             </div>
                         </div>
 
-                        {{-- Custom Filter Waktu --}}
+                        {{-- Filter Waktu --}}
                         <div class="relative col-span-2" x-data="{ open: false, isCustom: '{{ request('filter_waktu') }}' == 'custom' }" @click.outside="open = false">
                             <input type="hidden" name="filter_waktu" id="tanggalSelect" value="{{ request('filter_waktu') }}">
-
                             <button type="button" @click="open = !open"
                                 class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
                                 <span class="material-symbols-rounded text-base text-rose-500">calendar_today</span>
@@ -132,38 +115,24 @@
                                     ($el.previousElementSibling.value == 'bulan-ini' ? 'Bulan Ini' :
                                     ($el.previousElementSibling.value == 'custom' ? 'Custom' : 'Waktu')))
                                 ">Waktu</span>
-                                 <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></div>
+                                <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></div>
                             </button>
 
                             <div x-show="open" style="display: none;"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
-                                class="absolute right-0 md:left-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
+                                 x-transition.opacity.duration.200ms
+                                 class="absolute right-0 md:left-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
+                                <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Semua</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'hari-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Hari Ini</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'minggu-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Minggu Ini</button>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'bulan-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Bulan Ini</button>
 
-                                <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_waktu') == '' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    Semua
-                                </button>
-                                <button type="button" onclick="setFilter('tanggalSelect', 'hari-ini', false)" @click="open = false; isCustom = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_waktu') == 'hari-ini' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    Hari Ini
-                                </button>
-                                <button type="button" onclick="setFilter('tanggalSelect', 'minggu-ini', false)" @click="open = false; isCustom = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_waktu') == 'minggu-ini' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    Minggu Ini
-                                </button>
-                                <button type="button" onclick="setFilter('tanggalSelect', 'bulan-ini', false)" @click="open = false; isCustom = false"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors {{ request('filter_waktu') == 'bulan-ini' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
-                                    Bulan Ini
-                                </button>
-                                <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true"
-                                    class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors flex justify-between items-center {{ request('filter_waktu') == 'custom' ? 'bg-rose-50 text-rose-700' : 'text-stone-600' }}">
+                                <div class="border-t border-stone-100 my-1"></div>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors flex justify-between items-center">
                                     <span>Pilih Tanggal (Custom)</span>
-                                    <span class="material-symbols-rounded text-sm" x-show="isCustom" style="display: none;">check</span>
+                                    <span class="material-symbols-rounded text-sm" x-show="isCustom">check</span>
                                 </button>
 
-                                <div x-show="isCustom" style="display: none;" class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
+                                <div x-show="isCustom" class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
                                     <input type="date" name="start_date" id="startDateInput" value="{{ request('start_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
                                     <input type="date" name="end_date" id="endDateInput" value="{{ request('end_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
                                 </div>
@@ -178,14 +147,14 @@
                 </div>
             </form>
 
-            {{-- 4. TABLE VIEW (Desktop Only) --}}
+            {{-- 4. TABLE VIEW (Desktop) --}}
             <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-stone-50/50 border-b border-stone-100 text-stone-500">
                             <tr>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider">Info Transaksi</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Detail</th>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Keterangan</th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Kategori</th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider text-right">Nominal</th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Metode</th>
@@ -213,20 +182,20 @@
                                     </td>
                                     <td class="p-6 align-top">
                                         <div class="font-bold text-stone-700">{{ $item->penerima }}</div>
-                                        <div class="text-sm text-stone-500 mt-1 line-clamp-2 max-w-[250px] leading-relaxed">
+                                        <div class="text-xs text-stone-500 mt-1 line-clamp-2 max-w-[250px] leading-relaxed">
                                             {{ $item->deskripsi ?? '-' }}
                                         </div>
                                     </td>
                                     <td class="p-6 align-top text-center">
                                         @php
-                                            $colors = match (strtolower($item->kategori)) {
+                                            $badgeClass = match (strtolower($item->kategori)) {
                                                 'pembelian' => 'bg-amber-100 text-amber-800 border-amber-200',
                                                 'operasional' => 'bg-blue-100 text-blue-800 border-blue-200',
-                                                'gaji' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                                'gaji' => 'bg-purple-100 text-purple-800 border-purple-200',
                                                 default => 'bg-stone-100 text-stone-600 border-stone-200',
                                             };
                                         @endphp
-                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border {{ $colors }}">
+                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border {{ $badgeClass }}">
                                             {{ $item->kategori }}
                                         </span>
                                     </td>
@@ -241,11 +210,11 @@
                                     <td class="p-6 align-top text-center">
                                         @if($item->bukti_pembayaran)
                                             <button onclick="window.open('{{ asset('storage/' . $item->bukti_pembayaran) }}', '_blank')"
-                                                class="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all flex items-center justify-center">
-                                                <span class="material-symbols-rounded">image</span>
+                                                class="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all flex items-center justify-center shadow-sm">
+                                                <span class="material-symbols-rounded text-lg">image</span>
                                             </button>
                                         @else
-                                            <span class="text-stone-300">-</span>
+                                            <span class="text-stone-300 text-xs">-</span>
                                         @endif
                                     </td>
                                     <td class="p-6 align-top text-center">
@@ -253,14 +222,14 @@
                                             <a href="{{ route('kas-keluar.edit', $item->id) }}" class="p-2 rounded-lg text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors">
                                                 <span class="material-symbols-rounded">edit</span>
                                             </a>
-                                            <button type="button" class="delete-btn p-2 rounded-lg text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                            <button type="button" class="delete-btn p-2 rounded-lg text-stone-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                                                 data-id="{{ $item->id }}" data-deskripsi="{{ $item->deskripsi }}">
                                                 <span class="material-symbols-rounded">delete</span>
                                             </button>
+                                            <form action="{{ route('kas-keluar.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
+                                                @csrf @method('DELETE')
+                                            </form>
                                         </div>
-                                        <form action="{{ route('kas-keluar.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
-                                            @csrf @method('DELETE')
-                                        </form>
                                     </td>
                                 </tr>
                             @empty
@@ -303,12 +272,16 @@
                         data-metode="{{ strtolower($item->metode_pembayaran) }}"
                         data-kode="{{ strtolower($item->kode_kas) }}">
 
-                        <div class="absolute top-0 bottom-0 left-0 w-1
-                            {{ strtolower($item->kategori) == 'pembelian' ? 'bg-amber-400' : '' }}
-                            {{ strtolower($item->kategori) == 'operasional' ? 'bg-blue-400' : '' }}
-                            {{ strtolower($item->kategori) == 'gaji' ? 'bg-emerald-400' : '' }}
-                            {{ !in_array(strtolower($item->kategori), ['pembelian','operasional','gaji']) ? 'bg-stone-300' : '' }}
-                        "></div>
+                        {{-- Color Strip based on Category --}}
+                        @php
+                            $stripColor = match (strtolower($item->kategori)) {
+                                'pembelian' => 'bg-amber-400',
+                                'operasional' => 'bg-blue-400',
+                                'gaji' => 'bg-purple-400',
+                                default => 'bg-stone-300',
+                            };
+                        @endphp
+                        <div class="absolute top-0 bottom-0 left-0 w-1 {{ $stripColor }}"></div>
 
                         <div class="pl-2.5">
                             <div class="flex justify-between items-start mb-2">
@@ -352,13 +325,13 @@
                     <button @click="showDetail = false" class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-600 active:bg-stone-200">
                         <span class="material-symbols-rounded">arrow_back</span>
                     </button>
-                    <h2 class="text-base font-bold text-stone-800">Rincian Transaksi</h2>
+                    <h2 class="text-base font-bold text-stone-800">Rincian Pengeluaran</h2>
                     <div class="w-8"></div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-5 bg-stone-50/50">
                     <div class="text-center mb-6 mt-2">
-                        <span class="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm" x-text="selectedItem.kategori"></span>
+                        <span class="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm border border-rose-200" x-text="selectedItem.kategori"></span>
                         <h3 class="text-3xl font-black text-stone-800 tracking-tight" x-text="'Rp ' + selectedItem.nominal"></h3>
                         <p class="text-stone-400 text-xs mt-1 font-mono" x-text="selectedItem.kode_kas"></p>
                     </div>
@@ -382,10 +355,11 @@
                             <span class="text-[10px] text-stone-400 block mb-0.5">Deskripsi</span>
                             <p class="font-medium text-stone-600 leading-relaxed bg-stone-50 p-3 rounded-xl text-xs" x-text="selectedItem.deskripsi"></p>
                         </div>
+
                         <template x-if="selectedItem.bukti_url">
                             <div class="pt-2">
-                                <a :href="selectedItem.bukti_url" target="_blank" class="flex items-center justify-center gap-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors w-full">
-                                    <span class="material-symbols-rounded text-base">visibility</span> Lihat Bukti Foto
+                                <a :href="selectedItem.bukti_url" target="_blank" class="flex items-center justify-center gap-2 p-3 bg-stone-800 rounded-xl text-xs font-bold text-white hover:bg-stone-900 transition-colors w-full shadow-lg shadow-stone-800/20">
+                                    <span class="material-symbols-rounded text-base">image</span> Lihat Bukti Foto
                                 </a>
                             </div>
                         </template>
@@ -404,21 +378,19 @@
 
             {{-- 7. FLOATING BUTTON MOBILE --}}
             <a href="{{ route('kas-keluar.create') }}"
-                class="fixed bottom-28 right-5 md:hidden w-14 h-14 bg-rose-600 text-white rounded-full shadow-xl shadow-rose-500/40 flex items-center justify-center z-40 active:scale-90 transition-transform border-2 border-white/20">
+               class="fixed bottom-28 right-5 md:hidden w-14 h-14 bg-rose-600 text-white rounded-full shadow-xl shadow-rose-500/40 flex items-center justify-center z-40 active:scale-90 transition-transform border-2 border-white/20">
                 <span class="material-symbols-rounded text-2xl">add</span>
             </a>
 
         </div>
 
-        {{-- SCRIPTS (Logic Filter & Delete) --}}
+        {{-- SCRIPTS --}}
         <script>
             function setFilter(inputId, value, isCustom = false) {
                 const input = document.getElementById(inputId);
                 if (input) {
                     input.value = value;
-                    if(!isCustom) {
-                        applyAllFilters();
-                    }
+                    if(!isCustom) applyAllFilters();
                 }
             }
 
@@ -429,16 +401,12 @@
                 const startDateInput = document.getElementById('startDateInput');
                 const endDateInput = document.getElementById('endDateInput');
 
-                // Logic Search dengan Debounce
                 let searchTimeout;
                 searchInput?.addEventListener('input', () => {
                     clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        applyAllFilters();
-                    }, 300);
+                    searchTimeout = setTimeout(() => applyAllFilters(), 300);
                 });
 
-                // Logic Utama Filter
                 window.applyAllFilters = function() {
                     const query = searchInput.value.toLowerCase();
                     const hargaFilter = hargaSelect.value;
@@ -451,20 +419,14 @@
                     let visibleCountMobile = 0;
 
                     rows.forEach(row => {
-                        const penerima = row.dataset.penerima;
-                        const deskripsi = row.dataset.deskripsi;
+                        const penerima = row.dataset.penerima || '';
+                        const deskripsi = row.dataset.deskripsi || '';
                         const nominal = parseInt(row.dataset.nominal) || 0;
                         const tanggal = row.dataset.tanggal;
-                        const kode = row.dataset.kode;
-                        const kategori = row.dataset.kategori;
+                        const kode = row.dataset.kode || '';
+                        const kategori = row.dataset.kategori || '';
 
-                        const matchesSearch = !query ||
-                            penerima.includes(query) ||
-                            deskripsi.includes(query) ||
-                            kode.includes(query) ||
-                            kategori.includes(query) ||
-                            nominal.toString().includes(query);
-
+                        const matchesSearch = !query || penerima.includes(query) || deskripsi.includes(query) || kode.includes(query) || kategori.includes(query) || nominal.toString().includes(query);
                         const matchesHarga = checkHargaFilter(nominal, hargaFilter);
                         const matchesWaktu = checkWaktuFilter(tanggal, waktuFilter, startDate, endDate);
 
@@ -477,13 +439,12 @@
                         }
                     });
 
-                    // Toggle No Data Message
                     const noDataRow = document.getElementById('noDataRow');
                     if(noDataRow) noDataRow.style.display = visibleCount === 0 ? '' : 'none';
 
                     const noDataMobile = document.getElementById('noDataMobile');
                     if(noDataMobile && document.querySelectorAll('.filter-item-mobile').length > 0) {
-                            noDataMobile.style.display = visibleCountMobile === 0 ? '' : 'none';
+                        noDataMobile.style.display = visibleCountMobile === 0 ? '' : 'none';
                     }
                 }
 
@@ -534,11 +495,7 @@
                         cancelButtonColor: '#78716c',
                         confirmButtonText: 'Ya, Hapus',
                         cancelButtonText: 'Batal',
-                        customClass: {
-                            popup: 'rounded-3xl font-sans',
-                            confirmButton: 'rounded-xl px-6 py-2.5',
-                            cancelButton: 'rounded-xl px-6 py-2.5'
-                        }
+                        customClass: { popup: 'rounded-3xl font-sans', confirmButton: 'rounded-xl px-6 py-2.5', cancelButton: 'rounded-xl px-6 py-2.5' }
                     }).then((result) => {
                         if (result.isConfirmed) {
                             const form = document.getElementById('deleteForm-' + id) || createDeleteForm(id, url);
@@ -551,26 +508,21 @@
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = url;
-                    form.innerHTML = `
-                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="_method" value="DELETE">
-                    `;
+                    form.innerHTML = `<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="DELETE">`;
                     document.body.appendChild(form);
                     return form;
                 }
 
-                // Bind Event Listener ke Tombol Delete Desktop
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const deskripsi = btn.dataset.deskripsi;
-                        // Logic desktop menggunakan form hidden yg sudah ada
                         confirmDelete(id, deskripsi, null);
                     });
                 });
 
-                // Jalankan filter saat halaman dimuat
                 applyAllFilters();
             });
         </script>
+    </div>
 </x-app-layout>

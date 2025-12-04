@@ -1,392 +1,363 @@
 <x-app-layout>
 
+    {{-- EXTERNAL SCRIPTS --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    {{-- CUSTOM STYLES (Scoped) --}}
     <style>
-        /* Paksa hilangkan panah default browser */
-        select {
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            background-image: none !important;
-            background-position: right 0.5rem center !important;
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background-color: #e7e5e4; border-radius: 20px; }
+        .custom-scroll:hover::-webkit-scrollbar-thumb { background-color: #d6d3d1; }
+
+        /* --- PERBAIKAN: Hapus panah default select browser & Tailwind Forms Plugin --- */
+        .no-arrow {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none !important; /* PENTING: Menghapus panah SVG dari Tailwind Forms */
+            background-position: 0 0 !important;
         }
-        /* Fix khusus untuk browser IE/Edge lama */
-        select::-ms-expand {
+        /* Untuk Chrome/Safari/Edge yang lebih baru */
+        .no-arrow::-webkit-calendar-picker-indicator {
+            display: none !important;
+            opacity: 0;
+        }
+        /* Untuk IE10+ */
+        .no-arrow::-ms-expand {
             display: none;
         }
     </style>
 
-    {{-- Resources Chart.js --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <div class="space-y-6 sm:space-y-8 animate-fade-in-up pb-24">
 
-    {{-- HEADER SECTION --}}
-    <div class="flex flex-col md:flex-row justify-between items-end mb-6 sm:mb-8 gap-4 sm:gap-6">
-        <div class="w-full md:w-auto">
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-stone-800 tracking-tight leading-tight flex items-center gap-2">
-                <span class="material-symbols-rounded text-brand-600">monitor_heart</span>
-                Ringkasan Bisnis
-            </h2>
-            <p class="text-stone-500 text-xs sm:text-sm mt-2 flex items-center gap-2">
-                <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
-                Data keuangan terkini: {{ now()->format('d M Y') }}
-            </p>
-        </div>
+        {{-- 1. HEADER SECTION (Greeting & Filters) --}}
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
 
-        {{-- FILTER FORM (OPTIMIZED FOR MOBILE & DESKTOP) --}}
-        <form method="GET" action="{{ route('dashboard') }}"
-              class="w-full md:w-auto bg-white p-2 rounded-2xl shadow-soft border border-stone-100 flex flex-col sm:flex-row items-center gap-2 relative z-30">
-
-            {{-- Filter Bulan --}}
-            {{-- Mobile: Lebar Penuh (w-full). Desktop: Lebar tetap (sm:w-[180px]) --}}
-            <div class="relative w-full sm:w-[180px] group">
-                <select name="bulan" onchange="this.form.submit()"
-                    class="w-full max-w-full appearance-none outline-none border-none text-sm focus:ring-0 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold cursor-pointer py-3 pl-4 pr-10 transition-colors truncate">
-                    <option value="">Pilih Bulan</option>
-                    @foreach(range(1, 12) as $bln)
-                        @php
-                            $val = now()->year .'-'. str_pad($bln, 2, '0', STR_PAD_LEFT);
-                            $namaBulan = \Carbon\Carbon::create()->month($bln)->translatedFormat('F');
-                        @endphp
-                        <option value="{{ $val }}" {{ request('bulan') == $val ? 'selected' : '' }}>
-                            {{ $namaBulan }}
-                        </option>
-                    @endforeach
-                </select>
-                {{-- Icon Absolut --}}
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-stone-400 group-hover:text-brand-500 transition-colors">
-                    <span class="material-symbols-rounded text-xl">calendar_month</span>
-                </div>
-            </div>
-
-            {{-- Separator (Hanya muncul di Desktop) --}}
-            <div class="hidden sm:block w-px h-8 bg-stone-200 mx-1"></div>
-
-            {{-- Filter Tahun --}}
-            <div class="relative w-full sm:w-[140px] group">
-                <select name="tahun" onchange="this.form.submit()"
-                    class="w-full max-w-full appearance-none outline-none border-none text-sm focus:ring-0 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold cursor-pointer py-3 pl-4 pr-10 transition-colors truncate">
-                    <option value="">Pilih Tahun</option>
-                    @foreach(range(now()->year, now()->year - 5) as $t)
-                        <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>{{ $t }}</option>
-                    @endforeach
-                </select>
-                {{-- Icon Absolut --}}
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-stone-400 group-hover:text-brand-500 transition-colors">
-                    <span class="material-symbols-rounded text-xl">expand_more</span>
-                </div>
-            </div>
-
-        </form>
-    </div>
-
-    {{-- STATS CARDS GRID --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-
-        {{-- 1. Card Masuk --}}
-        <div class="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-6 shadow-soft border border-stone-100 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-            <div class="flex justify-between items-start mb-4">
-                <div class="p-2.5 sm:p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300 shadow-sm">
-                    <span class="material-symbols-rounded text-xl sm:text-2xl">arrow_downward</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">Total Pemasukan</span>
-                </div>
-            </div>
-            <h3 class="text-2xl lg:text-3xl font-bold text-stone-800 tracking-tight">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</h3>
-
-            <div class="mt-4 flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                    <span class="bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-bold">+{{ $countMasuk }} Transaksi</span>
-                </div>
-                <p class="text-[10px] sm:text-xs text-stone-400 mt-1">
-                    Rata-rata: <span class="font-bold text-emerald-600">Rp {{ $countMasuk > 0 ? number_format($totalMasuk / $countMasuk, 0, ',', '.') : 0 }}</span>
+            {{-- Greeting Area --}}
+            <div>
+                @php
+                    $hour = date('H');
+                    if ($hour < 11) $greeting = 'Selamat Pagi';
+                    elseif ($hour < 15) $greeting = 'Selamat Siang';
+                    elseif ($hour < 18) $greeting = 'Selamat Sore';
+                    else $greeting = 'Selamat Malam';
+                @endphp
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-800 tracking-tight leading-tight">
+                    {{ $greeting }}, <span class="text-brand-600">{{ Auth::user()->name }}</span>!
+                </h1>
+                <p class="text-stone-500 text-sm mt-1 font-medium">
+                    Berikut ringkasan performa <span class="font-bold text-stone-700">Teh Solo de Jumbo</span>.
                 </p>
             </div>
 
-            {{-- Decorative BG Icon --}}
-            <span class="material-symbols-rounded absolute -right-6 -bottom-6 text-[100px] sm:text-[140px] text-emerald-500/5 rotate-12 group-hover:scale-110 transition-transform duration-500 pointer-events-none">savings</span>
+            {{-- Filter Area --}}
+            <form method="GET" action="{{ route('dashboard') }}"
+                  class="bg-white p-1.5 rounded-2xl shadow-sm border border-stone-200 flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+
+                {{-- Select Bulan --}}
+                <div class="relative w-full sm:w-48">
+                    {{-- PERBAIKAN: Menambahkan class 'no-arrow' di sini --}}
+                    <select name="bulan" onchange="this.form.submit()"
+                            class="no-arrow w-full appearance-none bg-stone-50 border-transparent text-stone-700 text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition cursor-pointer hover:bg-stone-100">
+                        <option value="">Setahun Penuh</option>
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="material-symbols-rounded absolute right-3 top-2.5 text-stone-400 pointer-events-none text-xl">calendar_month</span>
+                </div>
+
+                {{-- Select Tahun --}}
+                <div class="relative w-full sm:w-32">
+                    {{-- PERBAIKAN: Menambahkan class 'no-arrow' di sini --}}
+                    <select name="tahun" onchange="this.form.submit()"
+                            class="no-arrow w-full appearance-none bg-stone-50 border-transparent text-stone-700 text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition cursor-pointer hover:bg-stone-100">
+                        @foreach(range(now()->year, 2024) as $y)
+                            <option value="{{ $y }}" {{ request('tahun', now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                    <span class="material-symbols-rounded absolute right-3 top-2.5 text-stone-400 pointer-events-none text-xl">expand_more</span>
+                </div>
+            </form>
         </div>
 
-        {{-- 2. Card Keluar --}}
-        <div class="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-6 shadow-soft border border-stone-100 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-            <div class="flex justify-between items-start mb-4">
-                <div class="p-2.5 sm:p-3 bg-rose-50 rounded-2xl text-rose-600 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300 shadow-sm">
-                    <span class="material-symbols-rounded text-xl sm:text-2xl">arrow_upward</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wider">Total Pengeluaran</span>
-                </div>
-            </div>
-            <h3 class="text-2xl lg:text-3xl font-bold text-stone-800 tracking-tight">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</h3>
+        {{-- 2. KEY METRICS (Stats Cards) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            <div class="mt-4 flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                    <span class="bg-rose-100 text-rose-700 text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-bold">{{ $countKeluar }} Transaksi</span>
-                </div>
-                <p class="text-[10px] sm:text-xs text-stone-400 mt-1">
-                    Rata-rata: <span class="font-bold text-rose-600">Rp {{ $countKeluar > 0 ? number_format($totalKeluar / $countKeluar, 0, ',', '.') : 0 }}</span>
-                </p>
-            </div>
-
-            <span class="material-symbols-rounded absolute -right-6 -bottom-6 text-[100px] sm:text-[140px] text-rose-500/5 rotate-12 group-hover:scale-110 transition-transform duration-500 pointer-events-none">payments</span>
-        </div>
-
-        {{-- 3. Card Saldo --}}
-        @php
-            $isSurplus = $saldoAkhir >= 0;
-            $persentaseTerpakai = $totalMasuk > 0 ? ($totalKeluar / $totalMasuk) * 100 : 0;
-        @endphp
-        <div class="relative bg-gradient-to-br {{ $isSurplus ? 'from-brand-500 to-brand-600' : 'from-red-500 to-red-600' }} rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-6 shadow-glow text-white overflow-hidden group hover:-translate-y-1 transition-all duration-300 md:col-span-1">
-            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
-
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start">
-                    <div class="p-2.5 sm:p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/10">
-                        <span class="material-symbols-rounded text-xl sm:text-2xl">account_balance_wallet</span>
-                    </div>
-                    <span class="bg-white/20 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold backdrop-blur-md border border-white/10 flex items-center gap-1">
-                        <span class="material-symbols-rounded text-sm">{{ $isSurplus ? 'trending_up' : 'trending_down' }}</span>
-                        {{ $isSurplus ? 'Surplus' : 'Defisit' }}
-                    </span>
-                </div>
-
-                <div class="mt-6">
-                    <p class="text-xs font-medium text-white/80 uppercase tracking-wider mb-1">Saldo Bersih</p>
-                    <h3 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</h3>
-
-                    <div class="mt-4 flex items-center gap-2 text-[10px] sm:text-xs font-medium bg-black/10 w-fit px-3 py-1 rounded-lg backdrop-blur-sm">
-                        <span class="material-symbols-rounded text-sm">pie_chart</span>
-                        {{ number_format($persentaseTerpakai, 1) }}% dana terpakai
+            {{-- Card: Pemasukan --}}
+            <div class="group relative bg-white rounded-[1.5rem] p-6 shadow-soft border border-stone-100 overflow-hidden hover:border-emerald-200 transition-all duration-300">
+                <div class="absolute top-0 right-0 p-5 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                        <span class="material-symbols-rounded text-2xl">arrow_downward</span>
                     </div>
                 </div>
-            </div>
-
-            <span class="material-symbols-rounded absolute -right-8 -bottom-12 text-[150px] sm:text-[180px] text-white opacity-10 rotate-[20deg] group-hover:rotate-[30deg] transition-transform duration-500 pointer-events-none">paid</span>
-        </div>
-    </div>
-
-    {{-- CHARTS ROW 1: BAR CHART & PIE MASUK --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {{-- Main Chart (Bar) --}}
-        <div class="lg:col-span-2 bg-white p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-soft border border-stone-100 flex flex-col">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-                <div>
-                    <h3 class="font-bold text-stone-800 text-base sm:text-lg tracking-tight">Tren Arus Kas</h3>
-                    <p class="text-xs text-stone-400 font-medium">Perbandingan Pemasukan & Pengeluaran</p>
+                <div class="relative z-10">
+                    <p class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Pemasukan</p>
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-stone-800 tracking-tight">
+                        <span class="text-lg text-stone-400 font-medium mr-0.5">Rp</span>{{ number_format($totalMasuk, 0, ',', '.') }}
+                    </h3>
+                    <div class="mt-4 inline-flex items-center gap-2 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                         <span class="material-symbols-rounded text-emerald-600 text-sm font-bold">add</span>
+                         <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">{{ $countMasuk }} Transaksi</span>
+                    </div>
                 </div>
-                {{-- Legend Custom --}}
-                <div class="flex gap-2 sm:gap-4 text-[10px] sm:text-xs font-bold bg-stone-50 p-1.5 rounded-xl border border-stone-100">
-                    <span class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white shadow-sm border border-stone-100 text-emerald-600"><span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500"></span> Masuk</span>
-                    <span class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white shadow-sm border border-stone-100 text-rose-600"><span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-rose-500"></span> Keluar</span>
+                <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-emerald-50 rounded-full blur-2xl opacity-60"></div>
+            </div>
+
+            {{-- Card: Pengeluaran --}}
+            <div class="group relative bg-white rounded-[1.5rem] p-6 shadow-soft border border-stone-100 overflow-hidden hover:border-rose-200 transition-all duration-300">
+                <div class="absolute top-0 right-0 p-5 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">
+                    <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
+                        <span class="material-symbols-rounded text-2xl">arrow_upward</span>
+                    </div>
                 </div>
+                <div class="relative z-10">
+                    <p class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Pengeluaran</p>
+                    <h3 class="text-2xl lg:text-3xl font-extrabold text-stone-800 tracking-tight">
+                        <span class="text-lg text-stone-400 font-medium mr-0.5">Rp</span>{{ number_format($totalKeluar, 0, ',', '.') }}
+                    </h3>
+                    <div class="mt-4 inline-flex items-center gap-2 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
+                        <span class="material-symbols-rounded text-rose-600 text-sm font-bold">remove</span>
+                        <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wide">{{ $countKeluar }} Transaksi</span>
+                   </div>
+                </div>
+                 <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-rose-50 rounded-full blur-2xl opacity-60"></div>
             </div>
-            <div class="relative w-full h-64 sm:h-72 md:h-80">
-                <canvas id="trenKas"></canvas>
-            </div>
-        </div>
 
-        {{-- Pie Chart (Masuk) --}}
-        <div class="bg-white p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-soft border border-stone-100 flex flex-col">
-            <div class="mb-4">
-                <h3 class="font-bold text-stone-800 text-base sm:text-lg tracking-tight">Sumber Dana</h3>
-                <p class="text-xs text-stone-400 font-medium">Kategori Pemasukan</p>
-            </div>
-            <div class="flex-1 flex items-center justify-center relative min-h-[220px]">
-                <canvas id="pieMasuk"></canvas>
-            </div>
-            <div id="legendMasuk" class="mt-6 space-y-2 overflow-y-auto max-h-40 pr-2 custom-scrollbar text-xs sm:text-sm"></div>
-        </div>
-    </div>
+            {{-- Card: Saldo (Dark Theme) --}}
+            <div class="relative bg-stone-900 rounded-[1.5rem] p-6 shadow-xl shadow-stone-900/10 text-white overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-stone-800 to-black opacity-80"></div>
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-40 h-40 bg-brand-500/20 rounded-full blur-3xl group-hover:bg-brand-500/30 transition-colors duration-500"></div>
 
-    {{-- CHARTS ROW 2: LINE CHART & PIE KELUAR --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {{-- Line Chart (Saldo) --}}
-        <div class="lg:col-span-2 bg-white p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-soft border border-stone-100 flex flex-col">
-            <div class="mb-6">
-                <h3 class="font-bold text-stone-800 text-base sm:text-lg tracking-tight">Pertumbuhan Saldo</h3>
-                <p class="text-xs text-stone-400 font-medium">Akumulasi keuntungan seiring waktu</p>
-            </div>
-            <div class="relative w-full h-64 sm:h-72 md:h-80">
-                <canvas id="saldoChart"></canvas>
-            </div>
-        </div>
-
-        {{-- Pie Chart (Keluar) --}}
-        <div class="bg-white p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] shadow-soft border border-stone-100 flex flex-col">
-            <div class="mb-4">
-                <h3 class="font-bold text-stone-800 text-base sm:text-lg tracking-tight">Pos Pengeluaran</h3>
-                <p class="text-xs text-stone-400 font-medium">Alokasi Biaya</p>
-            </div>
-            <div class="flex-1 flex items-center justify-center relative min-h-[220px]">
-                <canvas id="pieKeluar"></canvas>
-            </div>
-            <div id="legendKeluar" class="mt-6 space-y-2 overflow-y-auto max-h-40 pr-2 custom-scrollbar text-xs sm:text-sm"></div>
-        </div>
-    </div>
-
-    {{-- JAVASCRIPT Logic --}}
-    <script>
-        // Palette warna Modern
-        const colorSetMasuk = ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
-        const colorSetKeluar = ['#F43F5E', '#F97316', '#EAB308', '#A855F7', '#14B8A6', '#64748B'];
-
-        // --- DATA DARI CONTROLLER ---
-        const labelList = {!! json_encode($labelList) !!};
-        const dataMasuk = {!! json_encode($dataMasuk) !!};
-        const dataKeluar = {!! json_encode($dataKeluar) !!};
-        const saldoKumulatif = {!! json_encode($saldoKumulatif) !!};
-
-        const masukLabel = {!! json_encode($kategoriMasukLabel) !!};
-        const masukNominal = {!! json_encode($kategoriMasukNominal) !!};
-        const keluarLabel = {!! json_encode($kategoriKeluarLabel) !!};
-        const keluarNominal = {!! json_encode($kategoriKeluarNominal) !!};
-
-        // --- Helper: Format Rupiah Singkat (1 Jt, 500 K) ---
-        function formatCurrencyCompact(value) {
-            if (value >= 1000000 || value <= -1000000) {
-                return 'Rp ' + (value / 1000000).toFixed(1) + ' Jt';
-            } else if (value >= 1000 || value <= -1000) {
-                return 'Rp ' + (value / 1000).toFixed(0) + ' K';
-            }
-            return 'Rp ' + value;
-        }
-
-        // --- Helper: Generate Custom Legend ---
-        function generateLegend(labels, data, colors, elementId) {
-            let total = data.reduce((a, b) => Number(a) + Number(b), 0);
-            let html = "";
-            labels.forEach((label, i) => {
-                let percent = total > 0 ? ((data[i] / total) * 100).toFixed(0) : 0;
-                if(data[i] > 0) {
-                    html += `
-                    <div class="flex justify-between items-center text-xs bg-stone-50 p-2.5 rounded-xl border border-stone-100 hover:bg-stone-100 transition-colors cursor-default">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm" style="background:${colors[i % colors.length]}"></div>
-                            <span class="text-stone-600 font-bold truncate max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">${label}</span>
+                <div class="relative z-10 flex flex-col justify-between h-full">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Saldo Akhir</p>
+                            <h3 class="text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+                                <span class="text-lg text-stone-500 font-medium mr-0.5">Rp</span>{{ number_format($saldoAkhir, 0, ',', '.') }}
+                            </h3>
                         </div>
-                        <span class="font-bold text-stone-800 bg-white px-1.5 py-0.5 rounded shadow-sm border border-stone-100">${percent}%</span>
-                    </div>`;
-                }
-            });
-            document.getElementById(elementId).innerHTML = html;
-        }
+                        <div class="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/5 shadow-inner">
+                            <span class="material-symbols-rounded text-brand-400">account_balance_wallet</span>
+                        </div>
+                    </div>
 
+                    <div class="mt-6 pt-4 border-t border-white/10">
+                        <span class="text-[10px] text-stone-500 font-bold uppercase block mb-1">Status Periode</span>
+                        @if($surplusPeriode >= 0)
+                            <div class="text-emerald-400 font-bold text-sm flex items-center gap-1">
+                                <span class="material-symbols-rounded text-base">trending_up</span>
+                                Surplus Rp {{ number_format($surplusPeriode, 0, ',', '.') }}
+                            </div>
+                        @else
+                            <div class="text-rose-400 font-bold text-sm flex items-center gap-1">
+                                <span class="material-symbols-rounded text-base">trending_down</span>
+                                Defisit Rp {{ number_format(abs($surplusPeriode), 0, ',', '.') }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 3. MAIN ANALYTICS --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {{-- Main Chart --}}
+            <div class="lg:col-span-8 bg-white rounded-[1.5rem] shadow-soft border border-stone-100 p-6 flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                    <div>
+                        <h3 class="font-bold text-stone-800 text-lg">Analisa Arus Kas</h3>
+                        <p class="text-xs text-stone-400 font-medium mt-0.5">Grafik perbandingan & tren saldo</p>
+                    </div>
+
+                    {{-- Legend --}}
+                    <div class="flex items-center gap-4 bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-100 self-start sm:self-auto">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-stone-600">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Masuk
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-stone-600">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Keluar
+                        </div>
+                        <div class="items-center gap-1.5 text-xs font-bold text-stone-600 hidden sm:flex">
+                            <span class="w-2.5 h-2.5 rounded-full bg-stone-800"></span> Saldo
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative w-full h-[320px] sm:h-[400px]">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            {{-- Recent Activity --}}
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="bg-white rounded-[1.5rem] shadow-soft border border-stone-100 p-6 flex flex-col h-full max-h-[500px] lg:max-h-full">
+                    <div class="flex justify-between items-center mb-4 shrink-0">
+                        <div>
+                            <h3 class="font-bold text-stone-800 text-lg">Aktivitas Baru</h3>
+                            <p class="text-xs text-stone-400 font-medium">Transaksi terakhir</p>
+                        </div>
+                        <a href="{{ route('laporan.index') }}" class="group flex items-center gap-1 text-[10px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1.5 rounded-lg hover:bg-brand-100 transition">
+                            SEMUA <span class="material-symbols-rounded text-xs group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto custom-scroll pr-1 space-y-3 -mr-2">
+                        @forelse($recentActivity as $item)
+                            <div class="flex items-center justify-between p-3 rounded-2xl border border-stone-50 hover:bg-stone-50 hover:border-stone-200 transition-all duration-200 group cursor-default">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border
+                                        {{ $item->type == 'in' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600' }}">
+                                        <span class="material-symbols-rounded text-xl">
+                                            {{ $item->type == 'in' ? 'arrow_downward' : 'arrow_upward' }}
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-bold text-stone-700 truncate group-hover:text-stone-900 transition-colors">
+                                            {{ $item->kategori ?? 'Umum' }}
+                                        </p>
+                                        <p class="text-[10px] text-stone-400 font-medium flex items-center gap-1">
+                                            {{ \Carbon\Carbon::parse($item->date)->translatedFormat('d M, H:i') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-right pl-2 shrink-0">
+                                    <p class="text-xs sm:text-sm font-bold {{ $item->type == 'in' ? 'text-emerald-600' : 'text-rose-600' }}">
+                                        {{ $item->type == 'in' ? '+' : '-' }}{{ number_format($item->total, 0, ',', '.') }}
+                                    </p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="flex flex-col items-center justify-center h-48 text-stone-300">
+                                <span class="material-symbols-rounded text-4xl mb-2 opacity-50">receipt_long</span>
+                                <span class="text-xs font-medium">Belum ada data transaksi</span>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 4. PIE CHARTS --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {{-- Pie Masuk --}}
+            <div class="bg-white rounded-[1.5rem] shadow-soft border border-stone-100 p-6">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
+                    <h4 class="font-bold text-stone-700 text-sm uppercase tracking-wider">Sumber Pemasukan</h4>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="relative w-40 h-40 sm:w-48 sm:h-48 shrink-0">
+                        <canvas id="pieMasuk"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span class="material-symbols-rounded text-emerald-200 text-4xl opacity-50">savings</span>
+                        </div>
+                    </div>
+                    <div id="legendMasuk" class="w-full text-xs space-y-2 max-h-48 overflow-y-auto custom-scroll pr-2"></div>
+                </div>
+            </div>
+
+            {{-- Pie Keluar --}}
+            <div class="bg-white rounded-[1.5rem] shadow-soft border border-stone-100 p-6">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-1 h-4 bg-rose-500 rounded-full"></div>
+                    <h4 class="font-bold text-stone-700 text-sm uppercase tracking-wider">Pos Pengeluaran</h4>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="relative w-40 h-40 sm:w-48 sm:h-48 shrink-0">
+                        <canvas id="pieKeluar"></canvas>
+                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span class="material-symbols-rounded text-rose-200 text-4xl opacity-50">payments</span>
+                        </div>
+                    </div>
+                    <div id="legendKeluar" class="w-full text-xs space-y-2 max-h-48 overflow-y-auto custom-scroll pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- CHART SCRIPTS --}}
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
-            Chart.register(ChartDataLabels);
             Chart.defaults.font.family = "'Outfit', sans-serif";
             Chart.defaults.color = '#78716c';
 
-            // 1. BAR CHART (TREN MASUK & KELUAR)
-            new Chart(document.getElementById('trenKas'), {
+            const labels = {!! json_encode($labelList) !!};
+            const dMasuk = {!! json_encode($dataMasuk) !!};
+            const dKeluar = {!! json_encode($dataKeluar) !!};
+            const dSaldo = {!! json_encode($saldoKumulatif) !!};
+
+            const formatCompact = (val) => {
+                if(val >= 1000000) return (val/1000000).toFixed(1) + 'jt';
+                if(val >= 1000) return (val/1000).toFixed(0) + 'rb';
+                return val;
+            };
+
+            // Main Chart
+            const ctxMain = document.getElementById('mainChart').getContext('2d');
+            let gradMasuk = ctxMain.createLinearGradient(0, 0, 0, 400);
+            gradMasuk.addColorStop(0, '#10b981'); gradMasuk.addColorStop(1, '#059669');
+            let gradKeluar = ctxMain.createLinearGradient(0, 0, 0, 400);
+            gradKeluar.addColorStop(0, '#f43f5e'); gradKeluar.addColorStop(1, '#e11d48');
+
+            new Chart(ctxMain, {
                 type: 'bar',
                 data: {
-                    labels: labelList,
+                    labels: labels,
                     datasets: [
-                        { label: 'Masuk', data: dataMasuk, backgroundColor: '#10B981', hoverBackgroundColor: '#059669', borderRadius: 6, barPercentage: 0.6, categoryPercentage: 0.7 },
-                        { label: 'Keluar', data: dataKeluar, backgroundColor: '#F43F5E', hoverBackgroundColor: '#E11D48', borderRadius: 6, barPercentage: 0.6, categoryPercentage: 0.7 }
+                        { type: 'line', label: 'Saldo', data: dSaldo, borderColor: '#292524', borderWidth: 2, backgroundColor: '#292524', pointBackgroundColor: '#fff', pointBorderColor: '#292524', pointRadius: 4, tension: 0.4, yAxisID: 'y1', order: 1 },
+                        { label: 'Masuk', data: dMasuk, backgroundColor: gradMasuk, borderRadius: 6, barPercentage: 0.5, categoryPercentage: 0.8, order: 2 },
+                        { label: 'Keluar', data: dKeluar, backgroundColor: gradKeluar, borderRadius: 6, barPercentage: 0.5, categoryPercentage: 0.8, order: 3 }
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
-                        datalabels: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1c1917', titleFont: {size: 13}, bodyFont: {size: 12}, padding: 10, cornerRadius: 8, displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': Rp ' + Number(context.raw).toLocaleString('id-ID');
-                                }
-                            }
+                        tooltip: { backgroundColor: 'rgba(28, 25, 23, 0.9)', padding: 14, cornerRadius: 12, displayColors: true,
+                            callbacks: { label: function(c) { return (c.dataset.label||'') + ': ' + new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(c.parsed.y); } }
                         }
                     },
                     scales: {
-                        y: {
-                            grid: { color: '#f5f5f4', borderDash: [6, 6] },
-                            border: { display: false },
-                            ticks: {
-                                padding: 10, font: {size: 11},
-                                callback: function(value) { return formatCurrencyCompact(value); }
-                            }
-                        },
-                        x: { grid: { display: false }, ticks: { padding: 10, font: {size: 11} } }
+                        x: { grid: { display: false }, ticks: { font: {size: 11}, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+                        y: { type: 'linear', display: true, position: 'left', grid: { borderDash: [4, 4], color: '#f5f5f4', drawBorder: false }, ticks: { callback: formatCompact, font: {size: 11} } },
+                        y1: { display: false }
                     }
                 }
             });
 
-            // 2. LINE CHART (SALDO)
-            new Chart(document.getElementById('saldoChart'), {
-                type: 'line',
-                data: {
-                    labels: labelList,
-                    datasets: [{
-                        label: 'Saldo', data: saldoKumulatif,
-                        borderColor: '#f97316', borderWidth: 3,
-                        pointBackgroundColor: '#fff', pointBorderColor: '#f97316',
-                        pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
-                        fill: true,
-                        backgroundColor: (ctx) => {
-                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300);
-                            gradient.addColorStop(0, 'rgba(249, 115, 22, 0.15)');
-                            gradient.addColorStop(1, 'rgba(249, 115, 22, 0)');
-                            return gradient;
-                        },
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: { display: false },
-                        tooltip: {
-                            backgroundColor: '#f97316', titleColor: '#fff', bodyColor: '#fff', padding: 10, cornerRadius: 8, displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Saldo: Rp ' + Number(context.raw).toLocaleString('id-ID');
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            grid: { color: '#f5f5f4', borderDash: [6, 6] },
-                            border: { display: false },
-                            ticks: {
-                                padding: 10,
-                                callback: function(value) { return formatCurrencyCompact(value); }
-                            }
-                        },
-                        x: { grid: { display: false }, ticks: { padding: 10 } }
+            // Pie Charts
+            const createPie = (canvasId, labels, data, colors, legendId) => {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 10 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+                });
+                const container = document.getElementById(legendId);
+                let html = ''; let total = data.reduce((a,b)=>Number(a)+Number(b),0);
+                if(total === 0) { container.innerHTML = '<div class="text-center py-4 text-stone-400 italic">Tidak ada data</div>'; return; }
+                labels.forEach((lbl, i) => {
+                    if(data[i] > 0){
+                        let pct = ((data[i]/total)*100).toFixed(0)+'%';
+                        let val = new Intl.NumberFormat('id-ID').format(data[i]);
+                        html += `<div class="flex justify-between items-center p-2 rounded-lg hover:bg-stone-50 transition cursor-default group"><div class="flex items-center gap-3 overflow-hidden"><span class="w-3 h-3 rounded-full shrink-0 shadow-sm" style="background:${colors[i % colors.length]}"></span><div class="flex flex-col min-w-0"><span class="truncate text-xs font-bold text-stone-600 group-hover:text-stone-800">${lbl}</span><span class="text-[10px] text-stone-400">Rp ${val}</span></div></div><span class="font-bold text-stone-700 bg-stone-100 px-2 py-1 rounded text-[10px] min-w-[36px] text-center">${pct}</span></div>`;
                     }
-                }
-            });
-
-            // 3. PIE CHARTS CONFIG (Doughnut Style)
-            const pieOptions = {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { backgroundColor: '#1c1917', padding: 12, cornerRadius: 8 } },
-                cutout: '75%',
-                layout: { padding: 10 },
-                elements: { arc: { borderWidth: 0, hoverOffset: 10 } }
+                });
+                container.innerHTML = html;
             };
-
-            new Chart(document.getElementById('pieMasuk'), {
-                type: 'doughnut',
-                data: { labels: masukLabel, datasets: [{ data: masukNominal, backgroundColor: colorSetMasuk }] },
-                options: pieOptions
-            });
-            generateLegend(masukLabel, masukNominal, colorSetMasuk, 'legendMasuk');
-
-            new Chart(document.getElementById('pieKeluar'), {
-                type: 'doughnut',
-                data: { labels: keluarLabel, datasets: [{ data: keluarNominal, backgroundColor: colorSetKeluar }] },
-                options: pieOptions
-            });
-            generateLegend(keluarLabel, keluarNominal, colorSetKeluar, 'legendKeluar');
+            const colorsIn = ['#10b981', '#34d399', '#6ee7b7', '#059669', '#064e3b'];
+            const colorsOut = ['#f43f5e', '#fb7185', '#fda4af', '#e11d48', '#881337'];
+            createPie('pieMasuk', {!! json_encode($masukLabel) !!}, {!! json_encode($masukNominal) !!}, colorsIn, 'legendMasuk');
+            createPie('pieKeluar', {!! json_encode($keluarLabel) !!}, {!! json_encode($keluarNominal) !!}, colorsOut, 'legendKeluar');
         });
     </script>
 </x-app-layout>
