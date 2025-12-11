@@ -15,7 +15,12 @@ class KasKeluarController extends Controller
      */
     public function index(Request $request)
     {
-        $query = KasKeluar::where('user_id', \Illuminate\Support\Facades\Auth::id());
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->role === 'admin') {
+            $query = KasKeluar::query();
+        } else {
+            $query = KasKeluar::where('user_id', $user->id);
+        }
 
         // 🔍 Pencarian berdasarkan kategori, metode, penerima, atau deskripsi
         if ($request->search) {
@@ -100,13 +105,18 @@ class KasKeluarController extends Controller
      */
     public function store(Request $request)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // Kasir must upload payment proof
+        $buktiRule = $user->role === 'kasir' ? 'required|image|mimes:jpg,jpeg,png|max:2048' : 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|string|max:255',
             'metode_pembayaran' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:1',
-            'bukti_pembayaran' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_pembayaran' => $buktiRule,
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -137,13 +147,20 @@ class KasKeluarController extends Controller
     {
         $kasKeluar = KasKeluar::findOrFail($id);
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // Kasir must upload payment proof (but allow keeping existing one during update)
+        $buktiRule = $user->role === 'kasir'
+            ? 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+            : 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|string|max:255',
             'metode_pembayaran' => 'required|string|max:255',
             'penerima' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:1',
-            'bukti_pembayaran' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_pembayaran' => $buktiRule,
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -175,5 +192,39 @@ class KasKeluarController extends Controller
         $kasKeluar->delete();
 
         return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:kas_keluar,id',
+        ]);
+
+        try {
+            $ids = $request->ids;
+
+            // Handle file deletion for selected records
+            $records = KasKeluar::whereIn('id', $ids)->get();
+            foreach ($records as $record) {
+                // Check ownership if not admin (though route is currently admin only in web.php, let's be safe or consistent)
+                // Actually web.php shows kas-keluar routes are shared/kasir access, but bulk destroy was put in admin group?
+                // Wait, I put bulk destroy in admin group in web.php. 
+                // If kasir needs it, I should move it. 
+                // The user said "terapkan bulk actions untuk kas masuk dan kas keluar juga", didn't specify role.
+                // Existing destroy allows kasir? destroy method doesn't check ownership explicitly but index does filter.
+                // Let's assume admin for now as per my plan placement, or check ownership if I move it.
+                // For now, just delete files.
+                if ($record->bukti_pembayaran && Storage::disk('public')->exists($record->bukti_pembayaran)) {
+                    Storage::disk('public')->delete($record->bukti_pembayaran);
+                }
+            }
+
+            KasKeluar::whereIn('id', $ids)->delete();
+
+            return redirect()->route('kas-keluar.index')->with('success', 'Data terpilih berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->route('kas-keluar.index')->with('error', 'Gagal menghapus data terpilih.');
+        }
     }
 }

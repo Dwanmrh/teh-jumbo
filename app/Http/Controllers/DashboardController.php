@@ -29,8 +29,13 @@ class DashboardController extends Controller
         $saldoKumulatif = [];
 
         // Query Dasar
-        $qMasuk = KasMasuk::where('user_id', $userId);
-        $qKeluar = KasKeluar::where('user_id', $userId);
+        $qMasuk = KasMasuk::query();
+        $qKeluar = KasKeluar::query();
+
+        if (Auth::user()->role !== 'admin') {
+            $qMasuk->where('user_id', $userId);
+            $qKeluar->where('user_id', $userId);
+        }
 
         // 2. HITUNG SALDO AWAL (Uang sebelum periode yang dipilih)
         // Ini penting agar grafik saldo tidak mulai dari 0, tapi dari sisa uang bulan lalu
@@ -99,11 +104,24 @@ class DashboardController extends Controller
 
         // 5. TRANSAKSI TERAKHIR (LATEST HISTORY)
         // Menggabungkan masuk & keluar untuk feed aktivitas (Optional tapi berguna)
-        $latestMasuk = KasMasuk::where('user_id', $userId)->latest('tanggal_transaksi')->limit(5)->get()->map(function($item){
-            $item->type = 'in'; $item->date = $item->tanggal_transaksi; return $item;
+        $latestMasukQuery = KasMasuk::query();
+        $latestKeluarQuery = KasKeluar::query();
+
+        if (Auth::user()->role !== 'admin') {
+            $latestMasukQuery->where('user_id', $userId);
+            $latestKeluarQuery->where('user_id', $userId);
+        }
+
+        $latestMasuk = $latestMasukQuery->latest('tanggal_transaksi')->limit(5)->get()->map(function ($item) {
+            $item->type = 'in';
+            $item->date = $item->tanggal_transaksi;
+            return $item;
         });
-        $latestKeluar = KasKeluar::where('user_id', $userId)->latest('tanggal')->limit(5)->get()->map(function($item){
-            $item->type = 'out'; $item->date = $item->tanggal; $item->total = $item->nominal; return $item;
+        $latestKeluar = $latestKeluarQuery->latest('tanggal')->limit(5)->get()->map(function ($item) {
+            $item->type = 'out';
+            $item->date = $item->tanggal;
+            $item->total = $item->nominal;
+            return $item;
         });
 
         $recentActivity = $latestMasuk->merge($latestKeluar)->sortByDesc('date')->take(5);

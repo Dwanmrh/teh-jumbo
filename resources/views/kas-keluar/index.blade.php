@@ -17,11 +17,14 @@
                 </div>
 
                 {{-- TOMBOL TAMBAH (Desktop) --}}
-                <a href="{{ route('kas-keluar.create') }}"
-                   class="hidden md:inline-flex group bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1">
-                    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
-                    <span class="font-bold text-sm tracking-wide">Catat Pengeluaran</span>
-                </a>
+                <div class="flex gap-2">
+
+                    <a href="{{ route('kas-keluar.create') }}"
+                       class="hidden md:inline-flex group bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1">
+                        <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
+                        <span class="font-bold text-sm tracking-wide">Catat Pengeluaran</span>
+                    </a>
+                </div>
             </div>
 
             {{-- 2. STATS CARD --}}
@@ -147,12 +150,29 @@
                 </div>
             </form>
 
+            <div class="flex justify-start mb-4">
+                <button id="bulkDeleteBtn" onclick="submitBulkDelete()"
+                    class="hidden flex bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1 opacity-50 cursor-not-allowed">
+                    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm">delete</span>
+                    <span class="font-bold text-sm tracking-wide">Hapus Item (<span id="selectedCount">0</span>)</span>
+                </button>
+            </div>
+
+            <form id="bulkDeleteForm" action="{{ route('kas-keluar.bulk_destroy') }}" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+                <div id="bulkDeleteInputs"></div>
+            </form>
+
             {{-- 4. TABLE VIEW (Desktop) --}}
             <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-stone-50/50 border-b border-stone-100 text-stone-500">
                             <tr>
+                                <th class="p-6 text-xs font-bold uppercase tracking-wider w-10">
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded focus:ring-rose-500">
+                                </th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider">Info Transaksi</th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider">Keterangan</th>
                                 <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Kategori</th>
@@ -173,6 +193,9 @@
                                     data-metode="{{ strtolower($item->metode_pembayaran) }}"
                                     data-kode="{{ strtolower($item->kode_kas) }}">
 
+                                    <td class="p-6 align-top">
+                                        <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded focus:ring-rose-500">
+                                    </td>
                                     <td class="p-6 align-top">
                                         <div class="font-bold text-stone-800 whitespace-nowrap">{{ $item->kode_kas }}</div>
                                         <div class="text-xs text-stone-400 font-medium mt-1 flex items-center gap-1">
@@ -234,7 +257,7 @@
                                 </tr>
                             @empty
                                 <tr id="noDataRow">
-                                    <td colspan="7" class="py-20 text-center">
+                                    <td colspan="8" class="py-20 text-center">
                                         <div class="flex flex-col items-center justify-center text-stone-300">
                                             <span class="material-symbols-rounded text-6xl mb-4 bg-stone-50 rounded-full p-6">receipt_long</span>
                                             <p class="text-stone-500 font-medium text-lg">Belum ada data pengeluaran.</p>
@@ -520,6 +543,84 @@
                         confirmDelete(id, deskripsi, null);
                     });
                 });
+
+                // ===========================
+                // BULK DELETE LOGIC
+                // ===========================
+                const selectAllCheckbox = document.getElementById('selectAll');
+                const userCheckboxes = document.querySelectorAll('.user-checkbox');
+                const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+                const selectedCountSpan = document.getElementById('selectedCount');
+                const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+                const bulkDeleteInputs = document.getElementById('bulkDeleteInputs');
+
+                function updateBulkDeleteState() {
+                    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+                    const count = selectedCheckboxes.length;
+                    if(selectedCountSpan) selectedCountSpan.textContent = count;
+
+                    if (bulkDeleteBtn) {
+                        if (count > 0) {
+                            bulkDeleteBtn.disabled = false;
+                            bulkDeleteBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'hidden');
+                            bulkDeleteBtn.classList.add('flex'); // Ensure flex is added
+                        } else {
+                            bulkDeleteBtn.disabled = true;
+                            bulkDeleteBtn.classList.add('opacity-50', 'cursor-not-allowed', 'hidden');
+                            bulkDeleteBtn.classList.remove('flex');
+                        }
+                    }
+                }
+
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.addEventListener('change', function() {
+                        userCheckboxes.forEach(checkbox => {
+                            checkbox.checked = this.checked;
+                        });
+                        updateBulkDeleteState();
+                    });
+                }
+
+                userCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const allChecked = Array.from(userCheckboxes).every(c => c.checked);
+                        if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+                        updateBulkDeleteState();
+                    });
+                });
+
+                window.submitBulkDelete = function() {
+                    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+                    if (selectedCheckboxes.length === 0) return;
+
+                    Swal.fire({
+                        title: 'Hapus ' + selectedCheckboxes.length + ' Data?',
+                        text: "Data yang dipilih akan dihapus secara permanen!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#78716c',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-3xl font-sans',
+                            confirmButton: 'rounded-xl px-6 py-2.5',
+                            cancelButton: 'rounded-xl px-6 py-2.5'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            bulkDeleteInputs.innerHTML = ''; // Clear previous inputs
+                            selectedCheckboxes.forEach(checkbox => {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'ids[]';
+                                input.value = checkbox.value;
+                                bulkDeleteInputs.appendChild(input);
+                            });
+                            bulkDeleteForm.submit();
+                        }
+                    });
+                }
 
                 applyAllFilters();
             });
