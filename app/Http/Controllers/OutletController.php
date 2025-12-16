@@ -18,30 +18,28 @@ class OutletController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     * Dipanggil via fetch() dari modal Create.
      */
     public function store(Request $request)
     {
-        // VALIDASI
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
         ]);
 
-        // SIMPAN DATA
         Outlet::create($data);
 
-        // RESPONSE JSON AGAR TIDAK REDIRECT
+        // Jika menggunakan AJAX/Modal
         return response()->json([
             'status' => 'success',
             'message' => 'Outlet berhasil ditambahkan.'
         ]);
+
+        // Jika form submit biasa, gunakan: return redirect()->back()->with(...)
     }
 
     /**
      * Update the specified resource in storage.
-     * Dipanggil via fetch() dari modal Edit.
      */
     public function update(Request $request, Outlet $outlet)
     {
@@ -71,17 +69,25 @@ class OutletController extends Controller
     }
 
     /**
-     * Endpoint create() dan edit() tidak digunakan lagi
-     * karena kita memakai modal AJAX, bukan halaman terpisah.
+     * Hapus Banyak Outlet Sekaligus (Bulk Delete)
+     * Dipanggil dari Floating Action Bar
      */
-
-    public function create()
+    public function bulkDestroy(Request $request)
     {
-        abort(404);
+        // Validasi input array ID
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:outlets,id',
+        ]);
+
+        // Hapus data berdasarkan array ID
+        Outlet::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()
+            ->with('success', count($request->ids) . ' Outlet berhasil dihapus.');
     }
 
-    public function edit()
-    {
-        abort(404);
-    }
+    // Endpoint create() & edit() tidak dipakai karena modal
+    public function create() { abort(404); }
+    public function edit() { abort(404); }
 }

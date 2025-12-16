@@ -1,105 +1,126 @@
 <x-app-layout>
-    {{-- Libraries --}}
+    <x-slot name="title">Kas Keluar</x-slot>
+
+    {{-- =====================================================================
+         LIBRARIES & META
+         ===================================================================== --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- Container Utama --}}
-    <div class="min-h-screen bg-stone-50/50 pb-36"
-         x-data="{ showDetail: false, selectedItem: {} }">
+    {{-- =====================================================================
+         MAIN CONTAINER
+         ===================================================================== --}}
+    <div class="min-h-screen pb-32 sm:pb-20" x-data="{ showDetail: false, selectedItem: {} }">
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-
-            {{-- 1. HEADER SECTION --}}
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-extrabold text-stone-800 tracking-tight">Kas Keluar</h1>
-                    <p class="text-stone-500 text-xs md:text-sm mt-1.5 max-w-lg leading-relaxed">Kelola dan pantau seluruh arus pengeluaran operasional.</p>
+        {{-- 1. HEADER & ACTIONS --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                    <p class="text-xs font-bold tracking-widest text-rose-600 uppercase">Keuangan</p>
                 </div>
-
-                {{-- TOMBOL TAMBAH (Desktop) --}}
-                <div class="flex gap-2">
-
-                    <a href="{{ route('kas-keluar.create') }}"
-                       class="hidden md:inline-flex group bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1">
-                        <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm group-hover:rotate-90 transition-transform">add</span>
-                        <span class="font-bold text-sm tracking-wide">Catat Pengeluaran</span>
-                    </a>
-                </div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight">
+                    Kas <span class="text-rose-500">Keluar</span>
+                </h1>
+                <p class="text-stone-500 text-sm mt-2 max-w-lg leading-relaxed font-medium">
+                    Pantau arus pengeluaran operasional outlet secara realtime dan terperinci.
+                </p>
             </div>
 
-            {{-- 2. STATS CARD --}}
-            @php
-                $totalKas = $kasKeluar->sum('nominal');
-                $jumlahTransaksi = $kasKeluar->count();
-            @endphp
-            <div class="mb-6">
-                <div class="relative bg-gradient-to-br from-rose-600 to-rose-800 rounded-[2rem] p-6 md:p-10 shadow-2xl shadow-rose-900/20 overflow-hidden group">
-                    {{-- Decorative Blobs --}}
-                    <div class="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 md:w-64 md:h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-                    <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 md:w-40 md:h-40 bg-black/10 rounded-full blur-2xl"></div>
+            @if(Auth::user()->role === 'admin')
+                <div class="flex gap-3 w-full md:w-auto">
+                    {{-- REVISI: Z-Index diubah ke z-30 agar tidak menutupi menu/dropdown lain --}}
+                    <x-action-button
+                        href="{{ route('kas-keluar.create') }}"
+                        label="Catat Pengeluaran"
+                        icon="add"
+                        id="floatingAddBtn"
+                        class="z-30"
+                    />
+                </div>
+            @endif
+        </div>
 
-                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2 md:mb-3">
-                                <span class="bg-rose-500/50 border border-rose-400/30 text-rose-50 px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider">Total Keluar</span>
+        {{-- 2. STATS CARD --}}
+        @php
+            $totalKas = $kasKeluar->sum('nominal');
+            $jumlahTransaksi = $kasKeluar->count();
+        @endphp
+        <div class="mb-8 animate-[fadeIn_0.4s_ease-out]">
+            <div class="relative w-full bg-gradient-to-br from-rose-500 to-red-700 rounded-[2.5rem] p-6 md:p-10 shadow-2xl shadow-rose-900/10 overflow-hidden group border border-rose-400/20">
+                <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-rose-300/20 rounded-full blur-[80px] group-hover:bg-rose-300/30 transition-all duration-700"></div>
+                <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-56 h-56 bg-red-900/20 rounded-full blur-[80px]"></div>
+                <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/20 text-white px-3 py-1 rounded-full text-[10px] md:text-xs font-extrabold uppercase tracking-wider shadow-sm">
+                                Total Pengeluaran
+                            </span>
+                        </div>
+                        <h2 class="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-sm flex items-start gap-1">
+                            <span class="text-rose-100/80 text-lg md:text-3xl font-bold mt-1.5 md:mt-3">Rp</span>
+                            {{ number_format($totalKas, 0, ',', '.') }}
+                        </h2>
+                        <div class="mt-4 flex items-center gap-3">
+                            <div class="flex -space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-rose-200 border-2 border-rose-600 flex items-center justify-center text-[10px] font-bold text-rose-800">
+                                    <span class="material-symbols-rounded text-base">receipt_long</span>
+                                </div>
                             </div>
-
-                            {{-- Dynamic Font Size Logic --}}
-                            <h2 class="font-black text-white tracking-tighter drop-shadow-sm flex items-start transition-all duration-300"
-                                :class="'{{ strlen((string)$totalKas) }}' > 9 ? 'text-3xl md:text-5xl' : 'text-4xl md:text-6xl'">
-                                <span class="text-rose-200 text-lg md:text-3xl font-bold mr-1 mt-1 md:mt-2">Rp</span>
-                                {{ number_format($totalKas, 0, ',', '.') }}
-                            </h2>
-
-                            <p class="text-rose-100 mt-2 md:mt-3 font-medium flex items-center gap-2 text-xs md:text-base opacity-90">
-                                <span class="flex h-1.5 w-1.5 md:h-2 md:w-2 relative">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-200 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-white"></span>
-                                </span>
-                                {{ $jumlahTransaksi }} Transaksi tercatat
+                            <p class="text-rose-50 font-medium text-sm md:text-base">
+                                <span class="font-bold text-white">{{ $jumlahTransaksi }}</span> Transaksi keluar dicatat
                             </p>
                         </div>
-                        <div class="hidden md:block bg-white/10 p-4 rounded-3xl backdrop-blur-sm border border-white/10 shadow-inner">
-                            <span class="material-symbols-rounded text-5xl text-rose-50">trending_down</span>
-                        </div>
+                    </div>
+                    <div class="hidden md:flex h-20 w-20 bg-white/10 rounded-3xl backdrop-blur-md border border-white/20 shadow-inner items-center justify-center transform group-hover:scale-110 transition-transform duration-500">
+                        <span class="material-symbols-rounded text-5xl text-white drop-shadow-md">trending_down</span>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- 3. FILTER & SEARCH BAR --}}
-            <form method="GET" action="{{ route('kas-keluar.index') }}" id="filterForm"
-                  class="bg-white p-3 md:p-4 rounded-[1.5rem] md:rounded-3xl shadow-sm border border-stone-100 mb-6 sticky top-20 md:top-4 z-30 transition-all">
+        {{-- 3. FILTER & SEARCH BAR (Sticky z-40 > FAB z-30) --}}
+        <form method="GET" action="{{ route('kas-keluar.index') }}" id="filterForm"
+              class="sticky top-[80px] md:top-[170px] z-40 mb-8 animate-[fadeIn_0.5s_ease-out]">
 
-                <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+            <div class="bg-white/80 backdrop-blur-xl p-3 sm:p-4 rounded-[2rem] shadow-soft border border-stone-200/60 ring-1 ring-stone-900/5 transition-all duration-300">
+                <div class="flex flex-col md:flex-row gap-3">
+
                     {{-- Search Input --}}
                     <div class="relative flex-1 w-full group">
-                        <span class="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-xl group-focus-within:text-rose-500 transition-colors">search</span>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 bg-stone-100 rounded-full p-1 transition-colors group-focus-within:bg-rose-50">
+                            <span class="material-symbols-rounded text-stone-400 text-lg group-focus-within:text-rose-600">search</span>
+                        </div>
                         <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
-                            placeholder="Cari penerima, deskripsi..."
-                            class="w-full pl-10 pr-4 py-3 md:py-3.5 rounded-2xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-sm font-medium transition-all placeholder:text-stone-400">
+                               placeholder="Cari penerima, kode, atau keterangan..."
+                               class="w-full pl-12 pr-5 rounded-[1.5rem] border-0 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-rose-500/30 text-stone-700 text-sm font-semibold placeholder:text-stone-400 transition-all shadow-inner h-[52px]">
                     </div>
 
-                    {{-- Filter Buttons --}}
-                    <div class="grid grid-cols-5 gap-2 w-full md:w-auto">
+                    {{-- Filter Group --}}
+                    <div class="grid grid-cols-[1fr_1fr_3.5rem] md:grid-cols-[auto_auto_auto] gap-2 md:gap-3 w-full md:w-auto h-[52px]">
 
-                        {{-- Filter Harga --}}
-                        <div class="relative col-span-2" x-data="{ open: false }" @click.outside="open = false">
+                        {{-- Filter Nominal --}}
+                        <div class="relative h-full" x-data="{ open: false, hasValue: '{{ request('filter_harga') }}' }">
                             <input type="hidden" name="filter_harga" id="hargaSelect" value="{{ request('filter_harga') }}">
                             <button type="button" @click="open = !open"
-                                class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
-                                <span class="material-symbols-rounded text-base text-rose-500">attach_money</span>
-                                <span class="truncate" x-text="
-                                    $el.previousElementSibling.value == '0-50000' ? '0-50rb' :
-                                    ($el.previousElementSibling.value == '51000-500000' ? '51rb-500rb' :
-                                    ($el.previousElementSibling.value == '500001-999999999' ? '> 500rb' : 'Harga'))
-                                ">Harga</span>
-                                <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></div>
+                                    class="w-full md:w-auto min-w-0 md:min-w-[150px] h-full px-3 md:px-5 rounded-[1.5rem] bg-white border border-stone-200 hover:border-rose-300 hover:bg-rose-50/50 text-stone-600 hover:text-rose-700 text-xs md:text-sm font-bold flex items-center justify-between gap-2 transition-all shadow-sm group">
+                                <div class="flex items-center gap-2 overflow-hidden">
+                                    <span class="material-symbols-rounded text-lg text-rose-500 group-hover:scale-110 transition-transform shrink-0">attach_money</span>
+                                    <span class="truncate" x-text="hasValue ? 'Filter' : 'Nominal'">Nominal</span>
+                                </div>
+                                <span class="material-symbols-rounded text-stone-400 text-lg shrink-0 hidden sm:block">expand_more</span>
                             </button>
 
-                            <div x-show="open" style="display: none;"
-                                 x-transition.opacity.duration.200ms
-                                 class="absolute right-0 md:left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
-                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Semua</button>
+                            {{-- Dropdown Content (z-50) --}}
+                            <div x-cloak x-show="open" @click.outside="open = false"
+                                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="absolute left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1 ring-1 ring-black/5">
+                                <button type="button" onclick="setFilter('hargaSelect', '')" @click="open = false" class="text-left px-3 py-2.5 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-50 transition-colors">Semua Nominal</button>
+                                <div class="h-px bg-stone-100 mx-2"></div>
                                 <button type="button" onclick="setFilter('hargaSelect', '0-50000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">0 - 50rb</button>
                                 <button type="button" onclick="setFilter('hargaSelect', '51000-500000')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">51rb - 500rb</button>
                                 <button type="button" onclick="setFilter('hargaSelect', '500001-999999999')" @click="open = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">> 500rb</button>
@@ -107,523 +128,700 @@
                         </div>
 
                         {{-- Filter Waktu --}}
-                        <div class="relative col-span-2" x-data="{ open: false, isCustom: '{{ request('filter_waktu') }}' == 'custom' }" @click.outside="open = false">
+                        <div class="relative h-full" x-data="{ open: false, isCustom: '{{ request('filter_waktu') }}' == 'custom', hasValue: '{{ request('filter_waktu') }}' }">
                             <input type="hidden" name="filter_waktu" id="tanggalSelect" value="{{ request('filter_waktu') }}">
                             <button type="button" @click="open = !open"
-                                class="w-full h-full px-2 py-2.5 md:px-4 md:py-0 rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-600 text-xs md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors relative">
-                                <span class="material-symbols-rounded text-base text-rose-500">calendar_today</span>
-                                <span class="truncate" x-text="
-                                    $el.previousElementSibling.value == 'hari-ini' ? 'Hari Ini' :
-                                    ($el.previousElementSibling.value == 'minggu-ini' ? 'Minggu Ini' :
-                                    ($el.previousElementSibling.value == 'bulan-ini' ? 'Bulan Ini' :
-                                    ($el.previousElementSibling.value == 'custom' ? 'Custom' : 'Waktu')))
-                                ">Waktu</span>
-                                <div x-show="$el.previousElementSibling.value" style="display: none;" class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></div>
+                                    class="w-full md:w-auto min-w-0 md:min-w-[150px] h-full px-3 md:px-5 rounded-[1.5rem] bg-white border border-stone-200 hover:border-rose-300 hover:bg-rose-50/50 text-stone-600 hover:text-rose-700 text-xs md:text-sm font-bold flex items-center justify-between gap-2 transition-all shadow-sm group">
+                                <div class="flex items-center gap-2 overflow-hidden">
+                                    <span class="material-symbols-rounded text-lg text-rose-500 group-hover:scale-110 transition-transform shrink-0">calendar_today</span>
+                                    <span class="truncate" x-text="hasValue ? 'Filter' : 'Waktu'">Waktu</span>
+                                </div>
+                                <span class="material-symbols-rounded text-stone-400 text-lg shrink-0 hidden sm:block">expand_more</span>
                             </button>
 
-                            <div x-show="open" style="display: none;"
-                                 x-transition.opacity.duration.200ms
-                                 class="absolute right-0 md:left-0 top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1">
-                                <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Semua</button>
+                            {{-- Dropdown Content (z-50) --}}
+                            <div x-cloak x-show="open" @click.outside="open = false"
+                                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="absolute right-0 md:left-0 md:right-auto top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1 ring-1 ring-black/5">
+                                <button type="button" onclick="setFilter('tanggalSelect', '', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2.5 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-50 transition-colors">Semua Waktu</button>
+                                <div class="h-px bg-stone-100 mx-2"></div>
                                 <button type="button" onclick="setFilter('tanggalSelect', 'hari-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Hari Ini</button>
                                 <button type="button" onclick="setFilter('tanggalSelect', 'minggu-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Minggu Ini</button>
                                 <button type="button" onclick="setFilter('tanggalSelect', 'bulan-ini', false)" @click="open = false; isCustom = false" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors">Bulan Ini</button>
-
-                                <div class="border-t border-stone-100 my-1"></div>
-                                <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors flex justify-between items-center">
-                                    <span>Pilih Tanggal (Custom)</span>
-                                    <span class="material-symbols-rounded text-sm" x-show="isCustom">check</span>
+                                <button type="button" onclick="setFilter('tanggalSelect', 'custom', true)" @click="isCustom = true" class="text-left px-3 py-2 rounded-xl text-xs font-medium hover:bg-rose-50 hover:text-rose-700 transition-colors flex justify-between items-center group">
+                                    <span>Pilih Tanggal</span>
+                                    <span class="material-symbols-rounded text-sm group-hover:text-rose-600">date_range</span>
                                 </button>
-
-                                <div x-show="isCustom" class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
-                                    <input type="date" name="start_date" id="startDateInput" value="{{ request('start_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
-                                    <input type="date" name="end_date" id="endDateInput" value="{{ request('end_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-xs py-1.5 px-2">
+                                <div x-show="isCustom" x-transition class="p-2 bg-stone-50 rounded-xl mt-1 border border-stone-100 space-y-2">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="text-[10px] font-bold text-stone-400 pl-1">Dari</label>
+                                            <input type="date" name="start_date" id="startDateInput" value="{{ request('start_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-[10px] py-1.5 px-2 focus:ring-rose-500 focus:border-rose-500 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-bold text-stone-400 pl-1">Sampai</label>
+                                            <input type="date" name="end_date" id="endDateInput" value="{{ request('end_date') }}" onchange="applyAllFilters()" class="w-full bg-white border-stone-200 rounded-lg text-[10px] py-1.5 px-2 focus:ring-rose-500 focus:border-rose-500 shadow-sm">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Reset Button --}}
-                        <a href="{{ route('kas-keluar.index') }}" class="col-span-1 h-full flex items-center justify-center rounded-2xl border border-stone-200 hover:bg-rose-50 hover:text-rose-600 text-stone-500 transition-colors bg-stone-50">
-                            <span class="material-symbols-rounded text-lg">restart_alt</span>
+                        <a href="{{ route('kas-keluar.index') }}"
+                           class="w-full md:w-[52px] h-full flex items-center justify-center rounded-[1.5rem] border border-stone-200 text-stone-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all bg-white shadow-sm shrink-0" title="Reset Filter">
+                            <span class="material-symbols-rounded text-xl">restart_alt</span>
                         </a>
+
                     </div>
                 </div>
-            </form>
-
-            <div class="flex justify-start mb-4">
-                <button id="bulkDeleteBtn" onclick="submitBulkDelete()"
-                    class="hidden flex bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-2xl items-center gap-2 transition-all shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 hover:-translate-y-1 opacity-50 cursor-not-allowed">
-                    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm">delete</span>
-                    <span class="font-bold text-sm tracking-wide">Hapus Item (<span id="selectedCount">0</span>)</span>
-                </button>
             </div>
+        </form>
 
-            <form id="bulkDeleteForm" action="{{ route('kas-keluar.bulk_destroy') }}" method="POST" class="hidden">
-                @csrf
-                @method('DELETE')
-                <div id="bulkDeleteInputs"></div>
-            </form>
+        {{-- 4. TABLE VIEW (Desktop Only) --}}
+        <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2.5rem] shadow-soft border border-stone-100 overflow-hidden animate-[fadeIn_0.6s_ease-out]">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 border-b border-stone-100">
+                        <tr>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest w-10">
+                                <input type="checkbox" id="selectAll" class="w-4 h-4 text-rose-600 bg-white border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                            </th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest">Info Transaksi</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest">Penerima & Ket</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest text-center">Kategori</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest text-right">Nominal</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest text-center">Metode</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest text-center">Bukti</th>
+                            <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest text-center">Opsi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-50">
+                        @forelse ($kasKeluar as $item)
+                            <tr class="hover:bg-rose-50/30 transition-colors group filter-item"
+                                data-penerima="{{ strtolower($item->penerima) }}"
+                                data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
+                                data-nominal="{{ $item->nominal }}"
+                                data-tanggal="{{ $item->tanggal }}"
+                                data-kategori="{{ strtolower($item->kategori) }}"
+                                data-metode="{{ strtolower($item->metode_pembayaran) }}"
+                                data-kode="{{ strtolower($item->kode_kas) }}">
 
-            {{-- 4. TABLE VIEW (Desktop) --}}
-            <div id="kasDataContainer" class="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-stone-50/50 border-b border-stone-100 text-stone-500">
-                            <tr>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider w-10">
-                                    <input type="checkbox" id="selectAll" class="w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded focus:ring-rose-500">
-                                </th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Info Transaksi</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider">Keterangan</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Kategori</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-right">Nominal</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Metode</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Bukti</th>
-                                <th class="p-6 text-xs font-bold uppercase tracking-wider text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-stone-100">
-                            @forelse ($kasKeluar as $item)
-                                <tr class="hover:bg-stone-50 transition-colors group filter-item"
-                                    data-penerima="{{ strtolower($item->penerima) }}"
-                                    data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
-                                    data-nominal="{{ $item->nominal }}"
-                                    data-tanggal="{{ $item->tanggal }}"
-                                    data-kategori="{{ strtolower($item->kategori) }}"
-                                    data-metode="{{ strtolower($item->metode_pembayaran) }}"
-                                    data-kode="{{ strtolower($item->kode_kas) }}">
-
-                                    <td class="p-6 align-top">
-                                        <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded focus:ring-rose-500">
-                                    </td>
-                                    <td class="p-6 align-top">
-                                        <div class="font-bold text-stone-800 whitespace-nowrap">{{ $item->kode_kas }}</div>
-                                        <div class="text-xs text-stone-400 font-medium mt-1 flex items-center gap-1">
-                                            <span class="material-symbols-rounded text-[14px]">event</span>
-                                            {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
+                                <td class="p-6 align-top">
+                                    <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                </td>
+                                <td class="p-6 align-top">
+                                    <div class="font-bold text-stone-800 whitespace-nowrap group-hover:text-rose-700 transition-colors">{{ $item->kode_kas }}</div>
+                                    <div class="text-xs text-stone-400 font-bold mt-1 flex items-center gap-1.5">
+                                        <span class="material-symbols-rounded text-[14px]">event</span>
+                                        {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
+                                    </div>
+                                </td>
+                                <td class="p-6 align-top">
+                                    <div class="font-bold text-stone-700">{{ $item->penerima }}</div>
+                                    @if($item->deskripsi)
+                                        <div class="text-xs text-stone-500 mt-1 line-clamp-2 max-w-[250px] italic">
+                                            "{{ $item->deskripsi }}"
                                         </div>
-                                    </td>
-                                    <td class="p-6 align-top">
-                                        <div class="font-bold text-stone-700">{{ $item->penerima }}</div>
-                                        <div class="text-xs text-stone-500 mt-1 line-clamp-2 max-w-[250px] leading-relaxed">
-                                            {{ $item->deskripsi ?? '-' }}
-                                        </div>
-                                    </td>
-                                    <td class="p-6 align-top text-center">
-                                        @php
-                                            $badgeClass = match (strtolower($item->kategori)) {
-                                                'pembelian' => 'bg-amber-100 text-amber-800 border-amber-200',
-                                                'operasional' => 'bg-blue-100 text-blue-800 border-blue-200',
-                                                'gaji' => 'bg-purple-100 text-purple-800 border-purple-200',
-                                                default => 'bg-stone-100 text-stone-600 border-stone-200',
-                                            };
-                                        @endphp
-                                        <span class="inline-block px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border {{ $badgeClass }}">
-                                            {{ $item->kategori }}
-                                        </span>
-                                    </td>
-                                    <td class="p-6 align-top text-right whitespace-nowrap">
-                                        <span class="font-bold text-rose-600 text-base">Rp {{ number_format($item->nominal, 0, ',', '.') }}</span>
-                                    </td>
-                                    <td class="p-6 align-top text-center">
-                                        <span class="text-xs font-semibold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">
-                                            {{ $item->metode_pembayaran }}
-                                        </span>
-                                    </td>
-                                    <td class="p-6 align-top text-center">
-                                        @if($item->bukti_pembayaran)
-                                            <button onclick="window.open('{{ asset('storage/' . $item->bukti_pembayaran) }}', '_blank')"
-                                                class="w-10 h-10 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all flex items-center justify-center shadow-sm">
-                                                <span class="material-symbols-rounded text-lg">image</span>
-                                            </button>
-                                        @else
-                                            <span class="text-stone-300 text-xs">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="p-6 align-top text-center">
-                                        <div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                            <a href="{{ route('kas-keluar.edit', $item->id) }}" class="p-2 rounded-lg text-stone-500 hover:bg-rose-50 hover:text-rose-600 transition-colors">
-                                                <span class="material-symbols-rounded">edit</span>
+                                    @endif
+                                </td>
+                                <td class="p-6 align-top text-center">
+                                    @php
+                                        $kategoriLower = strtolower($item->kategori);
+                                        $badgeClass = match (true) {
+                                            str_contains($kategoriLower, 'pembelian') => 'bg-amber-100 text-amber-800 border-amber-200 ring-amber-500/20',
+                                            str_contains($kategoriLower, 'operasional') => 'bg-blue-100 text-blue-800 border-blue-200 ring-blue-500/20',
+                                            str_contains($kategoriLower, 'gaji') => 'bg-purple-100 text-purple-800 border-purple-200 ring-purple-500/20',
+                                            default => 'bg-stone-100 text-stone-600 border-stone-200 ring-stone-500/20',
+                                        };
+                                    @endphp
+                                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ring-2 ring-opacity-50 {{ $badgeClass }}">
+                                        {{ $item->kategori }}
+                                    </span>
+                                </td>
+                                <td class="p-6 align-top text-right whitespace-nowrap">
+                                    <span class="font-black text-rose-600 text-base tracking-tight">Rp {{ number_format($item->nominal, 0, ',', '.') }}</span>
+                                </td>
+                                <td class="p-6 align-top text-center">
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50">
+                                        <span class="text-[10px] font-bold text-stone-600 capitalize tracking-wide">{{ $item->metode_pembayaran }}</span>
+                                    </div>
+                                </td>
+                                <td class="p-6 align-top text-center">
+                                    @if($item->bukti_pembayaran)
+                                        <button onclick="window.open('{{ asset('storage/' . $item->bukti_pembayaran) }}', '_blank')"
+                                                class="p-2 rounded-xl bg-white border border-stone-200 text-stone-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-sm tooltip" title="Lihat Bukti">
+                                            <span class="material-symbols-rounded text-lg">image</span>
+                                        </button>
+                                    @else
+                                        <span class="text-xs text-stone-300 font-bold">-</span>
+                                    @endif
+                                </td>
+                                <td class="p-6 align-top text-center">
+                                    @if(Auth::user()->role === 'admin')
+                                        <div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                                            <a href="{{ route('kas-keluar.edit', $item->id) }}" class="p-2 rounded-xl text-stone-400 hover:bg-amber-50 hover:text-amber-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-amber-100" title="Edit">
+                                                <span class="material-symbols-rounded text-xl">edit_square</span>
                                             </a>
-                                            <button type="button" class="delete-btn p-2 rounded-lg text-stone-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                                data-id="{{ $item->id }}" data-deskripsi="{{ $item->deskripsi }}">
-                                                <span class="material-symbols-rounded">delete</span>
+                                            <button type="button"
+                                                    class="delete-btn p-2 rounded-xl text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-rose-100"
+                                                    title="Hapus"
+                                                    data-id="{{ $item->id }}"
+                                                    data-deskripsi="{{ $item->penerima }}"
+                                                    onclick="confirmDelete('{{ $item->id }}', this.getAttribute('data-deskripsi'), '{{ route('kas-keluar.destroy', $item->id) }}')">
+                                                <span class="material-symbols-rounded text-xl">delete</span>
                                             </button>
                                             <form action="{{ route('kas-keluar.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
                                                 @csrf @method('DELETE')
                                             </form>
                                         </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr id="noDataRow">
-                                    <td colspan="8" class="py-20 text-center">
-                                        <div class="flex flex-col items-center justify-center text-stone-300">
-                                            <span class="material-symbols-rounded text-6xl mb-4 bg-stone-50 rounded-full p-6">receipt_long</span>
-                                            <p class="text-stone-500 font-medium text-lg">Belum ada data pengeluaran.</p>
+                                    @else
+                                        <span class="text-xs text-stone-300 font-bold">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr id="noDataRow">
+                                <td colspan="8" class="py-24 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="bg-stone-50 p-6 rounded-full mb-4">
+                                            <span class="material-symbols-rounded text-5xl text-stone-300">receipt_long</span>
                                         </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {{-- 5. MOBILE LIST VIEW --}}
-            <div id="kasDataContainerMobile" class="md:hidden space-y-3">
-                @forelse ($kasKeluar as $item)
-                    <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
-                            'id' => $item->id,
-                            'kode_kas' => $item->kode_kas,
-                            'tanggal' => \Carbon\Carbon::parse($item->tanggal)->format('d M Y'),
-                            'kategori' => $item->kategori,
-                            'penerima' => $item->penerima,
-                            'nominal' => number_format($item->nominal, 0, ',', '.'),
-                            'metode_pembayaran' => $item->metode_pembayaran,
-                            'deskripsi' => $item->deskripsi ?? '-',
-                            'bukti_url' => $item->bukti_pembayaran ? asset('storage/' . $item->bukti_pembayaran) : null,
-                            'edit_url' => route('kas-keluar.edit', $item->id),
-                            'delete_url' => route('kas-keluar.destroy', $item->id),
-                        ]) }}')"
-                        class="bg-white rounded-[1.25rem] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-stone-100 active:scale-[0.98] transition-all cursor-pointer relative overflow-hidden filter-item-mobile group"
-                        data-penerima="{{ strtolower($item->penerima) }}"
-                        data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
-                        data-nominal="{{ $item->nominal }}"
-                        data-tanggal="{{ $item->tanggal }}"
-                        data-kategori="{{ strtolower($item->kategori) }}"
-                        data-metode="{{ strtolower($item->metode_pembayaran) }}"
-                        data-kode="{{ strtolower($item->kode_kas) }}">
-
-                        {{-- Color Strip based on Category --}}
-                        @php
-                            $stripColor = match (strtolower($item->kategori)) {
-                                'pembelian' => 'bg-amber-400',
-                                'operasional' => 'bg-blue-400',
-                                'gaji' => 'bg-purple-400',
-                                default => 'bg-stone-300',
-                            };
-                        @endphp
-                        <div class="absolute top-0 bottom-0 left-0 w-1 {{ $stripColor }}"></div>
-
-                        <div class="pl-2.5">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="w-2/3">
-                                    <div class="flex items-center gap-1.5 mb-1">
-                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 uppercase tracking-wide">{{ $item->kategori }}</span>
-                                        <span class="text-[9px] text-stone-400">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M') }}</span>
+                                        <p class="text-stone-800 font-bold text-lg">Belum ada data pengeluaran.</p>
+                                        <p class="text-stone-400 text-sm mt-1">Silakan tambah data baru untuk memulai.</p>
                                     </div>
-                                    <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-tight">{{ $item->penerima }}</h3>
-                                </div>
-                                <div class="text-right flex-1">
-                                    <p class="font-extrabold text-rose-600 text-base">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center pt-2 border-t border-stone-50">
-                                <p class="text-[10px] text-stone-500 line-clamp-1 italic w-3/4">"{{ $item->deskripsi ?? '-' }}"</p>
-                                <span class="material-symbols-rounded text-stone-300 text-base">chevron_right</span>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12" id="noDataMobile">
-                        <span class="material-symbols-rounded text-4xl text-stone-200 mb-2">money_off</span>
-                        <p class="text-stone-400 text-xs font-medium">Tidak ada data.</p>
-                    </div>
-                @endforelse
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-
-            {{-- 6. MODAL DETAIL MOBILE --}}
-            <div x-show="showDetail"
-                class="fixed inset-0 z-[100] md:hidden flex flex-col bg-white"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="translate-y-full"
-                x-transition:enter-end="translate-y-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="translate-y-0"
-                x-transition:leave-end="translate-y-full"
-                style="display: none;">
-
-                <div class="px-5 py-3 border-b border-stone-100 flex items-center justify-between bg-white sticky top-0 z-10">
-                    <button @click="showDetail = false" class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-600 active:bg-stone-200">
-                        <span class="material-symbols-rounded">arrow_back</span>
-                    </button>
-                    <h2 class="text-base font-bold text-stone-800">Rincian Pengeluaran</h2>
-                    <div class="w-8"></div>
-                </div>
-
-                <div class="flex-1 overflow-y-auto p-5 bg-stone-50/50">
-                    <div class="text-center mb-6 mt-2">
-                        <span class="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider mb-2 shadow-sm border border-rose-200" x-text="selectedItem.kategori"></span>
-                        <h3 class="text-3xl font-black text-stone-800 tracking-tight" x-text="'Rp ' + selectedItem.nominal"></h3>
-                        <p class="text-stone-400 text-xs mt-1 font-mono" x-text="selectedItem.kode_kas"></p>
-                    </div>
-
-                    <div class="bg-white rounded-3xl p-5 shadow-sm border border-stone-100 space-y-4">
-                        <div class="grid grid-cols-2 gap-3 pb-3 border-b border-stone-50">
-                            <div>
-                                <span class="text-[10px] text-stone-400 block mb-0.5">Tanggal</span>
-                                <span class="font-bold text-stone-700 text-sm" x-text="selectedItem.tanggal"></span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 block mb-0.5">Metode</span>
-                                <span class="font-bold text-stone-700 text-sm" x-text="selectedItem.metode_pembayaran"></span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-stone-400 block mb-0.5">Penerima</span>
-                            <span class="font-bold text-stone-800 text-base" x-text="selectedItem.penerima || '-'"></span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-stone-400 block mb-0.5">Deskripsi</span>
-                            <p class="font-medium text-stone-600 leading-relaxed bg-stone-50 p-3 rounded-xl text-xs" x-text="selectedItem.deskripsi"></p>
-                        </div>
-
-                        <template x-if="selectedItem.bukti_url">
-                            <div class="pt-2">
-                                <a :href="selectedItem.bukti_url" target="_blank" class="flex items-center justify-center gap-2 p-3 bg-stone-800 rounded-xl text-xs font-bold text-white hover:bg-stone-900 transition-colors w-full shadow-lg shadow-stone-800/20">
-                                    <span class="material-symbols-rounded text-base">image</span> Lihat Bukti Foto
-                                </a>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <div class="p-5 bg-white border-t border-stone-100 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                    <a :href="selectedItem.edit_url" class="flex-1 bg-white border border-stone-200 text-stone-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all text-sm">
-                        <span class="material-symbols-rounded text-lg">edit</span> Edit
-                    </a>
-                    <button @click="confirmDelete(selectedItem.id, selectedItem.deskripsi, selectedItem.delete_url)" class="flex-1 bg-rose-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-rose-500/30 hover:bg-rose-700 active:scale-95 transition-all text-sm">
-                        <span class="material-symbols-rounded text-lg">delete</span> Hapus
-                    </button>
-                </div>
-            </div>
-
-            {{-- 7. FLOATING BUTTON MOBILE --}}
-            <a href="{{ route('kas-keluar.create') }}"
-               class="fixed bottom-28 right-5 md:hidden w-14 h-14 bg-rose-600 text-white rounded-full shadow-xl shadow-rose-500/40 flex items-center justify-center z-40 active:scale-90 transition-transform border-2 border-white/20">
-                <span class="material-symbols-rounded text-2xl">add</span>
-            </a>
-
         </div>
 
-        {{-- SCRIPTS --}}
-        <script>
-            function setFilter(inputId, value, isCustom = false) {
-                const input = document.getElementById(inputId);
-                if (input) {
-                    input.value = value;
-                    if(!isCustom) applyAllFilters();
+        {{-- 5. MOBILE LIST VIEW --}}
+        <div id="kasDataContainerMobile" class="md:hidden space-y-3 pb-safe animate-[fadeIn_0.6s_ease-out]">
+
+             {{-- Checkbox Pilih Semua Khusus Mobile --}}
+             @if(Auth::user()->role === 'admin' && count($kasKeluar) > 0)
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <div class="relative">
+                            <input type="checkbox" id="selectAllMobile" class="peer sr-only">
+                            <div class="w-5 h-5 border-2 border-stone-300 rounded-md peer-checked:bg-rose-500 peer-checked:border-rose-500 transition-all"></div>
+                            <span class="material-symbols-rounded absolute top-0 left-0 text-[20px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">check</span>
+                        </div>
+                        <span class="text-xs font-bold text-stone-500 group-active:text-stone-800 uppercase tracking-wide">Pilih Semua</span>
+                    </label>
+                    <span class="text-[10px] text-stone-400 font-medium italic">{{ count($kasKeluar) }} Total Data</span>
+                </div>
+            @endif
+
+            @forelse ($kasKeluar as $item)
+                <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
+                        'id' => $item->id,
+                        'kode_kas' => $item->kode_kas,
+                        'tanggal' => \Carbon\Carbon::parse($item->tanggal)->format('d M Y'),
+                        'penerima' => $item->penerima,
+                        'kategori' => $item->kategori,
+                        'nominal' => number_format($item->nominal, 0, ',', '.'),
+                        'metode_pembayaran' => $item->metode_pembayaran,
+                        'deskripsi' => $item->deskripsi ?? '-',
+                        'bukti_url' => $item->bukti_pembayaran ? asset('storage/' . $item->bukti_pembayaran) : null,
+                        'edit_url' => route('kas-keluar.edit', $item->id),
+                        'delete_url' => route('kas-keluar.destroy', $item->id),
+                    ]) }}')"
+                    class="bg-white rounded-[1.5rem] p-4 shadow-soft border border-stone-100 active:scale-[0.98] active:bg-stone-50 transition-all cursor-pointer relative overflow-hidden filter-item-mobile group"
+                    data-penerima="{{ strtolower($item->penerima) }}"
+                    data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
+                    data-nominal="{{ $item->nominal }}"
+                    data-tanggal="{{ $item->tanggal }}"
+                    data-kategori="{{ strtolower($item->kategori) }}"
+                    data-metode="{{ strtolower($item->metode_pembayaran) }}"
+                    data-kode="{{ strtolower($item->kode_kas) }}">
+
+                    @php
+                        $kategoriLower = strtolower($item->kategori);
+                        $accentColor = match (true) {
+                            str_contains($kategoriLower, 'pembelian') => 'bg-amber-500',
+                            str_contains($kategoriLower, 'operasional') => 'bg-blue-500',
+                            str_contains($kategoriLower, 'gaji') => 'bg-purple-500',
+                            default => 'bg-stone-400',
+                        };
+                        $badgeClassMobile = match (true) {
+                            str_contains($kategoriLower, 'pembelian') => 'text-amber-600 bg-amber-50 border-amber-100',
+                            str_contains($kategoriLower, 'operasional') => 'text-blue-600 bg-blue-50 border-blue-100',
+                            str_contains($kategoriLower, 'gaji') => 'text-purple-600 bg-purple-50 border-purple-100',
+                            default => 'text-stone-500 bg-stone-100 border-stone-200',
+                        };
+                    @endphp
+
+                    {{-- CHECKBOX KHUSUS MOBILE --}}
+                    @if(Auth::user()->role === 'admin')
+                        <div class="absolute top-0 right-0 p-4 z-10" @click.stop>
+                            <label class="relative cursor-pointer flex items-center justify-center p-2 -m-2">
+                                <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox peer sr-only">
+                                <div class="w-6 h-6 bg-stone-100 border-2 border-stone-300 rounded-md peer-checked:bg-rose-500 peer-checked:border-rose-500 transition-all shadow-sm"></div>
+                                <span class="material-symbols-rounded absolute text-[18px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                            </label>
+                        </div>
+                    @endif
+
+                    {{-- Decorative Accent --}}
+                    <div class="absolute top-4 bottom-4 left-0 w-1 rounded-r-full {{ $accentColor }}"></div>
+
+                    <div class="pl-3 pr-8">
+                        {{-- Top Row: Date & Badge --}}
+                        <div class="flex items-center gap-2 mb-2">
+                             <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border {{ $badgeClassMobile }}">
+                                {{ $item->kategori }}
+                            </span>
+                            <span class="text-[10px] text-stone-400 font-bold tracking-wide">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M') }}</span>
+                        </div>
+
+                        {{-- Main Content --}}
+                        <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-snug">{{ $item->penerima }}</h3>
+                        <p class="text-[11px] text-stone-400 italic line-clamp-1 mb-2">{{ $item->deskripsi }}</p>
+
+                        {{-- Bottom Row: Price --}}
+                        <div class="flex justify-between items-end">
+                             <div class="flex flex-col">
+                                <span class="text-[10px] text-stone-400 font-medium">Nominal</span>
+                                <p class="font-black text-rose-600 text-lg tracking-tight -mt-0.5">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
+                             </div>
+                        </div>
+
+                        {{-- Footer Detail --}}
+                        @if($item->bukti_pembayaran)
+                            <div class="mt-3 pt-2 border-t border-stone-50 flex items-center gap-1.5 text-[10px] text-stone-500 font-bold">
+                                <span class="material-symbols-rounded text-sm text-stone-300">image</span>
+                                Bukti Terlampir
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-16 px-6 bg-white rounded-[2rem] border border-stone-100 border-dashed" id="noDataMobile">
+                    <div class="bg-stone-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-rounded text-3xl text-stone-300">money_off</span>
+                    </div>
+                    <h3 class="text-stone-800 font-bold">Data tidak ditemukan</h3>
+                    <p class="text-stone-400 text-xs mt-1">Coba ubah filter atau kata kunci pencarian Anda.</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- 6. MODAL DETAIL MOBILE (Bottom Sheet) z-[110] > FAB z-30 --}}
+        <div x-show="showDetail"
+             class="fixed inset-0 z-[110] md:hidden flex flex-col justify-end"
+             role="dialog" aria-modal="true" style="display: none;">
+
+            {{-- Backdrop --}}
+            <div x-show="showDetail"
+                 x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="absolute inset-0 bg-stone-900/40 backdrop-blur-[2px]" @click="showDetail = false"></div>
+
+            {{-- Content --}}
+            <div x-show="showDetail"
+                 x-transition:enter="transition cubic-bezier(0.32, 0.72, 0, 1) duration-500"
+                 x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+                 x-transition:leave="transition cubic-bezier(0.32, 0.72, 0, 1) duration-300"
+                 x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+                 class="relative bg-[#FAFAF9] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] max-h-[85vh] flex flex-col overflow-hidden">
+
+                {{-- Handle Bar --}}
+                <div class="absolute top-0 left-0 right-0 h-8 bg-transparent flex justify-center pt-3 z-20 pointer-events-none">
+                    <div class="w-12 h-1.5 bg-stone-300/50 rounded-full"></div>
+                </div>
+
+                {{-- Header Modal --}}
+                <div class="px-6 pt-8 pb-4 bg-white rounded-b-[2.5rem] shadow-sm z-10 relative">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shadow-sm"
+                              :class="{
+                                  'bg-amber-100 text-amber-800 border-amber-200': (selectedItem.kategori || '').toLowerCase().includes('pembelian'),
+                                  'bg-blue-100 text-blue-800 border-blue-200': (selectedItem.kategori || '').toLowerCase().includes('operasional'),
+                                  'bg-purple-100 text-purple-800 border-purple-200': (selectedItem.kategori || '').toLowerCase().includes('gaji'),
+                                  'bg-stone-100 text-stone-600 border-stone-200': !['pembelian', 'operasional', 'gaji'].some(x => (selectedItem.kategori || '').toLowerCase().includes(x))
+                              }" x-text="selectedItem.kategori">
+                        </span>
+                        <button @click="showDetail = false" class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 active:bg-stone-200 transition-colors">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Nominal Pengeluaran</p>
+                        <h3 class="text-4xl font-black text-stone-800 tracking-tighter" x-text="'Rp ' + selectedItem.nominal"></h3>
+                        <div class="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200">
+                             <span class="text-[10px] font-mono font-bold text-stone-500" x-text="selectedItem.kode_kas"></span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Body Modal --}}
+                <div class="overflow-y-auto p-6 space-y-4 pb-safe">
+                    <div class="bg-white p-5 rounded-3xl border border-stone-200/60 shadow-sm space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wide block mb-1">Tanggal</span>
+                                <span class="font-bold text-stone-700 text-sm flex items-center gap-1.5">
+                                    <span class="material-symbols-rounded text-base text-stone-400">event</span>
+                                    <span x-text="selectedItem.tanggal"></span>
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wide block mb-1">Metode</span>
+                                <span class="font-bold text-stone-700 text-sm capitalize flex items-center gap-1.5">
+                                    <span class="material-symbols-rounded text-base text-stone-400">payments</span>
+                                    <span x-text="selectedItem.metode_pembayaran"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="h-px bg-stone-100"></div>
+                        <div>
+                            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wide block mb-1">Penerima</span>
+                            <p class="font-medium text-stone-800 text-sm leading-relaxed" x-text="selectedItem.penerima || '-'"></p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wide block mb-1">Deskripsi</span>
+                            <p class="font-medium text-stone-600 text-sm leading-relaxed italic" x-text="selectedItem.deskripsi || '-'"></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-stone-100 p-4 rounded-3xl border border-stone-200 flex justify-between items-center" x-show="selectedItem.bukti_url">
+                         <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm">
+                                <span class="material-symbols-rounded">image</span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-stone-500 uppercase">Bukti Transaksi</p>
+                                <a :href="selectedItem.bukti_url" target="_blank" class="text-xs font-bold text-rose-600 hover:underline">Lihat Gambar</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if(Auth::user()->role === 'admin')
+                        <div class="grid grid-cols-2 gap-3 mt-4">
+                            <a :href="selectedItem.edit_url" class="bg-white border border-stone-200 text-stone-700 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all text-sm shadow-sm">
+                                <span class="material-symbols-rounded text-lg">edit</span> Edit
+                            </a>
+
+                            <button @click="confirmDelete(selectedItem.id, selectedItem.penerima, selectedItem.delete_url)"
+                                    class="bg-rose-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 hover:bg-rose-700 active:scale-95 transition-all text-sm">
+                                <span class="material-symbols-rounded text-lg">delete</span> Hapus
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- 7. FLOATING ACTION & BULK DELETE --}}
+        @if(Auth::user()->role === 'admin')
+
+            {{-- Bulk Delete Toast z-[100] > FAB z-30 --}}
+            <div id="bulkDeleteContainer" class="fixed bottom-[100px] md:bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4 transition-all duration-500 transform translate-y-40 opacity-0 invisible">
+                <div class="bg-stone-900/90 text-white p-2 pl-5 pr-2 rounded-full shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-rose-500 rounded-full p-1">
+                            <span class="material-symbols-rounded text-stone-900 text-sm font-bold">check</span>
+                        </div>
+                        <span class="text-sm font-medium">
+                            <span id="selectedCount" class="font-bold text-white text-lg">0</span> Terpilih
+                        </span>
+                    </div>
+                    <button onclick="submitBulkDelete()" class="bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold px-6 py-2.5 rounded-full transition-all active:scale-95 shadow-lg shadow-rose-900/30 flex items-center gap-2">
+                         Hapus
+                    </button>
+                </div>
+
+                {{-- Form Hidden --}}
+                <form id="bulkDeleteForm" action="{{ route('kas-keluar.bulk_destroy') }}" method="POST" class="hidden">
+                    @csrf @method('DELETE')
+                    <div id="bulkDeleteInputs"></div>
+                </form>
+            </div>
+        @endif
+
+    </div>
+
+    {{-- SCRIPTS --}}
+    <script>
+        // ===========================
+        // FILTER & SEARCH LOGIC
+        // ===========================
+        function setFilter(inputId, value, isCustom = false) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = value;
+                if (!isCustom) {
+                    applyAllFilters();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const hargaSelect = document.getElementById('hargaSelect');
+            const tanggalSelect = document.getElementById('tanggalSelect');
+            const startDateInput = document.getElementById('startDateInput');
+            const endDateInput = document.getElementById('endDateInput');
+
+            let searchTimeout;
+            searchInput?.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    applyAllFilters();
+                }, 300);
+            });
+
+            window.applyAllFilters = function () {
+                const query = searchInput.value.toLowerCase();
+                const hargaFilter = hargaSelect.value;
+                const waktuFilter = tanggalSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                const rows = document.querySelectorAll('.filter-item, .filter-item-mobile');
+                let visibleCount = 0;
+                let visibleCountMobile = 0;
+
+                rows.forEach(row => {
+                    // Update: Logic untuk Kas Keluar (penerima & deskripsi)
+                    const penerima = row.dataset.penerima || '';
+                    const deskripsi = row.dataset.deskripsi || '';
+                    const kode = row.dataset.kode || '';
+                    const nominal = parseInt(row.dataset.nominal) || 0;
+                    const tanggal = row.dataset.tanggal;
+                    const kategori = row.dataset.kategori || '';
+                    const metode = row.dataset.metode || '';
+
+                    const matchesSearch = !query ||
+                        penerima.includes(query) ||
+                        deskripsi.includes(query) ||
+                        kode.includes(query) ||
+                        kategori.includes(query) ||
+                        metode.includes(query) ||
+                        nominal.toString().includes(query);
+
+                    const matchesHarga = checkHargaFilter(nominal, hargaFilter);
+                    const matchesWaktu = checkWaktuFilter(tanggal, waktuFilter, startDate, endDate);
+
+                    if (matchesSearch && matchesHarga && matchesWaktu) {
+                        row.style.display = '';
+                        if (row.classList.contains('filter-item')) visibleCount++;
+                        if (row.classList.contains('filter-item-mobile')) visibleCountMobile++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Handle No Data Messages
+                const noDataRow = document.getElementById('noDataRow');
+                if (noDataRow) noDataRow.style.display = visibleCount === 0 ? '' : 'none';
+
+                const noDataMobile = document.getElementById('noDataMobile');
+                if (noDataMobile) {
+                      noDataMobile.style.display = visibleCountMobile === 0 ? '' : 'none';
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const searchInput = document.getElementById('searchInput');
-                const hargaSelect = document.getElementById('hargaSelect');
-                const tanggalSelect = document.getElementById('tanggalSelect');
-                const startDateInput = document.getElementById('startDateInput');
-                const endDateInput = document.getElementById('endDateInput');
+            function checkHargaFilter(nominal, filter) {
+                if (!filter) return true;
+                const [minStr, maxStr] = filter.split('-');
+                const min = parseInt(minStr) || 0;
+                const max = parseInt(maxStr) || Infinity;
+                return nominal >= min && nominal <= max;
+            }
 
-                let searchTimeout;
-                searchInput?.addEventListener('input', () => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => applyAllFilters(), 300);
-                });
+            function checkWaktuFilter(dateStr, filter, start, end) {
+                if (!filter) return true;
+                const dateToCheck = new Date(dateStr);
+                const today = new Date();
+                dateToCheck.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
 
-                window.applyAllFilters = function() {
-                    const query = searchInput.value.toLowerCase();
-                    const hargaFilter = hargaSelect.value;
-                    const waktuFilter = tanggalSelect.value;
-                    const startDate = startDateInput.value;
-                    const endDate = endDateInput.value;
+                switch (filter) {
+                    case 'hari-ini': return dateToCheck.getTime() === today.getTime();
+                    case 'minggu-ini': return isSameWeek(today, dateToCheck);
+                    case 'bulan-ini': return dateToCheck.getMonth() === today.getMonth() && dateToCheck.getFullYear() === today.getFullYear();
+                    case 'custom':
+                        if (!start || !end) return true;
+                        const startDate = new Date(start);
+                        const endDate = new Date(end);
+                        startDate.setHours(0, 0, 0, 0);
+                        endDate.setHours(0, 0, 0, 0);
+                        return dateToCheck >= startDate && dateToCheck <= endDate;
+                    default: return true;
+                }
+            }
 
-                    const rows = document.querySelectorAll('.filter-item, .filter-item-mobile');
-                    let visibleCount = 0;
-                    let visibleCountMobile = 0;
+            function isSameWeek(d1, d2) {
+                const onejan = new Date(d1.getFullYear(), 0, 1);
+                const week1 = Math.ceil((((d1.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+                const week2 = Math.ceil((((d2.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+                return week1 === week2 && d1.getFullYear() === d2.getFullYear();
+            }
 
-                    rows.forEach(row => {
-                        const penerima = row.dataset.penerima || '';
-                        const deskripsi = row.dataset.deskripsi || '';
-                        const nominal = parseInt(row.dataset.nominal) || 0;
-                        const tanggal = row.dataset.tanggal;
-                        const kode = row.dataset.kode || '';
-                        const kategori = row.dataset.kategori || '';
+            // ===========================
+            // BULK DELETE LOGIC
+            // ===========================
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const selectAllMobile = document.getElementById('selectAllMobile');
+            const bulkDeleteContainer = document.getElementById('bulkDeleteContainer');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+            const bulkDeleteInputs = document.getElementById('bulkDeleteInputs');
+            const floatingAddBtn = document.getElementById('floatingAddBtn');
 
-                        const matchesSearch = !query || penerima.includes(query) || deskripsi.includes(query) || kode.includes(query) || kategori.includes(query) || nominal.toString().includes(query);
-                        const matchesHarga = checkHargaFilter(nominal, hargaFilter);
-                        const matchesWaktu = checkWaktuFilter(tanggal, waktuFilter, startDate, endDate);
+            function syncCheckboxes(value, isChecked) {
+                const targets = document.querySelectorAll(`.user-checkbox[value="${value}"]`);
+                targets.forEach(cb => cb.checked = isChecked);
+                updateBulkDeleteState();
+            }
 
-                        if (matchesSearch && matchesHarga && matchesWaktu) {
-                            row.style.display = '';
-                            if(row.classList.contains('filter-item')) visibleCount++;
-                            if(row.classList.contains('filter-item-mobile')) visibleCountMobile++;
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
+            function updateBulkDeleteState() {
+                const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+                const uniqueIds = new Set();
+                checkedBoxes.forEach(cb => uniqueIds.add(cb.value));
 
-                    const noDataRow = document.getElementById('noDataRow');
-                    if(noDataRow) noDataRow.style.display = visibleCount === 0 ? '' : 'none';
+                const count = uniqueIds.size;
+                if (selectedCountSpan) selectedCountSpan.innerText = count;
 
-                    const noDataMobile = document.getElementById('noDataMobile');
-                    if(noDataMobile && document.querySelectorAll('.filter-item-mobile').length > 0) {
-                        noDataMobile.style.display = visibleCountMobile === 0 ? '' : 'none';
+                if (bulkDeleteContainer) {
+                    if (count > 0) {
+                        bulkDeleteContainer.classList.remove('translate-y-40', 'opacity-0', 'invisible');
+                        if(floatingAddBtn) floatingAddBtn.classList.add('translate-y-40', 'opacity-0');
+                    } else {
+                        bulkDeleteContainer.classList.add('translate-y-40', 'opacity-0', 'invisible');
+                        if(floatingAddBtn) floatingAddBtn.classList.remove('translate-y-40', 'opacity-0');
                     }
                 }
 
-                function checkHargaFilter(nominal, filter) {
-                    if (!filter) return true;
-                    const [minStr, maxStr] = filter.split('-');
-                    const min = parseInt(minStr) || 0;
-                    const max = parseInt(maxStr) || Infinity;
-                    return nominal >= min && nominal <= max;
-                }
+                const totalUniqueRows = new Set();
+                document.querySelectorAll('.user-checkbox').forEach(cb => totalUniqueRows.add(cb.value));
+                const allSelected = count > 0 && count === totalUniqueRows.size;
 
-                function checkWaktuFilter(dateStr, filter, start, end) {
-                    if (!filter) return true;
-                    const dateToCheck = new Date(dateStr);
-                    const today = new Date();
-                    dateToCheck.setHours(0,0,0,0);
-                    today.setHours(0,0,0,0);
+                if(selectAllCheckbox) selectAllCheckbox.checked = allSelected;
+                if(selectAllMobile) selectAllMobile.checked = allSelected;
+            }
 
-                    switch(filter) {
-                        case 'hari-ini': return dateToCheck.getTime() === today.getTime();
-                        case 'minggu-ini': return isSameWeek(today, dateToCheck);
-                        case 'bulan-ini': return dateToCheck.getMonth() === today.getMonth() && dateToCheck.getFullYear() === today.getFullYear();
-                        case 'custom':
-                            if (!start || !end) return true;
-                            const startDate = new Date(start);
-                            const endDate = new Date(end);
-                            startDate.setHours(0,0,0,0);
-                            endDate.setHours(0,0,0,0);
-                            return dateToCheck >= startDate && dateToCheck <= endDate;
-                        default: return true;
-                    }
-                }
-
-                function isSameWeek(d1, d2) {
-                    const onejan = new Date(d1.getFullYear(), 0, 1);
-                    const week1 = Math.ceil((((d1.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
-                    const week2 = Math.ceil((((d2.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
-                    return week1 === week2 && d1.getFullYear() === d2.getFullYear();
-                }
-
-                window.confirmDelete = function(id, deskripsi, url) {
-                    Swal.fire({
-                        title: 'Hapus Data?',
-                        html: `Anda akan menghapus pengeluaran <strong>${deskripsi || 'ini'}</strong> secara permanen.`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#e11d48',
-                        cancelButtonColor: '#78716c',
-                        confirmButtonText: 'Ya, Hapus',
-                        cancelButtonText: 'Batal',
-                        customClass: { popup: 'rounded-3xl font-sans', confirmButton: 'rounded-xl px-6 py-2.5', cancelButton: 'rounded-xl px-6 py-2.5' }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            const form = document.getElementById('deleteForm-' + id) || createDeleteForm(id, url);
-                            form.submit();
-                        }
-                    });
-                }
-
-                function createDeleteForm(id, url) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = url;
-                    form.innerHTML = `<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="DELETE">`;
-                    document.body.appendChild(form);
-                    return form;
-                }
-
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.dataset.id;
-                        const deskripsi = btn.dataset.deskripsi;
-                        confirmDelete(id, deskripsi, null);
-                    });
+            // Handler Select All
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = isChecked);
+                    if(selectAllMobile) selectAllMobile.checked = isChecked;
+                    updateBulkDeleteState();
                 });
+            }
 
-                // ===========================
-                // BULK DELETE LOGIC
-                // ===========================
-                const selectAllCheckbox = document.getElementById('selectAll');
-                const userCheckboxes = document.querySelectorAll('.user-checkbox');
-                const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-                const selectedCountSpan = document.getElementById('selectedCount');
-                const bulkDeleteForm = document.getElementById('bulkDeleteForm');
-                const bulkDeleteInputs = document.getElementById('bulkDeleteInputs');
-
-                function updateBulkDeleteState() {
-                    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
-                    const count = selectedCheckboxes.length;
-                    if(selectedCountSpan) selectedCountSpan.textContent = count;
-
-                    if (bulkDeleteBtn) {
-                        if (count > 0) {
-                            bulkDeleteBtn.disabled = false;
-                            bulkDeleteBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'hidden');
-                            bulkDeleteBtn.classList.add('flex'); // Ensure flex is added
-                        } else {
-                            bulkDeleteBtn.disabled = true;
-                            bulkDeleteBtn.classList.add('opacity-50', 'cursor-not-allowed', 'hidden');
-                            bulkDeleteBtn.classList.remove('flex');
-                        }
-                    }
-                }
-
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.addEventListener('change', function() {
-                        userCheckboxes.forEach(checkbox => {
-                            checkbox.checked = this.checked;
-                        });
-                        updateBulkDeleteState();
-                    });
-                }
-
-                userCheckboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', function() {
-                        const allChecked = Array.from(userCheckboxes).every(c => c.checked);
-                        if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
-                        updateBulkDeleteState();
-                    });
+            if (selectAllMobile) {
+                selectAllMobile.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    document.querySelectorAll('.user-checkbox').forEach(checkbox => checkbox.checked = isChecked);
+                    if(selectAllCheckbox) selectAllCheckbox.checked = isChecked;
+                    updateBulkDeleteState();
                 });
+            }
 
-                window.submitBulkDelete = function() {
-                    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
-                    if (selectedCheckboxes.length === 0) return;
-
-                    Swal.fire({
-                        title: 'Hapus ' + selectedCheckboxes.length + ' Data?',
-                        text: "Data yang dipilih akan dihapus secara permanen!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#e11d48',
-                        cancelButtonColor: '#78716c',
-                        confirmButtonText: 'Ya, Hapus',
-                        cancelButtonText: 'Batal',
-                        customClass: {
-                            popup: 'rounded-3xl font-sans',
-                            confirmButton: 'rounded-xl px-6 py-2.5',
-                            cancelButton: 'rounded-xl px-6 py-2.5'
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            bulkDeleteInputs.innerHTML = ''; // Clear previous inputs
-                            selectedCheckboxes.forEach(checkbox => {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = 'ids[]';
-                                input.value = checkbox.value;
-                                bulkDeleteInputs.appendChild(input);
-                            });
-                            bulkDeleteForm.submit();
-                        }
-                    });
-                }
-
-                applyAllFilters();
+            // Handler Individual Checkbox
+            document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    syncCheckboxes(this.value, this.checked);
+                });
             });
-        </script>
-    </div>
+
+            // ===========================
+            // SUBMIT BULK DELETE
+            // ===========================
+            window.submitBulkDelete = function () {
+                const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+                const uniqueIds = new Set();
+                checkedBoxes.forEach(cb => uniqueIds.add(cb.value));
+
+                if (uniqueIds.size === 0) return;
+
+                Swal.fire({
+                    title: 'Hapus ' + uniqueIds.size + ' Data?',
+                    text: "Data akan dihapus permanen dari database.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48', // rose-600
+                    cancelButtonColor: '#f5f5f4', // stone-100
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: false,
+                    customClass: {
+                        popup: 'rounded-[2rem] font-sans shadow-2xl p-6',
+                        title: 'text-xl font-black text-stone-800',
+                        htmlContainer: 'text-stone-500 font-medium',
+                        confirmButton: 'rounded-xl px-6 py-3 font-bold shadow-lg shadow-rose-600/20 text-white mr-2',
+                        cancelButton: 'rounded-xl px-6 py-3 font-bold text-stone-600 hover:bg-stone-200'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkDeleteInputs.innerHTML = '';
+                        uniqueIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'ids[]';
+                            input.value = id;
+                            bulkDeleteInputs.appendChild(input);
+                        });
+                        bulkDeleteForm.submit();
+                    }
+                });
+            }
+
+            // ===========================
+            // SINGLE DELETE SWEETALERT
+            // ===========================
+            window.confirmDelete = function (id, deskripsi, url) {
+                Swal.fire({
+                    title: 'Konfirmasi Hapus',
+                    html: `Hapus pengeluaran untuk <br><span class="text-rose-600 font-bold">"${deskripsi || 'ini'}"</span>?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48', // rose-600
+                    cancelButtonColor: '#f5f5f4', // stone-100
+                    confirmButtonText: 'Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: false,
+                    customClass: {
+                        popup: 'rounded-[2rem] font-sans shadow-2xl p-6',
+                        title: 'text-xl font-black text-stone-800',
+                        htmlContainer: 'text-stone-500 font-medium',
+                        confirmButton: 'rounded-xl px-6 py-3 font-bold shadow-lg shadow-rose-600/20 text-white mr-2',
+                        cancelButton: 'rounded-xl px-6 py-3 font-bold text-stone-600 hover:bg-stone-200'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('deleteForm-' + id) || createDeleteForm(id, url);
+                        form.submit();
+                    }
+                });
+            }
+
+            function createDeleteForm(id, url) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                form.innerHTML = `<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="DELETE">`;
+                document.body.appendChild(form);
+                return form;
+            }
+
+            // Initial Load
+            applyAllFilters();
+        });
+    </script>
+
+    {{-- Style Tambahan untuk Checkbox --}}
+    <style>
+        .user-checkbox:checked {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+        }
+    </style>
 </x-app-layout>

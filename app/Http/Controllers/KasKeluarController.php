@@ -6,33 +6,34 @@ use Illuminate\Http\Request;
 use App\Models\KasKeluar;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
-use Carbon\CarbonInterface; // <--- 1. TAMBAHKAN INI
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class KasKeluarController extends Controller
 {
-    /**
-     * Tampilkan semua data kas keluar dengan filter & pencarian.
-     */
     public function index(Request $request)
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         if ($user->role === 'admin') {
             $query = KasKeluar::query();
         } else {
             $query = KasKeluar::where('user_id', $user->id);
         }
 
-        // 🔍 Pencarian berdasarkan kategori, metode, penerima, atau deskripsi
+        // 1. Filter Search
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('kategori', 'like', "%{$request->search}%")
-                    ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
+                    // PERBAIKAN: Cari ke kolom payment_method
+                    ->orWhere('payment_method', 'like', "%{$request->search}%")
                     ->orWhere('penerima', 'like', "%{$request->search}%")
-                    ->orWhere('deskripsi', 'like', "%{$request->search}%");
+                    ->orWhere('deskripsi', 'like', "%{$request->search}%")
+                    ->orWhere('kode_kas', 'like', "%{$request->search}%");
             });
         }
 
-        // 📅 Filter tanggal
+        // 2. Filter Waktu
         $tz = 'Asia/Jakarta';
         $now = Carbon::now($tz);
 
@@ -45,7 +46,6 @@ class KasKeluarController extends Controller
                     $query->whereDate('tanggal', $now->copy()->subDay()->toDateString());
                     break;
                 case 'minggu-ini':
-                    // PERBAIKAN DI SINI: Gunakan CarbonInterface
                     $query->whereBetween('tanggal', [
                         $now->copy()->startOfWeek(CarbonInterface::MONDAY),
                         $now->copy()->endOfWeek(CarbonInterface::SUNDAY),
@@ -80,6 +80,7 @@ class KasKeluarController extends Controller
             }
         }
 
+        // 3. Filter Harga
         if ($request->filter_harga) {
             $range = explode('-', $request->filter_harga);
             if (count($range) === 2) {
@@ -87,27 +88,19 @@ class KasKeluarController extends Controller
             }
         }
 
-        $kasKeluar = $query->orderBy('tanggal', 'desc')->get();
+        $kasKeluar = $query->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc')->get();
 
         return view('kas-keluar.index', compact('kasKeluar'));
     }
 
-    /**
-     * Form tambah kas keluar.
-     */
     public function create()
     {
         return view('kas-keluar.create');
     }
 
-    /**
-     * Simpan data kas keluar baru.
-     */
     public function store(Request $request)
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
-
-        // Kasir must upload payment proof
+        $user = Auth::user();
         $buktiRule = $user->role === 'kasir' ? 'required|image|mimes:jpg,jpeg,png|max:2048' : 'nullable|image|mimes:jpg,jpeg,png|max:2048';
 
         $validated = $request->validate([
@@ -120,39 +113,60 @@ class KasKeluarController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        if ($request->hasFile('bukti_pembayaran')) {
-            $path = $request->file('bukti_pembayaran')->store('bukti_pembayaran', 'public');
-            $validated['bukti_pembayaran'] = $path;
+        try {
+            DB::beginTransaction();
+
+            // Handle File
+            if ($request->hasFile('bukti_pembayaran')) {
+                $path = $request->file('bukti_pembayaran')->store('bukti_pembayaran', 'public');
+                $validated['bukti_pembayaran'] = $path;
+            }
+
+            // PERBAIKAN: Mapping metode_pembayaran -> payment_method
+            $validated['payment_method'] = $validated['metode_pembayaran'];
+            unset($validated['metode_pembayaran']);
+
+            $validated['user_id'] = $user->id;
+
+            // Generate Kode Kas (KK-YYMM-XXX)
+            $dateCode = date('ym', strtotime($request->tanggal));
+            $last = KasKeluar::where('kode_kas', 'LIKE', 'KK-' . $dateCode . '-%')
+                ->orderBy('kode_kas', 'desc')
+                ->first();
+
+            $num = 1;
+            if ($last) {
+                $lastNum = (int) substr($last->kode_kas, -3);
+                $num = $lastNum + 1;
+            }
+            $validated['kode_kas'] = 'KK-' . $dateCode . '-' . str_pad($num, 3, '0', STR_PAD_LEFT);
+
+            KasKeluar::create($validated);
+
+            DB::commit();
+            return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
-
-        $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
-        KasKeluar::create($validated);
-
-        return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil ditambahkan.');
     }
 
-    /**
-     * Form edit kas keluar.
-     */
     public function edit($id)
     {
         $kasKeluar = KasKeluar::findOrFail($id);
+
+        // Inject virtual attribute untuk form edit
+        $kasKeluar->metode_pembayaran = $kasKeluar->payment_method;
+
         return view('kas-keluar.edit', compact('kasKeluar'));
     }
 
-    /**
-     * Update data kas keluar.
-     */
     public function update(Request $request, $id)
     {
         $kasKeluar = KasKeluar::findOrFail($id);
-
-        $user = \Illuminate\Support\Facades\Auth::user();
-
-        // Kasir must upload payment proof (but allow keeping existing one during update)
-        $buktiRule = $user->role === 'kasir'
-            ? 'nullable|image|mimes:jpg,jpeg,png|max:2048'
-            : 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+        $user = Auth::user();
+        $buktiRule = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
 
         $validated = $request->validate([
             'tanggal' => 'required|date',
@@ -164,23 +178,32 @@ class KasKeluarController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
-        // 🔁 Hapus file lama jika ada file baru
-        if ($request->hasFile('bukti_pembayaran')) {
-            if ($kasKeluar->bukti_pembayaran && Storage::disk('public')->exists($kasKeluar->bukti_pembayaran)) {
-                Storage::disk('public')->delete($kasKeluar->bukti_pembayaran);
+        try {
+            DB::beginTransaction();
+
+            if ($request->hasFile('bukti_pembayaran')) {
+                if ($kasKeluar->bukti_pembayaran && Storage::disk('public')->exists($kasKeluar->bukti_pembayaran)) {
+                    Storage::disk('public')->delete($kasKeluar->bukti_pembayaran);
+                }
+                $path = $request->file('bukti_pembayaran')->store('bukti_pembayaran', 'public');
+                $validated['bukti_pembayaran'] = $path;
             }
-            $path = $request->file('bukti_pembayaran')->store('bukti_pembayaran', 'public');
-            $validated['bukti_pembayaran'] = $path;
+
+            // PERBAIKAN: Mapping Update
+            $validated['payment_method'] = $validated['metode_pembayaran'];
+            unset($validated['metode_pembayaran']);
+
+            $kasKeluar->update($validated);
+
+            DB::commit();
+            return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal update: ' . $e->getMessage());
         }
-
-        $kasKeluar->update($validated);
-
-        return redirect()->route('kas-keluar.index')->with('success', 'Data kas keluar berhasil diperbarui.');
     }
 
-    /**
-     * Hapus data kas keluar.
-     */
     public function destroy($id)
     {
         $kasKeluar = KasKeluar::findOrFail($id);
@@ -203,18 +226,9 @@ class KasKeluarController extends Controller
 
         try {
             $ids = $request->ids;
-
-            // Handle file deletion for selected records
             $records = KasKeluar::whereIn('id', $ids)->get();
+
             foreach ($records as $record) {
-                // Check ownership if not admin (though route is currently admin only in web.php, let's be safe or consistent)
-                // Actually web.php shows kas-keluar routes are shared/kasir access, but bulk destroy was put in admin group?
-                // Wait, I put bulk destroy in admin group in web.php. 
-                // If kasir needs it, I should move it. 
-                // The user said "terapkan bulk actions untuk kas masuk dan kas keluar juga", didn't specify role.
-                // Existing destroy allows kasir? destroy method doesn't check ownership explicitly but index does filter.
-                // Let's assume admin for now as per my plan placement, or check ownership if I move it.
-                // For now, just delete files.
                 if ($record->bukti_pembayaran && Storage::disk('public')->exists($record->bukti_pembayaran)) {
                     Storage::disk('public')->delete($record->bukti_pembayaran);
                 }

@@ -24,12 +24,13 @@ class KasMasukController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('kode_kas', 'like', "%{$request->search}%")
-                    ->orWhere('metode_pembayaran', 'like', "%{$request->search}%")
+                    // PERBAIKAN: Sesuaikan nama kolom database (payment_method)
+                    ->orWhere('payment_method', 'like', "%{$request->search}%")
                     ->orWhere('keterangan', 'like', "%{$request->search}%");
             });
         }
 
-        // 2. Filter Waktu
+        // 2. Filter Waktu (Tetap sama)
         if ($request->filter_waktu) {
             switch ($request->filter_waktu) {
                 case 'hari-ini':
@@ -53,7 +54,7 @@ class KasMasukController extends Controller
             }
         }
 
-        // 3. Filter Harga
+        // 3. Filter Harga (Tetap sama)
         if ($request->filter_harga) {
             $range = explode('-', $request->filter_harga);
             if (count($range) === 2) {
@@ -80,6 +81,7 @@ class KasMasukController extends Controller
 
     public function store(Request $request)
     {
+        // Validasi menggunakan nama input dari FORM ('metode_pembayaran')
         $validated = $request->validate([
             'tanggal_transaksi' => 'required|date',
             'keterangan' => 'nullable|string|max:255',
@@ -95,27 +97,34 @@ class KasMasukController extends Controller
             // Format tanggal (YYYYMMDD)
             $tglFormat = date('Ymd', strtotime($request->tanggal_transaksi));
 
-            // Ambil record terakhir berdasarkan tanggal yang sama
+            // Generate Nomor Kas Manual
             $last = KasMasuk::whereDate('tanggal_transaksi', $request->tanggal_transaksi)
                 ->orderBy('created_at', 'desc')
                 ->first();
 
-            // Hitung nomor selanjutnya
             if ($last) {
-                $lastNumber = intval(substr($last->kode_kas, -3));
+                // Ambil 3 digit terakhir, handle jika kode bukan format standar
+                preg_match('/-(\d{3})$/', $last->kode_kas, $matches);
+                $lastNumber = isset($matches[1]) ? intval($matches[1]) : 0;
                 $nextNumber = $lastNumber + 1;
             } else {
                 $nextNumber = 1;
             }
 
-
             $kodeKas = 'KM-' . $tglFormat . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
+            // --- PERBAIKAN DATA SEBELUM SIMPAN ---
+            // 1. Mapping 'metode_pembayaran' (Input) ke 'payment_method' (Database)
+            $validated['payment_method'] = $validated['metode_pembayaran'];
+            unset($validated['metode_pembayaran']); // Hapus key lama agar tidak error
+
+            // 2. Set Data Lainnya
             $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
             $validated['user_id'] = Auth::id();
             $validated['keterangan'] = $validated['keterangan'] ?? '-';
             $validated['kode_kas'] = $kodeKas;
 
+            // Simpan
             KasMasuk::create($validated);
 
             DB::commit();
@@ -127,7 +136,6 @@ class KasMasukController extends Controller
         }
     }
 
-
     public function edit($id)
     {
         if (Auth::user()->role === 'admin') {
@@ -135,6 +143,11 @@ class KasMasukController extends Controller
         } else {
             $kasMasuk = KasMasuk::where('user_id', Auth::id())->findOrFail($id);
         }
+
+        // Inject atribut 'metode_pembayaran' virtual agar form edit terbaca
+        // Karena di database namanya 'payment_method', tapi form pakai 'metode_pembayaran'
+        $kasMasuk->metode_pembayaran = $kasMasuk->payment_method;
+
         return view('kas-masuk.edit', compact('kasMasuk'));
     }
 
@@ -158,9 +171,11 @@ class KasMasukController extends Controller
                 $kasMasuk = KasMasuk::where('user_id', Auth::id())->findOrFail($id);
             }
 
-            $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
+            // --- PERBAIKAN MAPPING UPDATE ---
+            $validated['payment_method'] = $validated['metode_pembayaran'];
+            unset($validated['metode_pembayaran']);
 
-            // Fallback keterangan
+            $validated['total'] = $validated['jumlah'] * $validated['harga_satuan'];
             $validated['keterangan'] = $validated['keterangan'] ?? '-';
 
             $kasMasuk->update($validated);

@@ -21,14 +21,13 @@ class KasMasuk extends Model
         'tanggal_transaksi',
         'keterangan',
         'kategori',
-        'metode_pembayaran',
+        'payment_method', // KOLOM DATABASE YANG BENAR
+        'detail_items',
         'jumlah',
         'harga_satuan',
         'total',
+        'kembalian',
         'user_id',
-        // Update Baru:
-        'detail_items',
-        'kembalian'
     ];
 
     protected $casts = [
@@ -37,37 +36,47 @@ class KasMasuk extends Model
         'harga_satuan' => 'decimal:2',
         'total' => 'decimal:2',
         'kembalian' => 'decimal:2',
-        'detail_items' => 'array', // Otomatis convert JSON <-> Array
+        'detail_items' => 'array',
     ];
+
+    // --- ACCESSOR ---
+    // Memungkinkan pemanggilan $item->metode_pembayaran di Blade View
+    // Walaupun kolom aslinya payment_method
+    public function getMetodePembayaranAttribute()
+    {
+        return $this->attributes['payment_method'] ?? 'Tunai';
+    }
 
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
-            // 1. Generate UUID jika belum ada
+            // 1. Generate UUID
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
 
-            // 2. Hitung Total otomatis (Backup jika null, meski biasanya diisi controller)
+            // 2. Default Payment Method jika kosong
+            // Ini yang menyebabkan bug "Tunai" sebelumnya jika Controller salah kirim key
+            if (empty($model->payment_method)) {
+                $model->payment_method = 'Tunai';
+            }
+
+            // 3. Logic Total Otomatis
             if ($model->jumlah && $model->harga_satuan && !$model->total) {
                 $model->total = $model->jumlah * $model->harga_satuan;
             }
 
-            // 3. Generate Kode Otomatis: KM-001 (POS punya kode sendiri di controller)
-            // Logic ini akan override jika kode_kas belum diisi controller.
-            // Karena di PosController kita isi manual 'POS-...', bagian ini aman.
+            // 4. Fallback Kode Kas
             if (empty($model->kode_kas)) {
-                $latest = self::orderBy('created_at', 'desc')->first();
-                $number = 1;
-
-                if ($latest && preg_match('/KM-(\d+)/', $latest->kode_kas, $matches)) {
-                    $number = intval($matches[1]) + 1;
-                }
-
-                $model->kode_kas = 'KM-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+                $model->kode_kas = 'KM-' . date('Ymd') . '-' . strtoupper(Str::random(3));
             }
         });
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }

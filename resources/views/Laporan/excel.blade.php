@@ -1,91 +1,91 @@
 <table>
-    {{-- HEADER LAPORAN --}}
+    {{-- JUDUL LAPORAN --}}
     <tr>
-        <td colspan="8" style="font-size: 16px; font-weight: bold; text-align: center; height: 30px; vertical-align: middle;">
-            LAPORAN KEUANGAN TEH SOLO JUMBO
+        <td colspan="7" style="font-size: 14px; font-weight: bold; text-align: center; height: 30px; vertical-align: middle;">
+            LAPORAN KEUANGAN TEH SOLO DE JUMBO
         </td>
     </tr>
     <tr>
-        <td colspan="8" style="text-align: center; color: #666666;">
-            Periode: {{ $selectedBulan ? \Carbon\Carbon::create()->month((int)$selectedBulan)->translatedFormat('F') : 'Semua Bulan' }} {{ $selectedTahun ?: 'Semua Tahun' }}
+        <td colspan="7" style="text-align: center; color: #555555; font-style: italic;">
+            Periode: {{ $selectedBulan ? \Carbon\Carbon::create()->month((int)$selectedBulan)->translatedFormat('F') : 'Semua Bulan' }} {{ $selectedTahun }}
         </td>
     </tr>
-    <tr></tr> {{-- Empty Row --}}
+    <tr></tr>
 
-    {{-- SUMMARY SECTION --}}
+    {{-- RINGKASAN DATA (Proporsional) --}}
     <tr>
-        <td colspan="2" style="font-weight: bold; border: 1px solid #000000; background-color: #f3f4f6;">RINGKASAN</td>
-        <td colspan="6"></td>
+        <td colspan="2" style="font-weight: bold; background-color: #eeeeee; border: 1px solid #000000;">RINGKASAN PERIODE</td>
+        <td colspan="5"></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #e5e7eb;">Saldo Awal</td>
-        <td style="border: 1px solid #e5e7eb; font-weight: bold; text-align: right;">{{ $saldoAwal }}</td>
+        <td style="border: 1px solid #cccccc; width: 25px;">Total Pemasukan (Omzet)</td>
+        <td style="border: 1px solid #cccccc; font-weight: bold; color: #059669; text-align: right; width: 20px;">{{ $totalMasuk }}</td>
+        <td colspan="5"></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #e5e7eb;">Total Pemasukan</td>
-        <td style="border: 1px solid #e5e7eb; font-weight: bold; color: #059669; text-align: right;">{{ $totalMasuk }}</td>
+        <td style="border: 1px solid #cccccc;">Total Pengeluaran</td>
+        <td style="border: 1px solid #cccccc; font-weight: bold; color: #e11d48; text-align: right;">{{ $totalKeluar }}</td>
+        <td colspan="5"></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #e5e7eb;">Total Pengeluaran</td>
-        <td style="border: 1px solid #e5e7eb; font-weight: bold; color: #e11d48; text-align: right;">{{ $totalKeluar }}</td>
+        <td style="border: 1px solid #000000; background-color: #333333; color: #ffffff; font-weight: bold;">SALDO PEMBUKUAN (AKHIR)</td>
+        <td style="border: 1px solid #000000; background-color: #333333; color: #ffffff; font-weight: bold; text-align: right;">{{ $saldoAkhir }}</td>
+        <td colspan="5"></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #000000; background-color: #1c1917; color: #ffffff;">Saldo Akhir</td>
-        <td style="border: 1px solid #000000; background-color: #1c1917; color: #ffffff; font-weight: bold; text-align: right;">{{ $saldoAkhir }}</td>
+        <td style="border: 1px solid #000000; background-color: #fffbeb; color: #92400e; font-weight: bold;">ESTIMASI SISA KAS (LACI)</td>
+        <td style="border: 1px solid #000000; background-color: #fffbeb; color: #92400e; font-weight: bold; text-align: right;">{{ $sisaUangFisik }}</td>
+        <td colspan="5" style="font-style: italic; color: #666666; font-size: 10px; vertical-align: middle;">*Hanya Uang Tunai (Cash Masuk - Keluar)</td>
     </tr>
-    <tr></tr> {{-- Empty Row --}}
+    <tr></tr>
 
-    {{-- TABLE HEADER --}}
+    {{-- HEADER TABEL TRANSAKSI --}}
     <thead>
     <tr>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 15px;">TANGGAL</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 12px;">KODE</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 35px;">KETERANGAN</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 20px;">PENERIMA/DARI</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 15px;">KATEGORI</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #065f46;">MASUK</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #9f1239;">KELUAR</th>
-        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 20px;">SALDO</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; vertical-align: middle;">TANGGAL</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 15px; vertical-align: middle;">KODE</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 40px; vertical-align: middle;">KETERANGAN</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 25px; vertical-align: middle;">KATEGORI / METODE</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #065f46; vertical-align: middle;">MASUK</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 18px; color: #9f1239; vertical-align: middle;">KELUAR</th>
+        <th style="font-weight: bold; text-align: center; border: 1px solid #000000; background-color: #d1d5db; width: 20px; vertical-align: middle;">SALDO</th>
     </tr>
     </thead>
 
-    {{-- TABLE BODY --}}
+    {{-- BODY TABEL --}}
     <tbody>
-        {{-- Row Saldo Awal --}}
-        @if($saldoAwal != 0)
-        <tr>
-            <td style="border: 1px solid #d1d5db; text-align: center; color: #9ca3af;">-</td>
-            <td style="border: 1px solid #d1d5db; text-align: center; color: #9ca3af;">AWAL</td>
-            <td style="border: 1px solid #d1d5db; font-style: italic; color: #4b5563;">Saldo Awal Periode</td>
-            <td style="border: 1px solid #d1d5db;">-</td>
-            <td style="border: 1px solid #d1d5db;">-</td>
-            <td style="border: 1px solid #d1d5db; text-align: right;">0</td>
-            <td style="border: 1px solid #d1d5db; text-align: right;">0</td>
-            <td style="border: 1px solid #d1d5db; text-align: right; font-weight: bold;">{{ $saldoAwal }}</td>
-        </tr>
-        @endif
-
         @foreach($laporan as $item)
         <tr>
-            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['tanggal']->format('d/m/Y') }}</td>
-            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['kode'] }}</td>
-            <td style="border: 1px solid #d1d5db;">{{ $item['keterangan'] }}</td>
-            <td style="border: 1px solid #d1d5db;">{{ $item['penerima'] !== '-' ? $item['penerima'] : '' }}</td>
-            <td style="border: 1px solid #d1d5db; text-align: center;">{{ $item['kategori'] }}</td>
-
-            {{-- Masuk Column --}}
-            <td style="border: 1px solid #d1d5db; text-align: right; {{ $item['masuk'] > 0 ? 'color: #059669; font-weight:bold;' : 'color: #d1d5db;' }}">
-                {{ $item['masuk'] }}
+            <td style="border: 1px solid #cccccc; text-align: center; vertical-align: top;">
+                {{ $item['tanggal']->format('d/m/Y H:i') }}
             </td>
-
-            {{-- Keluar Column --}}
-            <td style="border: 1px solid #d1d5db; text-align: right; {{ $item['keluar'] > 0 ? 'color: #e11d48; font-weight:bold;' : 'color: #d1d5db;' }}">
-                {{ $item['keluar'] }}
+            <td style="border: 1px solid #cccccc; text-align: center; vertical-align: top;">
+                {{ $item['kode'] }}
             </td>
-
-            {{-- Saldo Column --}}
-            <td style="border: 1px solid #d1d5db; text-align: right; font-weight: bold;">{{ $item['saldo'] }}</td>
+            <td style="border: 1px solid #cccccc; vertical-align: top;">
+                {{ $item['keterangan'] }}
+            </td>
+            <td style="border: 1px solid #cccccc; text-align: center; vertical-align: top;">
+                {{ $item['kategori'] }}
+                @if(strtolower($item['payment']) != 'tunai' && strtolower($item['payment']) != 'cash')
+                 ({{ strtoupper($item['payment']) }})
+                @endif
+            </td>
+            <td style="border: 1px solid #cccccc; text-align: right; vertical-align: top; {{ $item['masuk'] > 0 ? 'color: #065f46; font-weight:bold;' : 'color: #dddddd;' }}">
+                {{ $item['masuk'] > 0 ? $item['masuk'] : '0' }}
+            </td>
+            <td style="border: 1px solid #cccccc; text-align: right; vertical-align: top; {{ $item['keluar'] > 0 ? 'color: #9f1239; font-weight:bold;' : 'color: #dddddd;' }}">
+                {{ $item['keluar'] > 0 ? $item['keluar'] : '0' }}
+            </td>
+            <td style="border: 1px solid #cccccc; text-align: right; font-weight: bold; vertical-align: top;">
+                {{ $item['saldo'] }}
+            </td>
         </tr>
         @endforeach
+
+        {{-- FOOTER TABEL (Opsional, untuk batas bawah) --}}
+        <tr>
+            <td colspan="7" style="border-top: 2px solid #000000;"></td>
+        </tr>
     </tbody>
 </table>

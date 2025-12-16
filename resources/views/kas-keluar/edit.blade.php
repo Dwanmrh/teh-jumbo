@@ -1,18 +1,33 @@
 <x-app-layout>
-    {{-- Libraries --}}
+    <x-slot name="title">Edit KK</x-slot>
+
+    {{-- =====================================================================
+         LIBRARIES & META
+         ===================================================================== --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div class="min-h-screen bg-stone-50/50 pb-24 font-sans"
+    {{-- =====================================================================
+         MAIN CONTAINER
+         ===================================================================== --}}
+    <div class="flex flex-col space-y-8 font-sans"
          x-data="{
              nominal: '{{ (int)$kasKeluar->nominal }}',
              displayNominal: '',
              metode: '{{ $kasKeluar->metode_pembayaran }}',
+             search: '{{ $kasKeluar->kategori }}',
+             kategoriOpen: false,
+             options: ['Belanja Stok', 'Operasional Toko', 'Gaji Karyawan', 'Sewa Tempat', 'Listrik & Air', 'Maintenance', 'Lain-lain'],
+
+             // Image Logic
+             imageUrl: '{{ $kasKeluar->bukti_pembayaran ? asset('storage/' . $kasKeluar->bukti_pembayaran) : null }}',
+             fileName: '{{ $kasKeluar->bukti_pembayaran ? 'Bukti Terlampir' : null }}',
+
              init() {
                  this.displayNominal = this.formatRupiah(this.nominal);
              },
              formatRupiah(value) {
-                 if(!value) return '0';
+                 if(!value) return '';
                  return new Intl.NumberFormat('id-ID').format(value);
              },
              updateNominal(e) {
@@ -20,9 +35,14 @@
                  this.nominal = raw;
                  this.displayNominal = raw ? this.formatRupiah(raw) : '';
              },
-             // Image Logic (With existing file)
-             imageUrl: '{{ $kasKeluar->bukti_pembayaran ? asset('storage/' . $kasKeluar->bukti_pembayaran) : null }}',
-             fileName: '{{ $kasKeluar->bukti_pembayaran ? 'Bukti Terlampir' : null }}',
+             get totalLengthClass() {
+                 let len = (this.displayNominal || '').length;
+                 if (len <= 10) return 'text-4xl md:text-5xl';
+                 if (len <= 14) return 'text-3xl md:text-4xl';
+                 return 'text-2xl md:text-3xl';
+             },
+
+             // Image Functions
              fileChosen(event) {
                  let file = event.target.files[0];
                  if(file) {
@@ -36,237 +56,294 @@
                  this.imageUrl = null;
                  this.fileName = null;
                  document.getElementById('file-upload').value = '';
-                 // Optional: Add hidden input to signal backend to delete existing image
+             },
+
+             // Combobox
+             get filteredOptions() {
+                 if (this.search === '') return this.options;
+                 return this.options.filter(option => option.toLowerCase().includes(this.search.toLowerCase()));
              }
          }"
          x-init="init()">
 
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-
-            {{-- 1. HEADER --}}
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
-                <div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <a href="{{ route('kas-keluar.index') }}" class="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-stone-200 text-stone-400 hover:text-rose-600 hover:border-rose-200 transition-colors shadow-sm">
-                            <span class="material-symbols-rounded text-lg">arrow_back</span>
-                        </a>
-                        <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md border border-rose-100 uppercase tracking-wider">Mode Edit</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <h1 class="text-2xl md:text-4xl font-black text-stone-800 tracking-tight">Edit Pengeluaran</h1>
-                        <span class="text-lg md:text-xl font-medium text-stone-400 select-all">#{{ $kasKeluar->kode_kas }}</span>
-                    </div>
-                    <p class="text-stone-500 text-sm mt-1 max-w-lg leading-relaxed">Perbarui data transaksi jika terjadi kesalahan input.</p>
+        {{-- 1. HEADER & BACK BUTTON --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-[fadeIn_0.3s_ease-out]">
+            <div>
+                {{-- Breadcrumb --}}
+                <div class="flex items-center gap-2 mb-2">
+                    <a href="{{ route('kas-keluar.index') }}" class="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all group">
+                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                    </a>
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    <p class="text-xs font-bold tracking-widest text-amber-600 uppercase">Mode Edit</p>
                 </div>
+
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-stone-800 tracking-tight leading-tight">
+                        Edit Pengeluaran
+                    </h1>
+                    <span class="bg-amber-100 text-amber-700 border border-amber-200 text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg font-mono">
+                        #{{ $kasKeluar->kode_kas }}
+                    </span>
+                </div>
+                <p class="text-stone-500 text-sm mt-2 max-w-lg leading-relaxed font-medium">
+                    Perbarui data transaksi jika terjadi kesalahan input atau penyesuaian biaya.
+                </p>
             </div>
+        </div>
 
-            <form method="POST" action="{{ route('kas-keluar.update', $kasKeluar->id) }}" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
+        <form method="POST" action="{{ route('kas-keluar.update', $kasKeluar->id) }}" enctype="multipart/form-data" class="animate-[fadeIn_0.5s_ease-out]">
+            @csrf
+            @method('PUT')
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {{-- Error Handling --}}
+            @if ($errors->any())
+                <div class="mb-8 bg-rose-50 border border-rose-100 text-rose-600 px-6 py-4 rounded-[1.5rem] shadow-sm flex items-start gap-3">
+                    <span class="material-symbols-rounded text-rose-500 mt-0.5">warning</span>
+                    <div>
+                        <h3 class="font-bold text-sm mb-1">Periksa Inputan Anda</h3>
+                        <ul class="list-disc list-inside text-xs space-y-0.5 opacity-90 font-medium">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
 
-                    {{-- 2. KOLOM KIRI --}}
-                    <div class="lg:col-span-2 space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-                        {{-- Card Input Nominal --}}
-                        <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-200 relative overflow-hidden group">
-                            {{-- Decorative Background (Use Orange/Amber for Edit mode distinction if preferred, or keep Rose) --}}
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -mr-4 -mt-4 transition-all group-hover:bg-rose-100/50"></div>
+                {{-- 2. KOLOM KIRI (INPUT) --}}
+                <div class="lg:col-span-2 space-y-6">
 
-                            <div class="relative z-10">
-                                <h3 class="font-bold text-stone-700 text-lg mb-6 flex items-center gap-2">
-                                    <span class="material-symbols-rounded text-rose-500">edit_note</span> Koreksi Nominal
-                                </h3>
+                    {{-- Card Input Nominal --}}
+                    <div class="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-soft border border-stone-100 relative overflow-hidden group hover:border-amber-300/30 transition-all duration-500">
+                        {{-- Background Texture --}}
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-amber-50 rounded-bl-[5rem] -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-110 opacity-50"></div>
 
-                                <div class="relative">
-                                    <span class="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-stone-400 text-2xl md:text-3xl font-bold group-focus-within:text-rose-500 transition-colors">Rp</span>
-                                    <input type="text" x-model="displayNominal" @input="updateNominal" placeholder="0" required
-                                        class="w-full bg-stone-50 border-2 border-stone-100 focus:border-rose-500 focus:bg-white focus:ring-4 focus:ring-rose-500/10 rounded-[1.5rem] py-4 md:py-6 pl-14 md:pl-20 pr-6 text-3xl md:text-4xl font-black text-stone-800 placeholder-stone-300 transition-all outline-none">
-                                    <input type="hidden" name="nominal" :value="nominal">
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Card Detail --}}
-                        <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-200">
-                            <h3 class="font-bold text-stone-700 text-lg mb-6 flex items-center gap-2">
-                                <span class="material-symbols-rounded text-stone-400">receipt_long</span> Detail Transaksi
+                        <div class="relative z-10">
+                            <h3 class="font-bold text-stone-800 text-lg mb-6 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 border border-amber-200">
+                                    <span class="material-symbols-rounded text-lg">edit_note</span>
+                                </span>
+                                Koreksi Nominal
                             </h3>
 
-                            <div class="space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div class="space-y-2">
-                                        <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Tanggal</label>
+                            <div class="relative">
+                                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-stone-400 text-2xl md:text-3xl font-bold group-focus-within:text-amber-600 transition-colors">Rp</span>
+                                <input type="text" x-model="displayNominal" @input="updateNominal" placeholder="0" required
+                                       class="w-full bg-stone-50 border-transparent focus:border-amber-500/50 rounded-[2rem] py-6 pl-16 md:pl-20 pr-6 text-3xl md:text-5xl font-black text-stone-800 focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all outline-none placeholder-stone-200 tracking-tight shadow-inner">
+                                <input type="hidden" name="nominal" :value="nominal">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Card Detail --}}
+                    <div class="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-soft border border-stone-100">
+                        <h3 class="font-bold text-stone-800 text-lg mb-6 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 border border-stone-200">
+                                <span class="material-symbols-rounded text-lg">receipt_long</span>
+                            </span>
+                            Detail Transaksi
+                        </h3>
+
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {{-- Input Tanggal --}}
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Tanggal</label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 material-symbols-rounded text-lg pointer-events-none">calendar_today</span>
                                         <input type="date" name="tanggal" value="{{ old('tanggal', $kasKeluar->tanggal) }}" required
-                                            class="w-full bg-stone-50 border-stone-200 rounded-2xl text-stone-700 font-bold focus:ring-rose-500/20 focus:border-rose-500 transition-all py-3 px-4 text-sm">
+                                               class="w-full bg-stone-50 border-transparent focus:border-amber-500/50 rounded-[1.5rem] text-stone-700 font-bold focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all py-3.5 pl-12 pr-4 text-sm shadow-inner cursor-pointer">
                                     </div>
+                                </div>
 
-                                    {{-- COMBOBOX KATEGORI (EDIT MODE) --}}
-                                    <div class="space-y-2"
-                                         x-data="{
-                                             open: false,
-                                             search: '{{ $kasKeluar->kategori }}',
-                                             options: ['Belanja Stok', 'Operasional Toko', 'Gaji Karyawan', 'Sewa Tempat', 'Perbaikan & Maintenance', 'Lain-lain'],
-                                             get filteredOptions() {
-                                                 if (this.search === '') return this.options;
-                                                 return this.options.filter(option => option.toLowerCase().includes(this.search.toLowerCase()));
-                                             },
-                                             select(val) {
-                                                 this.search = val;
-                                                 this.open = false;
-                                             }
-                                         }">
-                                        <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Kategori</label>
-                                        <div class="relative" @click.outside="open = false">
-                                            <input type="text" name="kategori" x-model="search"
-                                                @focus="open = true" @input="open = true"
-                                                class="w-full bg-stone-50 border-stone-200 rounded-2xl text-stone-700 font-bold focus:ring-rose-500/20 focus:border-rose-500 transition-all py-3 pl-4 pr-10 text-sm"
-                                                placeholder="Cari kategori..." autocomplete="off">
+                                {{-- Combobox Kategori --}}
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Kategori</label>
+                                    <div class="relative" @click.outside="kategoriOpen = false">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 material-symbols-rounded text-lg pointer-events-none">category</span>
+                                        <input type="text" name="kategori" x-model="search"
+                                               @focus="kategoriOpen = true" @input="kategoriOpen = true"
+                                               class="w-full bg-stone-50 border-transparent focus:border-amber-500/50 rounded-[1.5rem] text-stone-700 font-bold focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all py-3.5 pl-12 pr-10 text-sm shadow-inner placeholder:text-stone-300"
+                                               placeholder="Pilih atau ketik..." autocomplete="off">
 
-                                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none transition-transform duration-300" :class="open ? 'rotate-180' : ''">
-                                                <span class="material-symbols-rounded">expand_more</span>
-                                            </span>
+                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none transition-transform duration-300"
+                                              :class="kategoriOpen ? 'rotate-180 text-amber-500' : ''">
+                                            <span class="material-symbols-rounded">expand_more</span>
+                                        </span>
 
-                                            <div x-show="open" x-transition.opacity.duration.200ms
-                                                 class="absolute z-50 mt-1 w-full bg-white rounded-2xl shadow-xl border border-stone-100 max-h-60 overflow-y-auto custom-scrollbar p-1.5">
-                                                <template x-for="option in filteredOptions" :key="option">
-                                                    <button type="button" @click="select(option)"
-                                                        class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-rose-50 hover:text-rose-700 transition-colors flex items-center justify-between group">
-                                                        <span x-text="option"></span>
-                                                        <span class="material-symbols-rounded text-rose-500 opacity-0 group-hover:opacity-100 text-lg">check</span>
-                                                    </button>
-                                                </template>
-                                                <div x-show="filteredOptions.length === 0 && search.length > 0" class="px-3 py-2.5 text-sm text-stone-400 italic flex items-center gap-2">
-                                                    <span class="material-symbols-rounded text-rose-500">add_circle</span>
-                                                    <span>Gunakan kategori baru: "<span x-text="search" class="font-bold text-stone-600"></span>"</span>
-                                                </div>
+                                        {{-- Dropdown Menu --}}
+                                        <div x-show="kategoriOpen" x-transition.opacity.duration.200ms style="display: none;"
+                                             class="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-stone-100 max-h-60 overflow-y-auto p-1.5 ring-1 ring-black/5 custom-scrollbar">
+                                            <template x-for="option in filteredOptions" :key="option">
+                                                <button type="button" @click="search = option; kategoriOpen = false"
+                                                        class="w-full text-left px-4 py-3 rounded-xl text-xs font-bold text-stone-600 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center justify-between group">
+                                                    <span x-text="option"></span>
+                                                    <span class="material-symbols-rounded text-amber-500 opacity-0 group-hover:opacity-100 text-base scale-75 group-hover:scale-100 transition-all">check</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="filteredOptions.length === 0 && search.length > 0"
+                                                 class="px-4 py-3 text-xs font-medium text-stone-400 italic bg-stone-50 rounded-xl border border-dashed border-stone-200 text-center m-1">
+                                                Kategori baru: <br>
+                                                <span x-text="search" class="font-bold text-amber-600 not-italic"></span>
                                             </div>
                                         </div>
                                     </div>
-                                    {{-- END COMBOBOX --}}
                                 </div>
+                            </div>
 
-                                <div class="space-y-2">
-                                    <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Dibayarkan Kepada</label>
+                            {{-- Penerima --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Dibayarkan Kepada</label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 material-symbols-rounded text-lg pointer-events-none">person</span>
                                     <input type="text" name="penerima" value="{{ old('penerima', $kasKeluar->penerima) }}" required
-                                        class="w-full bg-stone-50 border-stone-200 rounded-2xl px-5 py-3.5 text-stone-700 font-bold text-sm focus:ring-rose-500/20 focus:border-rose-500 transition-all placeholder:font-normal">
+                                           class="w-full bg-stone-50 border-transparent focus:border-amber-500/50 rounded-[1.5rem] text-stone-700 font-bold focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all py-3.5 pl-12 pr-4 text-sm shadow-inner placeholder:font-normal">
                                 </div>
+                            </div>
 
-                                <div class="space-y-2">
-                                    <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Sumber Dana</label>
-                                    <input type="hidden" name="metode_pembayaran" x-model="metode">
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <template x-for="m in ['Tunai', 'Transfer', 'QRIS']">
-                                            <button type="button" @click="metode = m"
-                                                :class="metode === m ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/30 ring-2 ring-rose-600 ring-offset-2' : 'bg-stone-50 text-stone-500 hover:bg-stone-100 border border-stone-200'"
-                                                class="py-3 px-2 rounded-xl text-xs md:text-sm font-bold transition-all flex flex-col items-center gap-1.5 md:flex-row md:justify-center">
-                                                <span class="material-symbols-rounded text-lg" x-text="m === 'Tunai' ? 'wallet' : (m === 'Transfer' ? 'account_balance' : 'qr_code')"></span>
-                                                <span x-text="m"></span>
+                            {{-- Metode Pembayaran --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Sumber Dana</label>
+                                <input type="hidden" name="metode_pembayaran" x-model="metode">
+                                <div class="grid grid-cols-3 gap-3">
+                                    @foreach(['Tunai' => 'wallet', 'Transfer' => 'account_balance', 'QRIS' => 'qr_code_scanner'] as $label => $icon)
+                                        <button type="button" @click="metode = '{{ $label }}'"
+                                                :class="metode === '{{ $label }}'
+                                                    ? 'bg-stone-800 text-white shadow-xl shadow-stone-800/20 ring-2 ring-stone-800 ring-offset-2'
+                                                    : 'bg-white text-stone-500 hover:bg-stone-50 border border-stone-200 hover:border-stone-300'"
+                                                class="py-3 px-2 rounded-[1.2rem] text-xs md:text-sm font-bold transition-all flex flex-col items-center gap-2 md:flex-row md:justify-center relative overflow-hidden group active:scale-95">
+                                            <span class="material-symbols-rounded text-lg" :class="metode === '{{ $label }}' ? 'text-amber-400' : 'text-stone-300 group-hover:text-stone-500'">{{ $icon }}</span>
+                                            <span>{{ $label }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center ml-3">
+                                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Keterangan Detail</label>
+                                    <span class="text-[10px] bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full font-bold">Opsional</span>
+                                </div>
+                                <textarea name="deskripsi" rows="2"
+                                          class="w-full bg-stone-50 border-transparent focus:border-amber-500/50 rounded-[1.5rem] text-stone-700 font-medium focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all py-3.5 px-5 text-sm leading-relaxed placeholder:text-stone-300 resize-none shadow-inner"
+                                          placeholder="Keterangan...">{{ old('deskripsi', $kasKeluar->deskripsi) }}</textarea>
+                            </div>
+
+                            {{-- Upload Bukti --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">
+                                    Bukti Foto / Struk @if(Auth::user()->role === 'kasir') <span class="text-rose-500">*</span> @endif
+                                </label>
+                                <div class="relative group cursor-pointer">
+                                    <input type="file" name="bukti_pembayaran" id="file-upload" class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer" @change="fileChosen">
+
+                                    <div class="border-2 border-dashed border-stone-200 rounded-[1.5rem] p-4 flex items-center gap-4 transition-all group-hover:border-amber-400 group-hover:bg-amber-50/30"
+                                         :class="imageUrl ? 'bg-stone-50 border-solid border-stone-300' : 'bg-stone-50/50'">
+
+                                        {{-- Placeholder --}}
+                                        <div class="flex items-center gap-4 w-full" x-show="!imageUrl">
+                                            <div class="w-12 h-12 rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-stone-300 group-hover:text-amber-500 group-hover:border-amber-200 transition-all shadow-sm">
+                                                <span class="material-symbols-rounded text-2xl">add_a_photo</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-stone-600 group-hover:text-amber-600 transition-colors">Ganti Bukti</p>
+                                                <p class="text-[10px] text-stone-400">JPG, PNG, PDF (Max 2MB)</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- Preview --}}
+                                        <div class="flex items-center gap-4 w-full" x-show="imageUrl" style="display: none;">
+                                            <div class="relative w-12 h-12 shrink-0">
+                                                <img :src="imageUrl" class="w-full h-full rounded-2xl object-cover shadow-sm border border-stone-200">
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-bold text-stone-700 truncate" x-text="fileName"></p>
+                                                <p class="text-[10px] text-amber-500 font-bold">Klik untuk ganti</p>
+                                            </div>
+                                            <button type="button" @click.prevent="removeImage" class="z-30 p-2 rounded-full bg-white border border-stone-200 text-stone-400 hover:text-amber-500 hover:border-amber-200 transition-all shadow-sm">
+                                                <span class="material-symbols-rounded text-lg block">delete</span>
                                             </button>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <div class="flex justify-between items-center">
-                                        <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Keterangan Detail</label>
-                                    </div>
-                                    <textarea name="deskripsi" rows="2"
-                                        class="w-full bg-stone-50 border-stone-200 rounded-2xl text-stone-700 font-medium focus:ring-rose-500/20 focus:border-rose-500 transition-all py-3 px-4 text-sm leading-relaxed placeholder:text-stone-300"
-                                        placeholder="Keterangan...">{{ old('deskripsi', $kasKeluar->deskripsi) }}</textarea>
-                                </div>
-
-                                {{-- Upload Bukti (Edit Mode - Shows Existing) --}}
-                                <div class="space-y-2">
-                                    <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider ml-1">Bukti Foto</label>
-                                    <div class="relative group cursor-pointer">
-                                        <input type="file" name="bukti_pembayaran" id="file-upload" class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer" @change="fileChosen">
-
-                                        <div class="border-2 border-dashed border-stone-300 rounded-2xl p-4 flex items-center gap-4 transition-all group-hover:border-rose-400 group-hover:bg-rose-50/50"
-                                             :class="imageUrl ? 'bg-stone-50' : 'bg-white'">
-
-                                            {{-- Placeholder --}}
-                                            <div class="flex items-center gap-4 w-full" x-show="!imageUrl">
-                                                <div class="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center text-stone-400 group-hover:text-rose-500 group-hover:bg-white transition-colors">
-                                                    <span class="material-symbols-rounded text-2xl">add_a_photo</span>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-bold text-stone-600 group-hover:text-rose-600">Ganti Bukti</p>
-                                                    <p class="text-[10px] text-stone-400">Klik untuk upload baru</p>
-                                                </div>
-                                            </div>
-
-                                            {{-- Preview (Existing or New) --}}
-                                            <div class="flex items-center gap-4 w-full" x-show="imageUrl" style="display: none;">
-                                                <img :src="imageUrl" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-stone-200">
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-bold text-stone-700 truncate" x-text="fileName"></p>
-                                                    <p class="text-[10px] text-rose-500 font-bold">Klik untuk ganti</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- 3. KOLOM KANAN --}}
-                    <div class="lg:col-span-1">
-                        <div class="sticky top-6 space-y-6">
-
-                            {{-- Card Total --}}
-                            <div class="bg-gradient-to-br from-rose-500 to-red-700 rounded-[2rem] p-6 text-white shadow-xl shadow-rose-500/20 relative overflow-hidden">
-                                <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                                <div class="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-6 -mb-6"></div>
-
-                                <div class="relative z-10">
-                                    <span class="text-rose-100 text-xs font-bold uppercase tracking-widest">Total Baru</span>
-                                    <div class="mt-2 mb-2 flex flex-col sm:flex-row sm:items-start gap-1">
-                                        <span class="text-rose-200 text-xl font-medium mt-1 mr-1">Rp</span>
-
-                                        {{-- Dynamic Font --}}
-                                        <h2 class="font-black tracking-tight leading-none transition-all duration-300 break-all"
-                                            :class="displayNominal.length > 10 ? 'text-2xl md:text-3xl' : 'text-3xl md:text-5xl'"
-                                            x-text="displayNominal || '0'">
-                                            0
-                                        </h2>
-                                    </div>
-
-                                    <div class="h-px bg-white/20 my-4"></div>
-                                    <div class="space-y-1">
-                                        <div class="flex justify-between items-center text-sm text-rose-50">
-                                            <span class="opacity-80">Sumber</span>
-                                            <span class="font-bold" x-text="metode"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 gap-3">
-                                <button type="submit"
-                                    class="w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-4 rounded-2xl shadow-lg shadow-stone-800/20 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group">
-                                    <span class="material-symbols-rounded group-hover:rotate-12 transition-transform">save_as</span>
-                                    Simpan Perubahan
-                                </button>
-                                <a href="{{ route('kas-keluar.index') }}"
-                                    class="w-full bg-white hover:bg-stone-50 text-stone-500 font-bold py-4 rounded-2xl border border-stone-200 transition-all flex items-center justify-center gap-2">
-                                    Batal
-                                </a>
-                            </div>
-
-                            <div class="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 flex gap-3">
-                                <span class="material-symbols-rounded text-orange-400 text-xl shrink-0">warning</span>
-                                <p class="text-xs text-orange-600/80 leading-relaxed font-medium">Perubahan ini akan mengoreksi saldo kas secara otomatis.</p>
-                            </div>
-
                         </div>
                     </div>
-
                 </div>
-            </form>
-        </div>
+
+                {{-- 3. KOLOM KANAN (SUMMARY STICKY) --}}
+                <div class="lg:col-span-1">
+                    <div class="sticky top-[110px] space-y-4">
+
+                        {{-- Warning Banner --}}
+                        <div class="bg-amber-50 border border-amber-100 p-4 rounded-3xl flex items-start gap-3 shadow-sm">
+                            <div class="bg-amber-100 p-2 rounded-full text-amber-600 shrink-0">
+                                <span class="material-symbols-rounded text-lg">priority_high</span>
+                            </div>
+                            <div class="text-xs text-stone-600 leading-relaxed font-medium pt-1">
+                                <span class="font-bold text-stone-800 block mb-0.5">Perhatian</span>
+                                Mengubah nominal akan mempengaruhi saldo kas akhir secara otomatis.
+                            </div>
+                        </div>
+
+                        {{-- Total Card (Gradient Amber) --}}
+                        <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-[2.5rem] p-6 text-white shadow-2xl shadow-orange-600/30 relative overflow-hidden border border-white/10 group">
+                            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/20 rounded-full blur-[50px] group-hover:bg-white/30 transition-all duration-700"></div>
+                            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-black/10 rounded-full blur-[40px]"></div>
+                            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+
+                            <div class="relative z-10 flex flex-col h-full justify-between min-h-[160px]">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="bg-white/20 backdrop-blur-md border border-white/20 text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+                                            Estimasi Baru
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-3 flex flex-col xl:flex-row xl:items-start gap-1">
+                                        <span class="text-orange-100 text-lg font-bold mt-1 mr-1">Rp</span>
+                                        <h2 class="font-black leading-none break-all tracking-tight"
+                                            :class="totalLengthClass"
+                                            x-text="displayNominal || '0'">0</h2>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 pt-4 border-t border-white/20 flex justify-between items-center">
+                                    <div class="flex flex-col max-w-[75%]">
+                                        <span class="text-[10px] text-orange-100/70 font-bold uppercase tracking-wide">Sumber Dana</span>
+                                        <span class="text-xs font-mono text-white truncate font-medium mt-0.5" x-text="metode"></span>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/10 shrink-0 shadow-inner">
+                                        <span class="material-symbols-rounded text-white text-lg">payments</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="space-y-3 pt-2">
+                            <button type="submit"
+                                class="w-full group relative px-6 py-4 bg-stone-800 hover:bg-stone-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-stone-500/30 hover:-translate-y-1 overflow-hidden">
+                                <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                                <span class="material-symbols-rounded bg-white/20 rounded-full p-0.5 group-hover:rotate-12 transition-transform">save_as</span>
+                                <span class="font-bold tracking-wide">Simpan Perubahan</span>
+                            </button>
+
+                            <a href="{{ route('kas-keluar.index') }}"
+                                class="w-full bg-white hover:bg-stone-50 text-stone-500 hover:text-stone-700 font-bold py-4 rounded-[1.5rem] border border-stone-200 hover:border-stone-300 transition-all flex items-center justify-center gap-2 active:scale-95">
+                                Batal
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </form>
     </div>
 </x-app-layout>

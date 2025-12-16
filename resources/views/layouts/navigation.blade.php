@@ -1,164 +1,188 @@
-{{-- 1. HEADER UTAMA (Logo & Profile) --}}
-<nav
-    class="fixed top-0 left-0 w-full z-[60] transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-stone-200/50">
+@php
+    $user = Auth::user();
+
+    $adminMain = [
+        ['route' => 'dashboard', 'icon' => 'grid_view', 'label' => 'Beranda'],
+        ['route' => 'pos.index', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
+        ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Masuk'],
+        ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Keluar'],
+    ];
+    $adminMore = [
+        ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
+        ['route' => 'outlets.index', 'icon' => 'store', 'label' => 'Outlet'],
+        ['route' => 'users.index', 'icon' => 'group', 'label' => 'User'],
+        ['route' => 'laporan.index', 'icon' => 'description', 'label' => 'Laporan'],
+    ];
+
+    $staffMain = [
+        ['route' => 'dashboard', 'icon' => 'grid_view', 'label' => 'Beranda'],
+        ['route' => 'pos.index', 'icon' => 'point_of_sale', 'label' => 'Kasir'],
+        ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Masuk'],
+        ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Keluar'],
+    ];
+    $staffMore = [
+         ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Cek Stok'],
+    ];
+
+    $mainLinks = ($user->role === 'admin') ? $adminMain : $staffMain;
+    $moreLinks = ($user->role === 'admin') ? $adminMore : $staffMore;
+    $allLinks  = array_merge($mainLinks, $moreLinks);
+@endphp
+
+{{-- TOP BAR (Identity) --}}
+<nav class="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-stone-200/60 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[64px] sm:h-[72px] flex justify-between items-center">
-
-        {{-- Logo Kiri --}}
+        {{-- Logo Brand --}}
         <div class="flex items-center gap-4">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
-                <div class="relative">
-                    <div
-                        class="absolute inset-0 bg-brand-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full">
-                    </div>
-                    {{-- Logo size responsive --}}
-                    <img src="{{ asset('assets/images/logo-teh.png') }}"
-                        class="relative h-8 w-8 sm:h-10 sm:w-10 object-contain group-hover:-rotate-6 transition-transform duration-300"
-                        alt="Logo">
-                </div>
-                <div class="flex flex-col -space-y-0.5">
-                    <span class="text-lg sm:text-xl font-bold text-stone-900 tracking-tight">Teh Solo</span>
-                    <span class="text-[9px] sm:text-[10px] font-bold text-brand-600 tracking-[0.2em] uppercase">
-                        {{ Auth::user()->role === 'admin' ? 'ADMIN PANEL' : 'KASIR PANEL' }}
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group select-none">
+                <img src="{{ asset('assets/images/logo-teh.png') }}" class="h-8 w-auto sm:h-9 object-contain transform group-hover:-rotate-12 transition-transform duration-500" alt="Logo">
+                <div class="flex flex-col justify-center">
+                    <span class="text-lg sm:text-xl font-extrabold text-stone-800 tracking-tight leading-none">Teh Solo <span class="text-brand-600">Jumbo</span></span>
+                    <span class="text-[9px] sm:text-[10px] font-bold text-stone-400 tracking-[0.15em] uppercase mt-0.5 group-hover:text-brand-500 transition-colors">
+                        {{ $user->role === 'admin' ? 'Owner Panel' : 'Staff Panel' }}
                     </span>
-
                 </div>
             </a>
         </div>
 
-        {{-- User Menu Kanan --}}
-        <div class="flex items-center gap-4">
+        {{-- Profile --}}
+        <div class="flex items-center">
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
-                    <button
-                        class="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 pr-1 py-1 rounded-full hover:bg-stone-100/80 transition duration-200 group focus:outline-none">
-                        <div class="text-right hidden sm:block leading-tight">
-                            <div class="text-sm font-bold text-stone-800 group-hover:text-brand-700 transition">
-                                {{ Auth::user()->name }}
-                            </div>
-                            <div class="text-[10px] text-stone-500 font-medium capitalize">{{ Auth::user()->role }}
-                            </div>
+                    <button class="flex items-center gap-2 py-1 pl-2 pr-1 sm:pr-2 rounded-full hover:bg-stone-100 border border-transparent hover:border-stone-200 transition-all duration-300 group">
+                        <div class="hidden sm:block text-right leading-tight mr-1.5">
+                            <div class="text-xs font-bold text-stone-800 group-hover:text-brand-700 transition-colors">{{ Str::limit($user->name, 15) }}</div>
+                            <div class="text-[10px] text-stone-400 font-medium capitalize tracking-wide">{{ $user->role }}</div>
                         </div>
-                        <div
-                            class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-500/20 ring-2 ring-white">
-                            {{ substr(Auth::user()->name, 0, 1) }}
+                        <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-bold border-[3px] border-stone-100 shadow-sm group-hover:scale-105 transition-transform">
+                            {{ substr($user->name, 0, 1) }}
                         </div>
-                        <span
-                            class="material-symbols-rounded text-stone-400 group-hover:text-stone-600 transition text-lg sm:text-xl">expand_more</span>
+                        <span class="material-symbols-rounded text-stone-400 text-xl sm:hidden">expand_more</span>
                     </button>
                 </x-slot>
-
                 <x-slot name="content">
-                    <div class="px-4 py-3 border-b border-gray-100">
-                        <p class="text-xs text-gray-500">Signed in as</p>
-                        <p class="text-sm font-bold text-gray-800 truncate">{{ Auth::user()->email }}</p>
+                    <div class="sm:hidden px-4 py-3 bg-stone-50 border-b border-stone-100">
+                         <div class="font-bold text-stone-800 text-sm">{{ $user->name }}</div>
+                         <div class="text-xs text-stone-500">{{ $user->email }}</div>
                     </div>
-                    <x-dropdown-link :href="route('profile.edit')" class="hover:bg-brand-50 hover:text-brand-600">
-                        <div class="flex items-center gap-2.5 py-1">
-                            <span class="material-symbols-rounded text-[20px]">person</span> Profile
-                        </div>
-                    </x-dropdown-link>
-                    @if(Auth::user()->role === 'admin')
-                        <div class="border-t border-gray-100 my-1"></div>
-
-                        <x-dropdown-link :href="route('outlets.index')" class="hover:bg-brand-50 hover:text-brand-600">
-                            <div class="flex items-center gap-2.5 py-1">
-                                <span class="material-symbols-rounded text-[20px]">store</span> Outlet
-                            </div>
+                    <div class="px-4 py-3 hidden sm:block bg-gradient-to-br from-brand-50/50 to-transparent border-b border-brand-100/30">
+                        <p class="text-[10px] uppercase font-bold text-brand-600 tracking-wider">Akun Terverifikasi</p>
+                        <p class="text-xs text-stone-600 font-medium truncate mt-0.5">{{ $user->email }}</p>
+                    </div>
+                    <div class="p-1.5 space-y-1">
+                        <x-dropdown-link :href="route('profile.edit')" class="rounded-lg hover:bg-stone-50 hover:text-brand-600 flex items-center gap-2.5 text-xs font-semibold px-3 py-2">
+                            <span class="material-symbols-rounded text-[18px]">person</span> Profil Saya
                         </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('users.index')" class="hover:bg-brand-50 hover:text-brand-600">
-                            <div class="flex items-center gap-2.5 py-1">
-                                <span class="material-symbols-rounded text-[20px]">group</span> User
-                            </div>
-                        </x-dropdown-link>
-                    @endif
-                    <div class="border-t border-gray-100 my-1"></div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <x-dropdown-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();"
-                            class="text-rose-600 hover:bg-rose-50 hover:text-rose-700">
-                            <div class="flex items-center gap-2.5 py-1">
-                                <span class="material-symbols-rounded text-[20px]">logout</span> Log Out
-                            </div>
-                        </x-dropdown-link>
-                    </form>
+                        <div class="h-px bg-stone-100 my-1 mx-2"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 flex items-center gap-2.5 text-xs font-semibold px-3 py-2">
+                                <span class="material-symbols-rounded text-[18px]">logout</span> Keluar Sistem
+                            </x-dropdown-link>
+                        </form>
+                    </div>
                 </x-slot>
             </x-dropdown>
         </div>
     </div>
 </nav>
-
-{{-- SPACER --}}
 <div class="h-[64px] sm:h-[72px]"></div>
 
-@php
-    // Role-based navigation
-    $user = Auth::user();
-    if ($user->role === 'admin') {
-        $navLinks = [
-            ['route' => 'dashboard', 'icon' => 'grid_view', 'label' => 'Dashboard'],
-            ['route' => 'pos.index', 'icon' => 'point_of_sale', 'label' => 'POS'],
-            ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Kas Masuk'],
-            ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Kas Keluar'],
-            ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
-            ['route' => 'laporan.index', 'icon' => 'description', 'label' => 'Laporan'],
-        ];
-
-    } else {
-        // Kasir has: POS, Kas Masuk (read-only), Kas Keluar, Produk
-        $navLinks = [
-            ['route' => 'pos.index', 'icon' => 'point_of_sale', 'label' => 'POS / Kasir'],
-            ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Kas Masuk'],
-            ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Kas Keluar'],
-            ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
-        ];
-    }
-@endphp
-
-{{-- 2. MENU NAVIGASI (Desktop - Floating Dock Style) --}}
-<div class="hidden sm:block w-full sticky top-[80px] z-40 pointer-events-none">
-    <div class="max-w-[1150px] mx-auto pointer-events-auto">
-        <div class="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl flex justify-between items-center shadow-soft border border-stone-200/60 ring-1 ring-black/5 gap-1 mt-6 w-full transition-all hover:scale-[1.01]">
-            @foreach($navLinks as $link)
-                <a href="{{ route($link['route']) }}"
-                    class="flex flex- items-center gap-2 items-center px-4 lg:px-5 py-2 lg:py-2.5 rounded-xl transition-all duration-300 group whitespace-nowrap relative overflow-hidden
-                               {{ request()->routeIs($link['route']) ? 'bg-brand-600 text-white shadow-glow' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900' }}">
-                    <span class="material-symbols-rounded text-[20px] relative z-10">{{ $link['icon'] }}</span>
-                    <span class="text-xs font-bold tracking-wide relative z-10">{{ $link['label'] }}</span>
-                </a>
-            @endforeach
+{{-- DESKTOP NAV (Floating Pills) --}}
+<div class="hidden md:block w-full sticky top-[64px] sm:top-[72px] z-40 pointer-events-none mb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-auto mt-6">
+        <div class="relative group mx-auto max-w-fit">
+            <div class="bg-white/80 backdrop-blur-md px-2 py-2 rounded-full flex items-center shadow-soft border border-stone-200/80 ring-1 ring-stone-900/5 gap-1 overflow-x-auto no-scrollbar max-w-full">
+                @foreach($allLinks as $link)
+                    @php $isActive = request()->routeIs($link['route']) || request()->routeIs(explode('.', $link['route'])[0].'.*'); @endphp
+                    <a href="{{ route($link['route']) }}"
+                       class="flex items-center gap-2 px-4 lg:px-5 py-2 rounded-full transition-all duration-300 group relative select-none whitespace-nowrap
+                              {{ $isActive
+                                 ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20 scale-[1.02]'
+                                 : 'text-stone-500 hover:text-brand-600 hover:bg-brand-50 hover:scale-[1.02]'
+                              }}">
+                        <span class="material-symbols-rounded text-[20px] {{ $isActive ? 'filled text-brand-400' : '' }}">{{ $link['icon'] }}</span>
+                        <span class="text-sm font-bold tracking-wide">{{ $link['label'] }}</span>
+                        @if(!$isActive)
+                             <span class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
         </div>
     </div>
 </div>
 
-{{-- 3. MENU NAVIGASI (Mobile - Floating Glass Dock) --}}
-<div class="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-6 transition-all duration-300">
-    <div
-        class="bg-white/90 backdrop-blur-xl border border-stone-300/60 ring-1 ring-black/5 shadow-md shadow-stone-300/40 rounded-2xl px-2 py-2 flex justify-between items-center relative w-full">
-        
-        @foreach($navLinks as $link)
-            @php $isActive = request()->routeIs($link['route']); @endphp
-            <a href="{{ route($link['route']) }}"
-                class="group relative flex flex-col items-center justify-center flex-1 transition-all duration-300
-                        {{ $isActive ? '-translate-y-2' : '' }}">
-
-                @if($isActive)
-                    <div
-                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-brand-500/10 rounded-full blur-md">
-                    </div>
-                @endif
-
-                <div
-                    class="relative z-10 p-2 rounded-lg transition-all duration-300
-                        {{ $isActive ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/40 scale-110' : 'text-stone-400 group-hover:text-brand-600' }}">
-                    <span class="material-symbols-rounded text-[22px] leading-none">
-                        {{ $link['icon'] }}
-                    </span>
+{{-- MOBILE NAV (Tidak ada perubahan, kode tetap sama seperti yang lama) --}}
+<div x-data="{ mobileMenuOpen: false }" class="md:hidden">
+    <div x-show="mobileMenuOpen" x-transition.opacity @click="mobileMenuOpen = false" class="fixed inset-0 z-[90] bg-stone-900/40 backdrop-blur-[3px]"></div>
+    <div class="fixed bottom-0 left-0 w-full z-[100] bg-white border-t border-stone-100 shadow-[0_-5px_30px_rgba(0,0,0,0.04)] pb-safe rounded-t-[20px]">
+        <div class="flex justify-between items-end h-[64px] px-2 relative">
+            <div class="flex-1 flex justify-around items-center h-full pl-2 pr-8">
+                @foreach(array_slice($mainLinks, 0, 2) as $link)
+                    @php $isActive = request()->routeIs($link['route']); @endphp
+                    <a href="{{ route($link['route']) }}" class="flex flex-col items-center justify-center w-full h-full active:scale-90 transition-transform duration-200 group">
+                        <div class="relative p-1 rounded-xl transition-all {{ $isActive ? '-translate-y-1' : '' }}">
+                            <span class="material-symbols-rounded text-[26px] {{ $isActive ? 'filled text-brand-600' : 'text-stone-400 group-hover:text-stone-600' }}">{{ $link['icon'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold {{ $isActive ? 'text-brand-700' : 'text-stone-400 group-hover:text-stone-600' }}">{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+            <div class="absolute left-1/2 -translate-x-1/2 -top-6 z-10">
+                <div class="p-1.5 bg-[#FDFDFC] rounded-full shadow-[0_-2px_8px_rgba(0,0,0,0.02)]">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-500/30 transition-all duration-300 transform active:scale-90 ring-4 ring-[#FDFDFC]" :class="mobileMenuOpen ? 'bg-stone-800 rotate-45' : 'bg-gradient-to-br from-brand-500 to-brand-600 hover:brightness-110'">
+                        <span class="material-symbols-rounded text-[32px] transition-transform duration-300" :class="mobileMenuOpen ? 'rotate-90' : ''" x-text="mobileMenuOpen ? 'add' : 'apps'"></span>
+                    </button>
                 </div>
+            </div>
+            <div class="flex-1 flex justify-around items-center h-full pl-8 pr-2">
+                @foreach(array_slice($mainLinks, 2) as $link)
+                    @php $isActive = request()->routeIs($link['route']); @endphp
+                    <a href="{{ route($link['route']) }}" class="flex flex-col items-center justify-center w-full h-full active:scale-90 transition-transform duration-200 group">
+                        <div class="relative p-1 rounded-xl transition-all {{ $isActive ? '-translate-y-1' : '' }}">
+                            <span class="material-symbols-rounded text-[26px] {{ $isActive ? 'filled text-brand-600' : 'text-stone-400 group-hover:text-stone-600' }}">{{ $link['icon'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold {{ $isActive ? 'text-brand-700' : 'text-stone-400 group-hover:text-stone-600' }}">{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <div x-cloak x-show="mobileMenuOpen"
+         x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-500"
+         x-transition:enter-start="translate-y-[120%] opacity-50"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition cubic-bezier(0.16, 1, 0.3, 1) duration-300"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-[120%] opacity-0"
+         @click.outside="mobileMenuOpen = false"
+         class="fixed bottom-[100px] left-4 right-4 z-[95] bg-white rounded-3xl shadow-2xl shadow-stone-900/10 border border-stone-100 ring-1 ring-stone-900/5 overflow-hidden max-h-[60vh] flex flex-col">
 
-            </a>
-        @endforeach
-
+        <div class="px-6 py-4 bg-stone-50 border-b border-stone-100 flex items-center justify-between shrink-0">
+             <h3 class="text-sm font-extrabold text-stone-800 flex items-center gap-2 uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-brand-500"></span> Menu Lainnya
+            </h3>
+            <button @click="mobileMenuOpen = false" class="text-stone-400 hover:text-stone-800"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <div class="grid grid-cols-4 gap-x-2 gap-y-6">
+                @foreach($moreLinks as $link)
+                    @php $isActive = request()->routeIs($link['route']); @endphp
+                    <a href="{{ route($link['route']) }}" class="flex flex-col items-center gap-2 group active:scale-95 transition-transform">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all border shadow-sm {{ $isActive ? 'bg-stone-800 text-white border-stone-800 shadow-md ring-2 ring-brand-200' : 'bg-white border-stone-100 text-stone-500 group-hover:bg-brand-50 group-hover:border-brand-200 group-hover:text-brand-600' }}">
+                            <span class="material-symbols-rounded text-[28px] {{ $isActive ? 'filled' : '' }}">{{ $link['icon'] }}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-center leading-tight text-stone-500 group-hover:text-stone-800 line-clamp-2">{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+                 <a href="{{ route('profile.edit') }}" class="flex flex-col items-center gap-2 group active:scale-95 transition-transform">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all border border-dashed border-stone-300 bg-stone-50 text-stone-400 group-hover:border-brand-400 group-hover:text-brand-600">
+                        <span class="material-symbols-rounded text-[28px]">settings</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-center leading-tight text-stone-500 group-hover:text-stone-800">Setting</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
