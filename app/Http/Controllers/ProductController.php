@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Outlet;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ class ProductController extends Controller
             }),
             // Menghitung stok rendah (di bawah atau sama dengan 10)
             'stokRendah' => $products->where('stok', '<=', 10)->count(),
+            'outlets' => Outlet::all(), // Pass outlets for Admin dropdown
         ]);
     }
 
@@ -47,11 +49,18 @@ class ProductController extends Controller
             'modal' => 'required|numeric|min:0', // Validasi Modal
             'stok' => 'required|integer|min:0',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'outlet_id' => 'nullable|exists:outlets,id',
         ]);
 
         // 2. Tambahkan User ID & Outlet ID
-        $val['user_id'] = Auth::id();
-        $val['outlet_id'] = Auth::user()->outlet_id; // Assign to confirmed outlet
+        $user = Auth::user();
+        $val['user_id'] = $user->id;
+
+        if ($user->role === 'admin' && $request->filled('outlet_id')) {
+            $val['outlet_id'] = $request->outlet_id;
+        } else {
+            $val['outlet_id'] = $user->outlet_id;
+        }
 
         // 3. Handle Upload Foto
         if ($request->hasFile('foto')) {
@@ -86,7 +95,13 @@ class ProductController extends Controller
             'modal' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'outlet_id' => 'nullable|exists:outlets,id',
         ]);
+
+        // HANDLE ADMIN CHANGE OUTLET
+        if (Auth::user()->role === 'admin' && $request->has('outlet_id')) {
+            $val['outlet_id'] = $request->outlet_id;
+        }
 
         // 2. Handle Ganti Foto
         if ($request->hasFile('foto')) {
