@@ -15,22 +15,18 @@ use Illuminate\Support\Facades\Route;
 // LANDING PAGE (Halaman Depan / Welcome)
 // ====================================================
 Route::get('/', function () {
-    // Cek jika user sudah login, kita bisa arahkan langsung ke sistem (Opsional)
-    // if (auth()->check()) {
-    //     return redirect()->route('redirect.role');
-    // }
-
     return view('welcome');
 });
 
 // Middleware Group (Auth & Verified)
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    /** =========================
+    /** ===================================================
      * 1. KHUSUS ADMIN (Middleware role:admin)
-     * ========================= */
+     * (Berisi Dashboard, Laporan, Manajemen User/Outlet, dan DELETE Data)
+     * ==================================================== */
     Route::middleware(['role:admin'])->group(function () {
-        // Dashboard & Laporan HANYA di sini
+        // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // --- LAPORAN ---
@@ -45,18 +41,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk_destroy');
         Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);
 
-        // --- HAPUS KAS (ADMIN) ---
-        Route::get('/kas-masuk/{id}/delete', [KasMasukController::class, 'destroy'])->name('kas-masuk.destroy');
+        // --- HAPUS KAS MASUK (FIXED) ---
+        // PENTING: Route bulk-destroy harus diatas route {id}
         Route::delete('/kas-masuk/bulk-destroy', [KasMasukController::class, 'bulkDestroy'])->name('kas-masuk.bulk_destroy');
+        // REVISI: Menggunakan DELETE method, bukan GET. URL disesuaikan standar RESTful.
+        Route::delete('/kas-masuk/{id}', [KasMasukController::class, 'destroy'])->name('kas-masuk.destroy');
+
+        // --- HAPUS KAS KELUAR ---
         Route::delete('/kas-keluar/bulk-destroy', [KasKeluarController::class, 'bulkDestroy'])->name('kas-keluar.bulk_destroy');
         Route::delete('/kas-keluar/{id}', [KasKeluarController::class, 'destroy'])->name('kas-keluar.destroy');
     });
 
-    /** =========================
+    /** ===================================================
      * 2. SHARED ACCESS (Admin & Kasir)
-     * ========================= */
+     * (Berisi POS, Input Data Kas, Input Produk)
+     * ==================================================== */
 
-    // Redirect User Biasa (Kasir) dari /dashboard ke /pos jika mereka login
+    // Redirect Logic
     Route::get('/redirect-role', function() {
         if(auth()->user()->role === 'admin') {
             return redirect()->route('dashboard');
@@ -64,7 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('pos.index');
     })->name('redirect.role');
 
-    // POS System (Kasir Kerja Disini)
+    // POS System
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/cart/add', [PosController::class, 'addToCart'])->name('pos.cart.add');
     Route::post('/pos/cart/plus', [PosController::class, 'qtyPlus'])->name('pos.cart.plus');
@@ -72,20 +73,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/pos/cart/remove', [PosController::class, 'removeItem'])->name('pos.cart.remove');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
 
-    // Produk & Kas (Kasir boleh input, tapi delete hanya admin di atas)
+    // Produk (Resource controller menangani index, create, store, edit, update, destroy)
+    // Jika kasir tidak boleh hapus produk, tambahkan ->except(['destroy'])
     Route::resource('products', ProductController::class);
 
-    Route::get('/kas-masuk', [KasMasukController::class, 'index'])->name('kas-masuk.index');
-    Route::get('/kas-masuk/create', [KasMasukController::class, 'create'])->name('kas-masuk.create');
-    Route::post('/kas-masuk', [KasMasukController::class, 'store'])->name('kas-masuk.store');
-    Route::get('/kas-masuk/{id}/edit', [KasMasukController::class, 'edit'])->name('kas-masuk.edit');
-    Route::put('/kas-masuk/{id}', [KasMasukController::class, 'update'])->name('kas-masuk.update');
+    // --- KAS MASUK (Resource minus destroy) ---
+    // Ini otomatis membuat route: index, create, store, edit, update.
+    // Route destroy sudah ditangani di grup Admin di atas.
+    Route::resource('kas-masuk', KasMasukController::class)->except(['destroy', 'show']);
 
-    Route::get('/kas-keluar', [KasKeluarController::class, 'index'])->name('kas-keluar.index');
-    Route::get('/kas-keluar/create', [KasKeluarController::class, 'create'])->name('kas-keluar.create');
-    Route::post('/kas-keluar', [KasKeluarController::class, 'store'])->name('kas-keluar.store');
-    Route::get('/kas-keluar/{id}/edit', [KasKeluarController::class, 'edit'])->name('kas-keluar.edit');
-    Route::put('/kas-keluar/{id}', [KasKeluarController::class, 'update'])->name('kas-keluar.update');
+    // --- KAS KELUAR (Resource minus destroy) ---
+    Route::resource('kas-keluar', KasKeluarController::class)->except(['destroy', 'show']);
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

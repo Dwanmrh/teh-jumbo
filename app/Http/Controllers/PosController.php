@@ -16,18 +16,16 @@ class PosController extends Controller
     {
         $user = Auth::user();
 
-        // REFACTOR: Logic sekarang berbasis Outlet
+        // Cek apakah user punya outlet (hanya untuk keperluan data sesi/struk, bukan pembatasan produk)
         $outletId = $user->outlet_id;
 
         if (!$outletId) {
-            // Jika user tidak punya outlet (misal Admin belum assign diri sendiri),
-            // Tampilkan error atau kosong.
-            return redirect()->route('dashboard')->with('error', 'Anda belum terdaftar di Outlet manapun.');
+            return redirect()->route('dashboard')->with('error', 'Anda belum terdaftar di Outlet manapun (Diperlukan untuk pencatatan laporan).');
         }
 
-        // Mengambil produk berdasarkan Outlet ID
-        $products = Product::where('outlet_id', $outletId)
-            ->orderBy('stok', 'desc')
+        // --- UPDATE: MENGAMBIL SEMUA PRODUK (GLOBAL) ---
+        // Menghapus ->where('outlet_id', $outletId) agar semua produk muncul
+        $products = Product::orderBy('stok', 'desc')
             ->orderBy('nama', 'asc')
             ->get();
 
@@ -57,24 +55,22 @@ class PosController extends Controller
         $namaPelanggan = $r->nama_pelanggan ?? 'Pelanggan Umum';
         $tipePesanan = $r->tipe_pesanan ?? 'Dine-in';
 
-        // Bersihkan input bayar dari karakter non-angka (misal: "Rp 10.000" jadi "10000")
+        // Bersihkan input bayar dari karakter non-angka
         $bayarInput = preg_replace('/\D/', '', $r->bayar);
         $bayar = intval($bayarInput);
 
         try {
             DB::beginTransaction();
 
-            // 2. Loop Keranjang (Critical Process)
+            // 2. Loop Keranjang
             foreach ($cart as $id => $item) {
-                // Lock row product untuk mencegah race condition (transaksi bersamaan)
+                // Lock row product
                 $product = Product::lockForUpdate()->find($id);
 
-                // REFACTOR: Validasi Berbasis Outlet
-                $userOutletId = Auth::user()->outlet_id;
-
-                // Validasi Produk Exist & Milik Outlet yang Sama
-                if (!$product || $product->outlet_id != $userOutletId) {
-                    throw new \Exception("Produk '{$product->nama}' tidak valid untuk Outlet ini.");
+                // --- UPDATE: HAPUS VALIDASI OUTLET ---
+                // Kita izinkan kasir menjual produk manapun, meskipun outlet_id produk berbeda
+                if (!$product) {
+                    throw new \Exception("Produk dengan ID {$id} tidak ditemukan.");
                 }
 
                 // Validasi Stok Server-Side
@@ -82,7 +78,7 @@ class PosController extends Controller
                     throw new \Exception("Stok '{$product->nama}' tidak mencukupi. Sisa stok: {$product->stok}");
                 }
 
-                // Kalkulasi Subtotal menggunakan HARGA DATABASE (Aman dari manipulasi)
+                // Kalkulasi Subtotal
                 $hargaSatuan = intval($product->harga);
                 $qty = intval($item['qty']);
                 $subtotal = $hargaSatuan * $qty;
@@ -90,7 +86,7 @@ class PosController extends Controller
                 $total += $subtotal;
                 $jumlahItem += $qty;
 
-                // Kurangi Stok Real-time
+                // Kurangi Stok Real-time (Global Stock)
                 $product->decrement('stok', $qty);
 
                 // Siapkan data detail untuk disimpan
@@ -113,21 +109,18 @@ class PosController extends Controller
                 }
                 $kembalian = $bayar - $total;
             } else {
-                // Jika QRIS/Transfer, anggap lunas sesuai total
                 $bayar = $total;
                 $kembalian = 0;
             }
 
-            // 4. Generate Kode Transaksi (POS-OUTLET_ID-YYMMDD-XXX)
+            // 4. Generate Kode Transaksi
             $today = Carbon::now()->format('ymd');
-            $userOutletId = Auth::user()->outlet_id;
+            $userOutletId = Auth::user()->outlet_id; // Laporan tetap masuk ke Outlet User yang login
 
-            // Hitung urutan berdasarkan Outlet, bukan User
             $countToday = KasMasuk::whereDate('created_at', Carbon::today())
                 ->where('outlet_id', $userOutletId)
                 ->count() + 1;
 
-            // Format: POS-{OUTLET}-{DATE}-{SEQ} (Contoh: POS-1-241217-001)
             $kodeKas = 'POS-' . $userOutletId . '-' . $today . '-' . str_pad($countToday, 3, '0', STR_PAD_LEFT);
 
             // 5. Tentukan Kategori Kas
@@ -139,32 +132,25 @@ class PosController extends Controller
                 'tanggal_transaksi' => Carbon::now(),
                 'keterangan' => "POS - {$namaPelanggan} ({$tipePesanan})",
                 'jumlah' => $jumlahItem,
-                'harga_satuan' => 0, // 0 karena bundle items
+                'harga_satuan' => 0,
                 'total' => $total,
                 'payment_method' => $metode,
                 'kategori' => $kategoriKas,
-                'user_id' => Auth::id(), // Tetap simpan siapa yang input (Kasir/Admin)
-                'outlet_id' => $userOutletId, // REFACTOR: Simpan Outlet ID
+                'user_id' => Auth::id(),
+                'outlet_id' => $userOutletId, // Transaksi tercatat di outlet Kasir, meskipun barangnya global
                 'kembalian' => $kembalian,
-                'detail_items' => $itemsForStruk, // Pastikan di Model KasMasuk ada cast: protected $casts = ['detail_items' => 'array'];
+                'detail_items' => $itemsForStruk,
             ]);
 
             DB::commit();
 
             $user = Auth::user();
-
-            if (!$user->outlet) {
-                return redirect()->route('pos.index')
-                    ->with('error', 'Outlet user tidak ditemukan.');
-            }
-
-            $alamatOutlet = $user->outlet->name;
-
+            $alamatOutlet = $user->outlet ? $user->outlet->name : 'Teh Solo Pusat';
 
             // 7. Siapkan Data Session untuk Cetak Struk
             $printData = [
                 'store_name' => 'Teh Solo De Jumbo',
-                'address'    => $alamatOutlet, // Bisa diambil dari setting database jika ada
+                'address'    => $alamatOutlet,
                 'no_ref' => $kas->kode_kas,
                 'tanggal' => Carbon::parse($kas->tanggal_transaksi)->format('d/m/Y H:i'),
                 'items' => $itemsForStruk,
@@ -177,7 +163,6 @@ class PosController extends Controller
                 'kasir' => Auth::user()->name ?? 'Kasir',
             ];
 
-            // Redirect dengan session flash data
             return redirect()->route('pos.index')
                 ->with('success', 'Transaksi Berhasil!')
                 ->with('print_data', $printData);

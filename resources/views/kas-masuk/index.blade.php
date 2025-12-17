@@ -31,7 +31,7 @@
 
             @if(Auth::user()->role === 'admin')
                 <div class="flex gap-3 w-full md:w-auto">
-                    {{-- REVISI: Z-Index diubah ke z-30 agar tidak menutupi menu/dropdown lain --}}
+                    {{-- Z-Index diatur ke z-30 agar tidak menutupi menu/dropdown lain --}}
                     <x-action-button
                         href="{{ route('kas-masuk.create') }}"
                         label="Catat Pemasukan"
@@ -251,6 +251,7 @@
                                             <a href="{{ route('kas-masuk.edit', $item->id) }}" class="p-2 rounded-xl text-stone-400 hover:bg-amber-50 hover:text-amber-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-amber-100" title="Edit">
                                                 <span class="material-symbols-rounded text-xl">edit_square</span>
                                             </a>
+                                            {{-- BUTTON DELETE FIX: MENGGUNAKAN FORM GLOBAL --}}
                                             <button type="button"
                                                     class="delete-btn p-2 rounded-xl text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-rose-100"
                                                     title="Hapus"
@@ -259,9 +260,6 @@
                                                     onclick="confirmDelete('{{ $item->id }}', this.getAttribute('data-deskripsi'), '{{ route('kas-masuk.destroy', $item->id) }}')">
                                                 <span class="material-symbols-rounded text-xl">delete</span>
                                             </button>
-                                            <form action="{{ route('kas-masuk.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
-                                                @csrf @method('DELETE')
-                                            </form>
                                         </div>
                                     @else
                                         <span class="text-xs text-stone-300 font-bold">-</span>
@@ -519,12 +517,20 @@
                     </button>
                 </div>
 
-                {{-- Form Hidden --}}
+                {{-- Form Hidden Bulk Delete --}}
                 <form id="bulkDeleteForm" action="{{ route('kas-masuk.bulk_destroy') }}" method="POST" class="hidden">
                     @csrf @method('DELETE')
                     <div id="bulkDeleteInputs"></div>
                 </form>
             </div>
+
+            {{-- SINGLE DELETE FORM GLOBAL (PERBAIKAN) --}}
+            {{-- Form ini digunakan oleh semua tombol hapus satuan --}}
+            <form id="singleDeleteForm" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
+
         @endif
 
     </div>
@@ -571,7 +577,6 @@
                 let visibleCountMobile = 0;
 
                 rows.forEach(row => {
-                    // Logic spesifik Kas Masuk
                     const keterangan = row.dataset.keterangan || '';
                     const kode = row.dataset.kode || '';
                     const nominal = parseInt(row.dataset.nominal) || 0;
@@ -598,7 +603,6 @@
                     }
                 });
 
-                // Handle No Data Messages
                 const noDataRow = document.getElementById('noDataRow');
                 if (noDataRow) noDataRow.style.display = visibleCount === 0 ? '' : 'none';
 
@@ -757,7 +761,7 @@
             }
 
             // ===========================
-            // SINGLE DELETE SWEETALERT
+            // SINGLE DELETE SWEETALERT (FIXED)
             // ===========================
             window.confirmDelete = function (id, deskripsi, url) {
                 Swal.fire({
@@ -779,19 +783,12 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const form = document.getElementById('deleteForm-' + id) || createDeleteForm(id, url);
+                        // LOGIK BARU: Gunakan form global 'singleDeleteForm'
+                        const form = document.getElementById('singleDeleteForm');
+                        form.action = url; // Set action URL ke route destroy item spesifik
                         form.submit();
                     }
                 });
-            }
-
-            function createDeleteForm(id, url) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = url;
-                form.innerHTML = `<input type="hidden" name="_token" value="{{ csrf_token() }}"><input type="hidden" name="_method" value="DELETE">`;
-                document.body.appendChild(form);
-                return form;
             }
 
             // Initial Load
