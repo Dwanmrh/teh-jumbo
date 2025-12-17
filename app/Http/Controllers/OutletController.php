@@ -12,7 +12,8 @@ class OutletController extends Controller
      */
     public function index()
     {
-        $outlets = Outlet::all();
+        // Menggunakan latest() agar data baru muncul di paling atas
+        $outlets = Outlet::latest()->get();
         return view('outlets.index', compact('outlets'));
     }
 
@@ -29,13 +30,9 @@ class OutletController extends Controller
 
         Outlet::create($data);
 
-        // Jika menggunakan AJAX/Modal
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Outlet berhasil ditambahkan.'
-        ]);
-
-        // Jika form submit biasa, gunakan: return redirect()->back()->with(...)
+        // PERBAIKAN: Menggunakan Redirect agar halaman refresh dan alert muncul
+        return redirect()->route('outlets.index')
+            ->with('success', 'Outlet berhasil ditambahkan.');
     }
 
     /**
@@ -51,10 +48,9 @@ class OutletController extends Controller
 
         $outlet->update($data);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Outlet berhasil diperbarui.'
-        ]);
+        // PERBAIKAN: Menggunakan Redirect dengan pesan sukses
+        return redirect()->route('outlets.index')
+            ->with('success', 'Outlet berhasil diperbarui.');
     }
 
     /**

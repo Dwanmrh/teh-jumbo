@@ -27,7 +27,6 @@
             </div>
 
             {{-- ACTION BUTTON COMPONENT --}}
-            {{-- Menggunakan component x-action-button --}}
             <x-action-button
                 onclick="openCreateModal()"
                 label="Tambah Outlet"
@@ -36,7 +35,7 @@
             />
         </div>
 
-        {{-- Alert Messages --}}
+        {{-- Alert Messages (Flash Session) --}}
         @if(session('success'))
             <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center gap-4 text-emerald-800 shadow-sm backdrop-blur-sm animate-[slideIn_0.4s_ease-out]">
                 <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600">
@@ -68,7 +67,7 @@
         {{-- CONTENT AREA --}}
         <div class="bg-white border border-stone-100 rounded-[2.5rem] shadow-xl shadow-stone-200/50 overflow-hidden relative">
 
-            {{-- Decorative Top Gradient (Brand Colors) --}}
+            {{-- Decorative Top Gradient --}}
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-500 via-orange-500 to-yellow-500"></div>
 
             {{-- A. DESKTOP TABLE VIEW --}}
@@ -170,12 +169,12 @@
 
                 @forelse($outlets as $outlet)
                 <div class="bg-white p-5 rounded-3xl shadow-[0_2px_20px_rgba(0,0,0,0.04)] border border-stone-100 relative overflow-hidden group">
-                    {{-- ID Badge Absolute --}}
+                    {{-- ID Badge --}}
                     <div class="absolute top-0 left-0 px-4 py-1.5 rounded-br-2xl text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-600 border-r border-b border-brand-100">
                         #{{ str_pad($outlet->id, 3, '0', STR_PAD_LEFT) }}
                     </div>
 
-                    {{-- Checkbox Absolute --}}
+                    {{-- Checkbox --}}
                     <div class="absolute top-5 right-5">
                          <input type="checkbox" name="selected_outlets[]" value="{{ $outlet->id }}"
                             class="item-checkbox w-5 h-5 text-brand-600 bg-white border-stone-300 rounded-[6px] focus:ring-brand-500">
@@ -187,20 +186,15 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <h3 class="font-bold text-stone-900 truncate text-lg leading-tight">{{ $outlet->name }}</h3>
-
-                             {{-- Phone Info --}}
                             @if($outlet->phone)
                             <div class="mt-1 flex items-center gap-1.5">
                                 <span class="material-symbols-rounded text-[14px] text-brand-500">call</span>
-                                <span class="text-xs font-semibold text-stone-600 font-mono">
-                                    {{ $outlet->phone }}
-                                </span>
+                                <span class="text-xs font-semibold text-stone-600 font-mono">{{ $outlet->phone }}</span>
                             </div>
                             @endif
                         </div>
                     </div>
 
-                    {{-- Address --}}
                     <div class="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-100 flex gap-2">
                         <span class="material-symbols-rounded text-[16px] text-stone-400 mt-0.5 shrink-0">location_on</span>
                         <p class="text-xs text-stone-600 leading-relaxed font-medium">{{ $outlet->address }}</p>
@@ -230,12 +224,10 @@
         </div>
     </div>
 
-    {{-- ================= FLOATING ACTION & BULK DELETE ================= --}}
+    {{-- ================= FLOATING BULK DELETE BAR ================= --}}
     @if(Auth::user()->role === 'admin')
-        {{-- BULK DELETE BAR (Floating Island Style) --}}
         <div id="bulkDeleteContainer"
             class="fixed bottom-24 md:bottom-8 left-0 right-0 z-40 px-4 flex justify-center transition-all duration-500 transform translate-y-40 opacity-0 invisible">
-
             <div class="bg-stone-900/90 backdrop-blur-md text-white p-2 pl-5 pr-2 rounded-full shadow-2xl flex items-center justify-between border border-stone-700 w-full max-w-sm ring-1 ring-white/10">
                 <div class="flex items-center gap-3">
                     <div class="bg-brand-600 rounded-full p-1 flex items-center justify-center animate-pulse">
@@ -250,8 +242,6 @@
                     <span class="material-symbols-rounded text-[16px] group-hover:rotate-12 transition-transform">delete</span>
                 </button>
             </div>
-
-            {{-- Hidden Form --}}
             <form id="bulkDeleteForm" action="{{ route('outlets.bulk_destroy') }}" method="POST" class="hidden">
                 @csrf @method('DELETE')
                 <div id="bulkDeleteInputs"></div>
@@ -262,10 +252,7 @@
     {{-- ================= MODAL CREATE ================= --}}
     <div id="createModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6">
         <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="closeCreateModal()"></div>
-
         <div class="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl transform scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto no-scrollbar" id="createModalContent">
-
-            {{-- Modal Header --}}
             <div class="sticky top-0 bg-white/90 backdrop-blur-md px-8 py-6 border-b border-stone-100 flex justify-between items-center z-10">
                 <div>
                     <h2 class="text-2xl font-extrabold text-stone-900 tracking-tight">Tambah Outlet</h2>
@@ -275,12 +262,9 @@
                     <span class="material-symbols-rounded font-bold">close</span>
                 </button>
             </div>
-
             <div class="p-8">
                 <form action="{{ route('outlets.store') }}" method="POST" class="space-y-6">
                     @csrf
-
-                    {{-- Nama Outlet --}}
                     <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Nama Outlet</label>
                         <div class="relative group">
@@ -289,8 +273,6 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium text-stone-800 placeholder-stone-400">
                         </div>
                     </div>
-
-                    {{-- Kontak Telepon --}}
                     <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Kontak Telepon</label>
                         <div class="relative group">
@@ -299,8 +281,6 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium font-mono text-stone-800 placeholder-stone-400">
                         </div>
                     </div>
-
-                    {{-- Alamat --}}
                     <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Lokasi Lengkap</label>
                         <div class="relative group">
@@ -309,17 +289,9 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium text-stone-800 placeholder-stone-400 resize-none"></textarea>
                         </div>
                     </div>
-
-                    {{-- Actions --}}
                     <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-stone-100">
-                        <button type="button" onclick="closeCreateModal()"
-                            class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-50 transition-colors">
-                            Batal
-                        </button>
-                        <button type="submit"
-                            class="px-8 py-3 bg-stone-900 hover:bg-black text-white rounded-xl font-bold shadow-lg shadow-stone-900/20 active:scale-95 transition-all">
-                            Simpan Data
-                        </button>
+                        <button type="button" onclick="closeCreateModal()" class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-50 transition-colors">Batal</button>
+                        <button type="submit" class="px-8 py-3 bg-stone-900 hover:bg-black text-white rounded-xl font-bold shadow-lg shadow-stone-900/20 active:scale-95 transition-all">Simpan Data</button>
                     </div>
                 </form>
             </div>
@@ -329,9 +301,7 @@
     {{-- ================= MODAL EDIT ================= --}}
     <div id="editModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6">
         <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="closeEditModal()"></div>
-
         <div class="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl transform scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto no-scrollbar" id="editModalContent">
-
             <div class="sticky top-0 bg-white/90 backdrop-blur-md px-8 py-6 border-b border-stone-100 flex justify-between items-center z-10">
                 <div>
                     <h2 class="text-2xl font-extrabold text-stone-900 tracking-tight">Edit Outlet</h2>
@@ -341,13 +311,10 @@
                     <span class="material-symbols-rounded font-bold">close</span>
                 </button>
             </div>
-
             <div class="p-8">
                 <form id="editForm" method="POST" class="space-y-6">
                     @csrf @method('PUT')
                     <input type="hidden" name="id" id="editId">
-
-                    {{-- Nama Outlet --}}
                     <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Nama Outlet</label>
                         <div class="relative group">
@@ -356,8 +323,6 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium text-stone-800">
                         </div>
                     </div>
-
-                    {{-- Kontak --}}
                     <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Kontak Telepon</label>
                         <div class="relative group">
@@ -366,9 +331,7 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium font-mono text-stone-800">
                         </div>
                     </div>
-
-                     {{-- Alamat --}}
-                     <div>
+                    <div>
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Lokasi Lengkap</label>
                         <div class="relative group">
                             <span class="absolute left-4 top-3.5 text-stone-400 material-symbols-rounded text-[20px] group-focus-within:text-brand-500 transition-colors">map</span>
@@ -376,16 +339,9 @@
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium text-stone-800 resize-none"></textarea>
                         </div>
                     </div>
-
                     <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-stone-100">
-                        <button type="button" onclick="closeEditModal()"
-                            class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-50 transition-colors">
-                            Batal
-                        </button>
-                        <button type="submit"
-                            class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 active:scale-95 transition-all">
-                            Simpan Perubahan
-                        </button>
+                        <button type="button" onclick="closeEditModal()" class="px-6 py-3 rounded-xl font-bold text-stone-500 hover:bg-stone-50 transition-colors">Batal</button>
+                        <button type="submit" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 active:scale-95 transition-all">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -427,6 +383,7 @@
             document.getElementById('editName').value = name;
             document.getElementById('editPhone').value = phone;
             document.getElementById('editAddress').value = address;
+            // Set action URL secara dinamis untuk update
             document.getElementById('editForm').action = '/outlets/' + id;
             toggleModal('editModal', 'editModalContent', true);
         }
@@ -437,7 +394,6 @@
         const selectAllMobile = document.getElementById('selectAllMobile');
         const bulkContainer = document.getElementById('bulkDeleteContainer');
         const selectedCountSpan = document.getElementById('selectedCount');
-        // Logic khusus: Kita menggunakan tombol component dengan ID 'floatingAddBtn'
         const fab = document.getElementById('floatingAddBtn');
 
         function getSelectedUniqueIds() {
@@ -449,7 +405,6 @@
 
         function updateBulkState() {
             const uniqueIds = getSelectedUniqueIds();
-
             if(selectedCountSpan) selectedCountSpan.innerText = uniqueIds.length;
 
             if(uniqueIds.length > 0) {
@@ -460,12 +415,12 @@
                 if(fab) fab.classList.remove('translate-y-40', 'opacity-0', 'invisible');
             }
 
-            const allCheckboxes = document.querySelectorAll('.item-checkbox');
+            const totalItems = document.querySelectorAll('.item-checkbox').length;
+            // Jika ada duplicate checkbox (desktop vs mobile), hitung unique itemnya
             const uniqueCheckboxes = new Set();
             document.querySelectorAll('.item-checkbox').forEach(cb => uniqueCheckboxes.add(cb.value));
 
-            const totalItems = uniqueCheckboxes.size;
-            const allChecked = uniqueIds.length === totalItems && totalItems > 0;
+            const allChecked = uniqueIds.length === uniqueCheckboxes.size && uniqueCheckboxes.size > 0;
 
             if(selectAll) selectAll.checked = allChecked;
             if(selectAllMobile) selectAllMobile.checked = allChecked;
@@ -556,6 +511,5 @@
                 }, 3000);
             });
         });
-
     </script>
 </x-app-layout>

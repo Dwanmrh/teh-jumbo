@@ -236,7 +236,7 @@
                         <thead>
                             <tr>
                                 <th>Cabang</th>
-                                <th class="text-right">Trx</th>
+                                <th class="text-right">Transaksi</th>
                                 <th class="text-right">Omzet</th>
                             </tr>
                         </thead>

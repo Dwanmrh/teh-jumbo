@@ -101,7 +101,8 @@ class KasKeluarController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $buktiRule = $user->role === 'kasir' ? 'required|image|mimes:jpg,jpeg,png|max:2048' : 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+        // Staff/Kasir WAJIB upload bukti, Admin boleh kosong
+        $buktiRule = $user->role === 'admin' ? 'nullable|image|mimes:jpg,jpeg,png|max:2048' : 'required|image|mimes:jpg,jpeg,png|max:2048';
 
         $validated = $request->validate([
             'tanggal' => 'required|date',

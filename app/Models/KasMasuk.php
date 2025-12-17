@@ -28,6 +28,7 @@ class KasMasuk extends Model
         'total',
         'kembalian',
         'user_id',
+        'outlet_id',
     ];
 
     protected $casts = [
@@ -78,5 +79,10 @@ class KasMasuk extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function outlet()
+    {
+        return $this->belongsTo(\App\Models\Outlet::class);
     }
 }

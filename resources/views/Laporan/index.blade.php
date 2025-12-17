@@ -193,7 +193,7 @@
                         <span class="font-bold text-stone-700">Rp {{ number_format($totalMasukCash, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between text-xs">
-                        <span class="text-stone-500 font-medium">QRIS/Bank</span>
+                        <span class="text-stone-500 font-medium">Non-Tunai</span>
                         <span class="font-bold text-stone-700">Rp {{ number_format($totalMasukNonCash, 0, ',', '.') }}</span>
                     </div>
                 </div>
@@ -222,7 +222,7 @@
                     <div class="flex justify-between items-start">
                         <div class="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1 flex items-center gap-2">
                             <span class="material-symbols-rounded text-sm">point_of_sale</span>
-                            <span>UANG DI LACI (CASH)</span>
+                            <span>UANG DI LACI</span>
                         </div>
                         {{-- Tooltip Info --}}
                         <div class="group relative">
@@ -246,7 +246,7 @@
                            <span>Keluar (Tunai):</span>
                            <span class="text-rose-400 font-bold">-Rp {{ number_format($totalKeluar, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex justify-between text-[10px] text-stone-500 mt-1">
+                        <div class="flex justify-between text-[10px] text-stone-400 mt-1">
                            <span>Info Saldo Akhir (All):</span>
                            <span class="text-stone-300 font-bold">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</span>
                         </div>

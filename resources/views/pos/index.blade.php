@@ -27,9 +27,14 @@
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </span>
-                        <p class="text-xs font-bold text-stone-500 uppercase tracking-wider">
-                            Sistem Aktif &bull; {{ date('d M Y') }}
-                        </p>
+                        <div class="flex flex-col">
+                            <p class="text-xs font-bold text-stone-500 uppercase tracking-wider">
+                                {{ Auth::user()->outlet ? Auth::user()->outlet->name : 'Cabang Utama' }}
+                            </p>
+                            <p class="text-[10px] font-medium text-stone-400">
+                                {{ date('d M Y') }}
+                            </p>
+                        </div>
                     </div>
                 </div>
 

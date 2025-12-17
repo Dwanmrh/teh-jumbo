@@ -11,8 +11,16 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+// ====================================================
+// LANDING PAGE (Halaman Depan / Welcome)
+// ====================================================
 Route::get('/', function () {
-    return redirect()->route('login'); // Redirect to login
+    // Cek jika user sudah login, kita bisa arahkan langsung ke sistem (Opsional)
+    // if (auth()->check()) {
+    //     return redirect()->route('redirect.role');
+    // }
+
+    return view('welcome');
 });
 
 // Middleware Group (Auth & Verified)

@@ -2,20 +2,21 @@
     <x-slot name="title">Kas Keluar</x-slot>
 
     {{-- =====================================================================
-         LIBRARIES & META
-         ===================================================================== --}}
+    LIBRARIES & META
+    ===================================================================== --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- =====================================================================
-         MAIN CONTAINER
-         ===================================================================== --}}
+    MAIN CONTAINER
+    ===================================================================== --}}
     <div class="min-h-screen pb-32 sm:pb-20" x-data="{ showDetail: false, selectedItem: {} }">
 
         {{-- 1. HEADER & ACTIONS --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
             <div>
                 <div class="flex items-center gap-2 mb-1">
                     <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
@@ -29,7 +30,7 @@
                 </p>
             </div>
 
-            @if(Auth::user()->role === 'admin')
+            @if(Auth::user()->role === 'admin' || Auth::user()->role === 'kasir' || Auth::user()->role === 'staff')
                 <div class="flex gap-3 w-full md:w-auto">
                     {{-- REVISI: Z-Index diubah ke z-30 agar tidak menutupi menu/dropdown lain --}}
                     <x-action-button
@@ -317,88 +318,88 @@
             @endif
 
             @forelse ($kasKeluar as $item)
-                <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
-                        'id' => $item->id,
-                        'kode_kas' => $item->kode_kas,
-                        'tanggal' => \Carbon\Carbon::parse($item->tanggal)->format('d M Y'),
-                        'penerima' => $item->penerima,
-                        'kategori' => $item->kategori,
-                        'nominal' => number_format($item->nominal, 0, ',', '.'),
-                        'metode_pembayaran' => $item->metode_pembayaran,
-                        'deskripsi' => $item->deskripsi ?? '-',
-                        'bukti_url' => $item->bukti_pembayaran ? asset('storage/' . $item->bukti_pembayaran) : null,
-                        'edit_url' => route('kas-keluar.edit', $item->id),
-                        'delete_url' => route('kas-keluar.destroy', $item->id),
-                    ]) }}')"
-                    class="bg-white rounded-[1.5rem] p-4 shadow-soft border border-stone-100 active:scale-[0.98] active:bg-stone-50 transition-all cursor-pointer relative overflow-hidden filter-item-mobile group"
-                    data-penerima="{{ strtolower($item->penerima) }}"
-                    data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
-                    data-nominal="{{ $item->nominal }}"
-                    data-tanggal="{{ $item->tanggal }}"
-                    data-kategori="{{ strtolower($item->kategori) }}"
-                    data-metode="{{ strtolower($item->metode_pembayaran) }}"
-                    data-kode="{{ strtolower($item->kode_kas) }}">
+                            <div @click="showDetail = true; selectedItem = JSON.parse('{{ json_encode([
+                    'id' => $item->id,
+                    'kode_kas' => $item->kode_kas,
+                    'tanggal' => \Carbon\Carbon::parse($item->tanggal)->format('d M Y'),
+                    'penerima' => $item->penerima,
+                    'kategori' => $item->kategori,
+                    'nominal' => number_format($item->nominal, 0, ',', '.'),
+                    'metode_pembayaran' => $item->metode_pembayaran,
+                    'deskripsi' => $item->deskripsi ?? '-',
+                    'bukti_url' => $item->bukti_pembayaran ? asset('storage/' . $item->bukti_pembayaran) : null,
+                    'edit_url' => route('kas-keluar.edit', $item->id),
+                    'delete_url' => route('kas-keluar.destroy', $item->id),
+                ]) }}')"
+                                class="bg-white rounded-[1.5rem] p-4 shadow-soft border border-stone-100 active:scale-[0.98] active:bg-stone-50 transition-all cursor-pointer relative overflow-hidden filter-item-mobile group"
+                                data-penerima="{{ strtolower($item->penerima) }}"
+                                data-deskripsi="{{ strtolower($item->deskripsi ?? '') }}"
+                                data-nominal="{{ $item->nominal }}"
+                                data-tanggal="{{ $item->tanggal }}"
+                                data-kategori="{{ strtolower($item->kategori) }}"
+                                data-metode="{{ strtolower($item->metode_pembayaran) }}"
+                                data-kode="{{ strtolower($item->kode_kas) }}">
 
-                    @php
-                        $kategoriLower = strtolower($item->kategori);
-                        $accentColor = match (true) {
-                            str_contains($kategoriLower, 'pembelian') => 'bg-amber-500',
-                            str_contains($kategoriLower, 'operasional') => 'bg-blue-500',
-                            str_contains($kategoriLower, 'gaji') => 'bg-purple-500',
-                            default => 'bg-stone-400',
-                        };
-                        $badgeClassMobile = match (true) {
-                            str_contains($kategoriLower, 'pembelian') => 'text-amber-600 bg-amber-50 border-amber-100',
-                            str_contains($kategoriLower, 'operasional') => 'text-blue-600 bg-blue-50 border-blue-100',
-                            str_contains($kategoriLower, 'gaji') => 'text-purple-600 bg-purple-50 border-purple-100',
-                            default => 'text-stone-500 bg-stone-100 border-stone-200',
-                        };
-                    @endphp
+                                @php
+                                    $kategoriLower = strtolower($item->kategori);
+                                    $accentColor = match (true) {
+                                        str_contains($kategoriLower, 'pembelian') => 'bg-amber-500',
+                                        str_contains($kategoriLower, 'operasional') => 'bg-blue-500',
+                                        str_contains($kategoriLower, 'gaji') => 'bg-purple-500',
+                                        default => 'bg-stone-400',
+                                    };
+                                    $badgeClassMobile = match (true) {
+                                        str_contains($kategoriLower, 'pembelian') => 'text-amber-600 bg-amber-50 border-amber-100',
+                                        str_contains($kategoriLower, 'operasional') => 'text-blue-600 bg-blue-50 border-blue-100',
+                                        str_contains($kategoriLower, 'gaji') => 'text-purple-600 bg-purple-50 border-purple-100',
+                                        default => 'text-stone-500 bg-stone-100 border-stone-200',
+                                    };
+                                @endphp
 
-                    {{-- CHECKBOX KHUSUS MOBILE --}}
-                    @if(Auth::user()->role === 'admin')
-                        <div class="absolute top-0 right-0 p-4 z-10" @click.stop>
-                            <label class="relative cursor-pointer flex items-center justify-center p-2 -m-2">
-                                <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox peer sr-only">
-                                <div class="w-6 h-6 bg-stone-100 border-2 border-stone-300 rounded-md peer-checked:bg-rose-500 peer-checked:border-rose-500 transition-all shadow-sm"></div>
-                                <span class="material-symbols-rounded absolute text-[18px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
-                            </label>
-                        </div>
-                    @endif
+                                {{-- CHECKBOX KHUSUS MOBILE --}}
+                                @if(Auth::user()->role === 'admin')
+                                    <div class="absolute top-0 right-0 p-4 z-10" @click.stop>
+                                        <label class="relative cursor-pointer flex items-center justify-center p-2 -m-2">
+                                            <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox peer sr-only">
+                                            <div class="w-6 h-6 bg-stone-100 border-2 border-stone-300 rounded-md peer-checked:bg-rose-500 peer-checked:border-rose-500 transition-all shadow-sm"></div>
+                                            <span class="material-symbols-rounded absolute text-[18px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                                        </label>
+                                    </div>
+                                @endif
 
-                    {{-- Decorative Accent --}}
-                    <div class="absolute top-4 bottom-4 left-0 w-1 rounded-r-full {{ $accentColor }}"></div>
+                                {{-- Decorative Accent --}}
+                                <div class="absolute top-4 bottom-4 left-0 w-1 rounded-r-full {{ $accentColor }}"></div>
 
-                    <div class="pl-3 pr-8">
-                        {{-- Top Row: Date & Badge --}}
-                        <div class="flex items-center gap-2 mb-2">
-                             <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border {{ $badgeClassMobile }}">
-                                {{ $item->kategori }}
-                            </span>
-                            <span class="text-[10px] text-stone-400 font-bold tracking-wide">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M') }}</span>
-                        </div>
+                                <div class="pl-3 pr-8">
+                                    {{-- Top Row: Date & Badge --}}
+                                    <div class="flex items-center gap-2 mb-2">
+                                         <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide border {{ $badgeClassMobile }}">
+                                            {{ $item->kategori }}
+                                        </span>
+                                        <span class="text-[10px] text-stone-400 font-bold tracking-wide">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M') }}</span>
+                                    </div>
 
-                        {{-- Main Content --}}
-                        <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-snug">{{ $item->penerima }}</h3>
-                        <p class="text-[11px] text-stone-400 italic line-clamp-1 mb-2">{{ $item->deskripsi }}</p>
+                                    {{-- Main Content --}}
+                                    <h3 class="font-bold text-stone-800 text-sm line-clamp-1 leading-snug">{{ $item->penerima }}</h3>
+                                    <p class="text-[11px] text-stone-400 italic line-clamp-1 mb-2">{{ $item->deskripsi }}</p>
 
-                        {{-- Bottom Row: Price --}}
-                        <div class="flex justify-between items-end">
-                             <div class="flex flex-col">
-                                <span class="text-[10px] text-stone-400 font-medium">Nominal</span>
-                                <p class="font-black text-rose-600 text-lg tracking-tight -mt-0.5">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
-                             </div>
-                        </div>
+                                    {{-- Bottom Row: Price --}}
+                                    <div class="flex justify-between items-end">
+                                         <div class="flex flex-col">
+                                            <span class="text-[10px] text-stone-400 font-medium">Nominal</span>
+                                            <p class="font-black text-rose-600 text-lg tracking-tight -mt-0.5">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
+                                         </div>
+                                    </div>
 
-                        {{-- Footer Detail --}}
-                        @if($item->bukti_pembayaran)
-                            <div class="mt-3 pt-2 border-t border-stone-50 flex items-center gap-1.5 text-[10px] text-stone-500 font-bold">
-                                <span class="material-symbols-rounded text-sm text-stone-300">image</span>
-                                Bukti Terlampir
+                                    {{-- Footer Detail --}}
+                                    @if($item->bukti_pembayaran)
+                                        <div class="mt-3 pt-2 border-t border-stone-50 flex items-center gap-1.5 text-[10px] text-stone-500 font-bold">
+                                            <span class="material-symbols-rounded text-sm text-stone-300">image</span>
+                                            Bukti Terlampir
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        @endif
-                    </div>
-                </div>
             @empty
                 <div class="text-center py-16 px-6 bg-white rounded-[2rem] border border-stone-100 border-dashed" id="noDataMobile">
                     <div class="bg-stone-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">

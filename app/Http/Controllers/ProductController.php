@@ -12,17 +12,23 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $outletId = $user->outlet_id;
 
-        // Ambil produk milik user yang sedang login saja
-        $products = Product::where('user_id', $userId)->latest()->get();
+        if ($outletId) {
+            // Show products for the outlet (Shared)
+            $products = Product::where('outlet_id', $outletId)->latest()->get();
+        } else {
+            // Fallback: If no outlet assigned, show by user_id
+            $products = Product::where('user_id', $user->id)->latest()->get();
+        }
 
         return view('products.index', [
             'products' => $products,
             'totalProduk' => $products->count(),
             'totalStok' => $products->sum('stok'),
             // Menghitung potensi omset (Harga Jual * Stok)
-            'nilaiStok' => $products->sum(function($p) {
+            'nilaiStok' => $products->sum(function ($p) {
                 return $p->harga * $p->stok;
             }),
             // Menghitung stok rendah (di bawah atau sama dengan 10)
@@ -43,8 +49,9 @@ class ProductController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // 2. Tambahkan User ID
+        // 2. Tambahkan User ID & Outlet ID
         $val['user_id'] = Auth::id();
+        $val['outlet_id'] = Auth::user()->outlet_id; // Assign to confirmed outlet
 
         // 3. Handle Upload Foto
         if ($request->hasFile('foto')) {
@@ -59,9 +66,15 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        // Pastikan hanya pemilik yang bisa update
-        if ($product->user_id !== Auth::id()) {
-            abort(403);
+        // Pastikan hanya pemilik Outlet yang sama yang bisa update
+        $user = Auth::user();
+        if ($product->outlet_id) {
+            if ($product->outlet_id !== $user->outlet_id)
+                abort(403, 'Unauthorized Outlet Access');
+        } else {
+            // Legacy/Fallback check
+            if ($product->user_id !== $user->id)
+                abort(403);
         }
 
         // 1. Validasi Input
@@ -93,8 +106,13 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->user_id !== Auth::id()) {
-            abort(403);
+        $user = Auth::user();
+        if ($product->outlet_id) {
+            if ($product->outlet_id !== $user->outlet_id)
+                abort(403, 'Unauthorized Outlet Access');
+        } else {
+            if ($product->user_id !== $user->id)
+                abort(403);
         }
 
         // Hapus foto fisik saat data dihapus

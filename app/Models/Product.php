@@ -10,6 +10,7 @@ class Product extends Model
 
     protected $fillable = [
         'user_id',   // Wajib ada
+        'outlet_id', // Tambahan REF-POS-OUTLET
         'nama',
         'kategori',
         'ukuran',    // Tambahan sesuai Index
@@ -23,5 +24,10 @@ class Product extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class);
     }
 }
