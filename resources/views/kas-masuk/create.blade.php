@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="title">Create KM</x-slot>
+    <x-slot name="title">Catat Pemasukan</x-slot>
 
     {{-- =====================================================================
          LIBRARIES & META
@@ -7,18 +7,16 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{--
-        MAIN CONTAINER FIX:
-        1. Menghapus 'min-h-screen' dan 'max-w-6xl px-4...' bawaan lama.
-        2. Mengganti dengan 'flex flex-col space-y-8' agar layout mengalir rapi sesuai parent.
-    --}}
-    <div class="flex flex-col space-y-8 font-sans"
+    {{-- =====================================================================
+         MAIN CONTAINER
+         ===================================================================== --}}
+    <div class="min-h-screen pb-32 sm:pb-20 font-sans"
          x-data="{
              qty: 1,
              harga: '',
              total: 0,
              metode: 'Tunai',
-             kategori: 'Titipan Mitra',
+             kategori: '',
              kategoriOpen: false,
              options: ['Titipan Mitra', 'Suntikan Modal', 'Pendapatan Lain', 'Event Besar', 'Penjualan Tunai (Manual)', 'Dana Talangan', 'Uang Kembalian'],
 
@@ -44,20 +42,21 @@
              }
          }">
 
-        {{-- 1. HEADER & BACK BUTTON --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-[fadeIn_0.3s_ease-out]">
+        {{-- 1. HEADER & ACTIONS --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
             <div>
-                {{-- Breadcrumb / Label --}}
-                <div class="flex items-center gap-2 mb-2">
-                    <a href="{{ route('kas-masuk.index') }}" class="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all group">
-                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                <div class="flex items-center gap-2 mb-1">
+                    <a href="{{ route('kas-masuk.index') }}" class="group flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                            <span class="material-symbols-rounded text-sm">arrow_back</span>
+                        </div>
+                        <span class="text-xs font-bold tracking-widest text-stone-400 group-hover:text-emerald-600 uppercase transition-colors">Kembali</span>
                     </a>
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-stone-300"></span>
                     <p class="text-xs font-bold tracking-widest text-emerald-600 uppercase">Input Transaksi</p>
                 </div>
-
-                <h1 class="text-3xl md:text-4xl font-extrabold text-stone-800 tracking-tight leading-tight">
-                    Catat Pemasukan
+                <h1 class="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight">
+                    Catat <span class="text-emerald-500">Pemasukan</span>
                 </h1>
                 <p class="text-stone-500 text-sm mt-2 max-w-lg leading-relaxed font-medium">
                     Input data pemasukan non-transaksi kasir seperti titipan mitra atau suntikan modal.
@@ -67,14 +66,6 @@
 
         <form method="POST" action="{{ route('kas-masuk.store') }}" class="animate-[fadeIn_0.5s_ease-out]">
             @csrf
-
-            {{-- Alert Session Error --}}
-            @if(session('error'))
-                <div class="mb-6 bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-[1.5rem] flex items-center gap-3 shadow-sm animate-pulse">
-                    <span class="material-symbols-rounded">error</span>
-                    <span class="font-bold text-sm leading-relaxed">{{ session('error') }}</span>
-                </div>
-            @endif
 
             {{-- Validation Errors --}}
             @if ($errors->any())
@@ -96,7 +87,7 @@
                 {{-- KOLOM KIRI (INPUT FORM) --}}
                 <div class="lg:col-span-2 space-y-6">
 
-                    {{-- Card 1: Nominal (Style mirip Search Bar Index) --}}
+                    {{-- Card 1: Nominal --}}
                     <div class="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-soft border border-stone-100 relative overflow-hidden group hover:border-emerald-300/30 transition-all duration-500">
                          {{-- Background Texture --}}
                          <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-50 rounded-bl-[5rem] -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-110 opacity-50"></div>
@@ -227,7 +218,7 @@
                 <div class="lg:col-span-1">
                     <div class="sticky top-[110px] space-y-4">
 
-                        {{-- Total Card (Senada dengan Index Stats Card) --}}
+                        {{-- Total Card (Mirip Index Stats Card) --}}
                         <div class="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-[2.5rem] p-6 text-white shadow-2xl shadow-emerald-900/20 relative overflow-hidden border border-emerald-400/20 group">
                             {{-- Background Effects --}}
                             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-emerald-300/20 rounded-full blur-[50px] group-hover:bg-emerald-300/30 transition-all duration-700"></div>
@@ -266,7 +257,7 @@
                         {{-- Actions --}}
                         <div class="space-y-3 pt-2">
                             <button type="submit"
-                                class="w-full group relative px-6 py-4 bg-stone-800 hover:bg-emerald-600 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-emerald-500/30 hover:-translate-y-1 overflow-hidden">
+                                class="w-full group relative px-6 py-4 bg-stone-900 hover:bg-emerald-600 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-emerald-500/30 hover:-translate-y-1 overflow-hidden">
                                 <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                                 <span class="material-symbols-rounded bg-white/20 rounded-full p-0.5 group-hover:rotate-12 transition-transform">save</span>
                                 <span class="font-bold tracking-wide">Simpan Data</span>

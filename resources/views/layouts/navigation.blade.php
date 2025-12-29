@@ -17,9 +17,7 @@
         ['route' => 'kas-masuk.index', 'icon' => 'trending_up', 'label' => 'Masuk'],
         ['route' => 'kas-keluar.index', 'icon' => 'trending_down', 'label' => 'Keluar'],
     ];
-    $staffMore = [
-        ['route' => 'products.index', 'icon' => 'inventory_2', 'label' => 'Produk'],
-    ];
+    $staffMore = [];
 
     $mainLinks = ($user->role === 'admin') ? $adminMain : $staffMain;
     $moreLinks = ($user->role === 'admin') ? $adminMore : $staffMore;
@@ -80,6 +78,12 @@
                         <x-dropdown-link :href="route('profile.edit')"
                             class="rounded-lg hover:bg-stone-50 hover:text-brand-600 flex items-center gap-2.5 text-xs font-semibold px-3 py-2">
                             <span class="material-symbols-rounded text-[18px]">person</span> Profil Saya
+                        </x-dropdown-link>
+
+                        {{-- TAMBAHAN: LINK PANDUAN --}}
+                        <x-dropdown-link :href="route('panduan')"
+                            class="rounded-lg hover:bg-stone-50 hover:text-cyan-600 flex items-center gap-2.5 text-xs font-semibold px-3 py-2">
+                            <span class="material-symbols-rounded text-[18px]">menu_book</span> Panduan Aplikasi
                         </x-dropdown-link>
 
                         @if($user->role === 'admin')
@@ -212,6 +216,17 @@
                             class="text-[10px] font-bold text-center leading-tight text-stone-500 group-hover:text-stone-800 line-clamp-2">{{ $link['label'] }}</span>
                     </a>
                 @endforeach
+                {{-- TAMBAHAN: LINK PANDUAN (UNTUK MOBILE) --}}
+                <a href="{{ route('panduan') }}"
+                    class="flex flex-col items-center gap-2 group active:scale-95 transition-transform">
+                    <div
+                        class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all border border-dashed border-stone-300 bg-stone-50 text-stone-400 group-hover:border-cyan-400 group-hover:text-cyan-600">
+                        <span class="material-symbols-rounded text-[28px]">menu_book</span>
+                    </div>
+                    <span
+                        class="text-[10px] font-bold text-center leading-tight text-stone-500 group-hover:text-stone-800">Panduan</span>
+                </a>
+                
                 <a href="{{ route('profile.edit') }}"
                     class="flex flex-col items-center gap-2 group active:scale-95 transition-transform">
                     <div

@@ -16,12 +16,14 @@ class KasMasuk extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    // Pastikan TIDAK ADA baris: public readonly string $metode_pembayaran; di sini!
+
     protected $fillable = [
         'kode_kas',
         'tanggal_transaksi',
         'keterangan',
         'kategori',
-        'payment_method', // KOLOM DATABASE YANG BENAR
+        'payment_method',
         'detail_items',
         'jumlah',
         'harga_satuan',
@@ -42,7 +44,6 @@ class KasMasuk extends Model
 
     // --- ACCESSOR ---
     // Memungkinkan pemanggilan $item->metode_pembayaran di Blade View
-    // Walaupun kolom aslinya payment_method
     public function getMetodePembayaranAttribute()
     {
         return $this->attributes['payment_method'] ?? 'Tunai';
@@ -59,7 +60,6 @@ class KasMasuk extends Model
             }
 
             // 2. Default Payment Method jika kosong
-            // Ini yang menyebabkan bug "Tunai" sebelumnya jika Controller salah kirim key
             if (empty($model->payment_method)) {
                 $model->payment_method = 'Tunai';
             }

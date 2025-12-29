@@ -12,7 +12,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // ====================================================
-// LANDING PAGE (Halaman Depan / Welcome)
+// LANDING PAGE
 // ====================================================
 Route::get('/', function () {
     return view('welcome');
@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     /** ===================================================
      * 1. KHUSUS ADMIN (Middleware role:admin)
-     * (Berisi Dashboard, Laporan, Manajemen User/Outlet, dan DELETE Data)
+     * (Full Control: Dashboard, Laporan, User, Outlet, Create/Edit/Delete Produk)
      * ==================================================== */
     Route::middleware(['role:admin'])->group(function () {
         // Dashboard
@@ -41,20 +41,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk_destroy');
         Route::resource('users', UserController::class)->except(['create', 'edit', 'show']);
 
-        // --- HAPUS KAS MASUK (FIXED) ---
-        // PENTING: Route bulk-destroy harus diatas route {id}
+        // --- MANAJEMEN PRODUK (FULL ACCESS) ---
+        // Admin bisa Create, Store, Edit, Update, Destroy
+        // Kita exclude 'index' karena 'index' ditaruh di Shared agar Staff juga bisa lihat daftar.
+        Route::resource('products', ProductController::class)->except(['index']);
+
+        // --- DELETE LOGIC (Advanced) ---
         Route::delete('/kas-masuk/bulk-destroy', [KasMasukController::class, 'bulkDestroy'])->name('kas-masuk.bulk_destroy');
-        // REVISI: Menggunakan DELETE method, bukan GET. URL disesuaikan standar RESTful.
         Route::delete('/kas-masuk/{id}', [KasMasukController::class, 'destroy'])->name('kas-masuk.destroy');
 
-        // --- HAPUS KAS KELUAR ---
         Route::delete('/kas-keluar/bulk-destroy', [KasKeluarController::class, 'bulkDestroy'])->name('kas-keluar.bulk_destroy');
         Route::delete('/kas-keluar/{id}', [KasKeluarController::class, 'destroy'])->name('kas-keluar.destroy');
     });
 
     /** ===================================================
      * 2. SHARED ACCESS (Admin & Kasir)
-     * (Berisi POS, Input Data Kas, Input Produk)
+     * (POS, Input Kas, Read-Only Produk)
      * ==================================================== */
 
     // Redirect Logic
@@ -73,22 +75,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/pos/cart/remove', [PosController::class, 'removeItem'])->name('pos.cart.remove');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
 
-    // Produk (Resource controller menangani index, create, store, edit, update, destroy)
-    // Jika kasir tidak boleh hapus produk, tambahkan ->except(['destroy'])
-    Route::resource('products', ProductController::class);
+    // --- PRODUK (READ ONLY) ---
+    // Staff hanya boleh melihat daftar produk (untuk cek harga/stok), tidak boleh edit.
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
-    // --- KAS MASUK (Resource minus destroy) ---
-    // Ini otomatis membuat route: index, create, store, edit, update.
-    // Route destroy sudah ditangani di grup Admin di atas.
+    // --- KAS MASUK & KELUAR (Input Only) ---
     Route::resource('kas-masuk', KasMasukController::class)->except(['destroy', 'show']);
-
-    // --- KAS KELUAR (Resource minus destroy) ---
     Route::resource('kas-keluar', KasKeluarController::class)->except(['destroy', 'show']);
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // --- PANDUAN PENGGUNAAN ---
+    Route::get('/panduan', function () {
+        return view('panduan');
+    })->name('panduan');
 });
 
 require __DIR__ . '/auth.php';

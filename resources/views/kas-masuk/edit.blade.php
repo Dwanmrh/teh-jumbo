@@ -7,12 +7,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{--
-        MAIN CONTAINER FIX:
-        1. Menghapus 'min-h-screen' dan 'max-w-6xl px-4...' bawaan lama.
-        2. Mengganti dengan 'flex flex-col space-y-8' agar layout mengalir rapi sesuai parent.
-    --}}
-    <div class="flex flex-col space-y-8 font-sans"
+    {{-- =====================================================================
+         MAIN CONTAINER
+         ===================================================================== --}}
+    <div class="min-h-screen pb-32 sm:pb-20 font-sans"
          x-data="{
              qty: {{ old('jumlah', $kasMasuk->jumlah) }},
              harga: {{ old('harga_satuan', $kasMasuk->harga_satuan) }},
@@ -46,21 +44,23 @@
          }"
          x-init="init()">
 
-        {{-- 1. HEADER & BACK BUTTON --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-[fadeIn_0.3s_ease-out]">
+        {{-- 1. HEADER & ACTIONS --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
             <div>
-                {{-- Breadcrumb / Label --}}
-                <div class="flex items-center gap-2 mb-2">
-                    <a href="{{ route('kas-masuk.index') }}" class="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all group">
-                        <span class="material-symbols-rounded text-base">arrow_back</span>
+                <div class="flex items-center gap-2 mb-1">
+                    <a href="{{ route('kas-masuk.index') }}" class="group flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <span class="material-symbols-rounded text-sm">arrow_back</span>
+                        </div>
+                        <span class="text-xs font-bold tracking-widest text-stone-400 group-hover:text-amber-600 uppercase transition-colors">Kembali</span>
                     </a>
-                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-stone-300"></span>
                     <p class="text-xs font-bold tracking-widest text-amber-600 uppercase">Edit Transaksi</p>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-stone-800 tracking-tight leading-tight">
-                        Edit Pemasukan
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight leading-tight">
+                        Edit <span class="text-amber-500">Pemasukan</span>
                     </h1>
                     <span class="bg-amber-100 text-amber-700 border border-amber-200 text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg font-mono">
                         #{{ $kasMasuk->kode_kas ?? $kasMasuk->id }}
@@ -76,7 +76,7 @@
             @csrf
             @method('PUT')
 
-            {{-- Alert Session Error --}}
+            {{-- Validation Errors --}}
             @if ($errors->any())
                 <div class="mb-8 bg-rose-50 border border-rose-100 text-rose-600 px-6 py-4 rounded-[1.5rem] shadow-sm flex items-start gap-3">
                     <span class="material-symbols-rounded text-rose-500 mt-0.5">warning</span>
@@ -277,7 +277,7 @@
                         {{-- Actions --}}
                         <div class="space-y-3 pt-2">
                             <button type="submit"
-                                class="w-full group relative px-6 py-4 bg-stone-800 hover:bg-stone-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-stone-500/30 hover:-translate-y-1 overflow-hidden">
+                                class="w-full group relative px-6 py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-stone-500/30 hover:-translate-y-1 overflow-hidden">
                                 <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                                 <span class="material-symbols-rounded bg-white/20 rounded-full p-0.5 group-hover:rotate-12 transition-transform">save_as</span>
                                 <span class="font-bold tracking-wide">Simpan Perubahan</span>

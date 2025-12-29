@@ -7,83 +7,123 @@ use App\Models\Product;
 use App\Models\Outlet;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $outletId = $user->outlet_id;
 
-        if ($outletId) {
-            // Show products for the outlet (Shared)
-            $products = Product::where('outlet_id', $outletId)->latest()->get();
-        } else {
-            // Fallback: If no outlet assigned, show by user_id
-            $products = Product::where('user_id', $user->id)->latest()->get();
+        // Mulai Query Builder
+        $query = Product::query();
+
+        // --- LOGIKA FILTER OUTLET ---
+
+        // 1. Jika User adalah KASIR (Punya outlet_id & bukan admin)
+        // Maka HANYA tampilkan produk dari outlet tersebut.
+        if ($user->role !== 'admin' && $user->outlet_id) {
+            $query->where('outlet_id', $user->outlet_id);
         }
+        // 2. Jika User adalah ADMIN
+        // Cek apakah Admin sedang memfilter outlet tertentu via Dropdown
+        elseif ($user->role === 'admin') {
+            if ($request->has('outlet_filter') && $request->outlet_filter != '') {
+                $query->where('outlet_id', $request->outlet_filter);
+            }
+            // Jika tidak ada filter, otomatis tampilkan semua (default)
+        }
+
+        // Eksekusi Query
+        $products = $query->latest()->get();
+
+        // Ambil data outlet untuk dropdown filter (Hanya Admin yang butuh)
+        $outlets = Outlet::all();
 
         return view('products.index', [
             'products' => $products,
+            // Statistik dihitung dari $products yang SUDAH TERSARING
             'totalProduk' => $products->count(),
             'totalStok' => $products->sum('stok'),
-            // Menghitung potensi omset (Harga Jual * Stok)
             'nilaiStok' => $products->sum(function ($p) {
                 return $p->harga * $p->stok;
             }),
-            // Menghitung stok rendah (di bawah atau sama dengan 10)
             'stokRendah' => $products->where('stok', '<=', 10)->count(),
-            'outlets' => Outlet::all(), // Pass outlets for Admin dropdown
+            'outlets' => $outlets,
+            // Kirim ID filter yang sedang aktif agar dropdown tidak reset
+            'currentOutletFilter' => $request->outlet_filter,
         ]);
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         // 1. Validasi Input
         $val = $request->validate([
             'nama' => 'required|string|max:255',
             'kategori' => 'required|string',
             'ukuran' => 'required|string',
             'harga' => 'required|numeric|min:0',
-            'modal' => 'required|numeric|min:0', // Validasi Modal
+            'modal' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'outlet_id' => 'nullable|exists:outlets,id',
+            // Ubah validasi outlet_id menjadi array outlet_ids
+            'outlet_ids' => 'nullable|array',
+            'outlet_ids.*' => 'exists:outlets,id',
         ]);
 
-        // 2. Tambahkan User ID & Outlet ID
-        $user = Auth::user();
-        $val['user_id'] = $user->id;
-
-        if ($user->role === 'admin' && $request->filled('outlet_id')) {
-            $val['outlet_id'] = $request->outlet_id;
-        } else {
-            $val['outlet_id'] = $user->outlet_id;
-        }
-
-        // 3. Handle Upload Foto
+        // 2. Handle Upload Foto (Sekali saja)
+        $fotoPath = null;
         if ($request->hasFile('foto')) {
-            $val['foto'] = $request->file('foto')->store('produk', 'public');
+            $fotoPath = $request->file('foto')->store('produk', 'public');
         }
 
-        // 4. Simpan ke Database
-        Product::create($val);
+        // 3. Tentukan Outlet Tujuan
+        // Jika Admin & memilih outlet, gunakan array dari form
+        // Jika Kasir/Owner Outlet, gunakan outlet_id mereka sendiri (dibungkus array)
+        $targetOutlets = [];
 
-        return redirect()->route('products.index')->with('success', 'Menu berhasil ditambahkan!');
+        if ($user->role === 'admin' && !empty($request->outlet_ids)) {
+            $targetOutlets = $request->outlet_ids;
+        } elseif ($user->outlet_id) {
+            $targetOutlets = [$user->outlet_id];
+        } else {
+            // Fallback jika tidak punya outlet sama sekali
+             $targetOutlets = [null];
+        }
+
+        // 4. Looping Simpan ke Database (Multi Outlet)
+        foreach ($targetOutlets as $oid) {
+            Product::create([
+                'user_id' => $user->id,
+                'outlet_id' => $oid, // ID Outlet berbeda tiap loop
+                'nama' => $request->nama,
+                'kategori' => $request->kategori,
+                'ukuran' => $request->ukuran,
+                'harga' => $request->harga,
+                'modal' => $request->modal,
+                'stok' => $request->stok,
+                'foto' => $fotoPath, // Path foto yang sama
+            ]);
+        }
+
+        return redirect()->route('products.index')->with('success', 'Menu berhasil ditambahkan ke outlet yang dipilih!');
     }
 
     public function update(Request $request, Product $product)
     {
-        // Pastikan hanya pemilik Outlet yang sama yang bisa update
         $user = Auth::user();
+
+        // Cek Otorisasi
         if ($product->outlet_id) {
-            if ($product->outlet_id !== $user->outlet_id)
+            // Jika user bukan admin DAN outlet produk beda dengan outlet user -> tolak
+            if ($user->role !== 'admin' && $product->outlet_id !== $user->outlet_id) {
                 abort(403, 'Unauthorized Outlet Access');
+            }
         } else {
-            // Legacy/Fallback check
-            if ($product->user_id !== $user->id)
+            if ($product->user_id !== $user->id && $user->role !== 'admin') {
                 abort(403);
+            }
         }
 
         // 1. Validasi Input
@@ -95,26 +135,57 @@ class ProductController extends Controller
             'modal' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'outlet_id' => 'nullable|exists:outlets,id',
+            'outlet_ids' => 'nullable|array', // Terima array
+            'outlet_ids.*' => 'exists:outlets,id',
         ]);
 
-        // HANDLE ADMIN CHANGE OUTLET
-        if (Auth::user()->role === 'admin' && $request->has('outlet_id')) {
-            $val['outlet_id'] = $request->outlet_id;
-        }
+        // 2. Handle Foto Baru
+        // Kita simpan path foto baru di variabel terpisah dulu
+        $newFotoPath = $product->foto;
 
-        // 2. Handle Ganti Foto
         if ($request->hasFile('foto')) {
-            // Hapus foto lama jika ada (agar storage tidak penuh)
+            // Hapus foto lama jika ada
             if ($product->foto && Storage::disk('public')->exists($product->foto)) {
                 Storage::disk('public')->delete($product->foto);
             }
-            // Simpan foto baru
-            $val['foto'] = $request->file('foto')->store('produk', 'public');
+            // Upload baru
+            $newFotoPath = $request->file('foto')->store('produk', 'public');
         }
 
-        // 3. Update Database
-        $product->update($val);
+        // 3. Update Produk Saat Ini (Utama)
+        $product->update([
+            'nama' => $request->nama,
+            'kategori' => $request->kategori,
+            'ukuran' => $request->ukuran,
+            'harga' => $request->harga,
+            'modal' => $request->modal,
+            'stok' => $request->stok,
+            'foto' => $newFotoPath,
+        ]);
+
+        // 4. DUPLIKASI ke Outlet Lain (Fitur Spesial Admin)
+        if ($user->role === 'admin' && !empty($request->outlet_ids)) {
+            // Filter: Jangan duplikasi ke outlet tempat produk ini berada sekarang
+            $outletsToClone = array_diff($request->outlet_ids, [$product->outlet_id]);
+
+            foreach ($outletsToClone as $oid) {
+                Product::create([
+                    'user_id' => $user->id,
+                    'outlet_id' => $oid,
+                    'nama' => $request->nama,
+                    'kategori' => $request->kategori,
+                    'ukuran' => $request->ukuran,
+                    'harga' => $request->harga,
+                    'modal' => $request->modal,
+                    'stok' => $request->stok,
+                    'foto' => $newFotoPath, // Share foto path
+                ]);
+            }
+
+            if(count($outletsToClone) > 0) {
+                 return redirect()->route('products.index')->with('success', 'Menu diperbarui & diduplikasi ke outlet lain!');
+            }
+        }
 
         return redirect()->route('products.index')->with('success', 'Menu berhasil diperbarui!');
     }
@@ -122,15 +193,17 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $user = Auth::user();
-        if ($product->outlet_id) {
-            if ($product->outlet_id !== $user->outlet_id)
-                abort(403, 'Unauthorized Outlet Access');
-        } else {
-            if ($product->user_id !== $user->id)
-                abort(403);
+
+        // Otorisasi Hapus
+        if ($user->role !== 'admin') {
+            if ($product->outlet_id) {
+                if ($product->outlet_id !== $user->outlet_id) abort(403);
+            } else {
+                if ($product->user_id !== $user->id) abort(403);
+            }
         }
 
-        // Hapus foto fisik saat data dihapus
+        // Hapus foto fisik
         if ($product->foto && Storage::disk('public')->exists($product->foto)) {
             Storage::disk('public')->delete($product->foto);
         }

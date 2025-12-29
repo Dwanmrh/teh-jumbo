@@ -217,8 +217,9 @@
                             {{-- Penerima --}}
                             <div class="space-y-2">
                                 <label
-                                    class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Dibayarkan
-                                    Kepada</label>
+                                    class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">
+                                    Dibayarkan Kepada <span class="text-rose-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <span
                                         class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 material-symbols-rounded text-lg pointer-events-none">person</span>
@@ -266,11 +267,11 @@
                             {{-- Upload Bukti --}}
                             <div class="space-y-2">
                                 <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">
-                                    Bukti Foto / Struk @if(Auth::user()->role !== 'admin') <span
-                                    class="text-rose-500">*</span> @endif
+                                    Bukti Foto / Struk <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="relative group cursor-pointer">
-                                    <input type="file" name="bukti_pembayaran" id="file-upload"
+                                    {{-- ADDED REQUIRED HERE --}}
+                                    <input type="file" name="bukti_pembayaran" id="file-upload" required
                                         class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
                                         @change="fileChosen">
 

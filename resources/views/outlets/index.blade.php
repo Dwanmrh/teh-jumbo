@@ -285,7 +285,7 @@
                         <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">Lokasi Lengkap</label>
                         <div class="relative group">
                             <span class="absolute left-4 top-3.5 text-stone-400 material-symbols-rounded text-[20px] group-focus-within:text-brand-500 transition-colors">map</span>
-                            <textarea name="address" rows="3" required placeholder="Jl. Slamet Riyadi No. 45..."
+                            <textarea name="address" rows="3" required placeholder="Jl. Brawijaya No. 45..."
                                 class="w-full pl-12 pr-4 py-3.5 bg-stone-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-brand-500 focus:ring-0 transition-all font-medium text-stone-800 placeholder-stone-400 resize-none"></textarea>
                         </div>
                     </div>

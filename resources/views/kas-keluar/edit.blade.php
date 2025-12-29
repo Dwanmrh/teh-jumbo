@@ -196,7 +196,9 @@
 
                             {{-- Penerima --}}
                             <div class="space-y-2">
-                                <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">Dibayarkan Kepada</label>
+                                <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">
+                                    Dibayarkan Kepada <span class="text-amber-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 material-symbols-rounded text-lg pointer-events-none">person</span>
                                     <input type="text" name="penerima" value="{{ old('penerima', $kasKeluar->penerima) }}" required
@@ -236,9 +238,10 @@
                             {{-- Upload Bukti --}}
                             <div class="space-y-2">
                                 <label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest ml-3">
-                                    Bukti Foto / Struk @if(Auth::user()->role === 'kasir') <span class="text-rose-500">*</span> @endif
+                                    Bukti Foto / Struk <span class="text-amber-500">*</span>
                                 </label>
                                 <div class="relative group cursor-pointer">
+                                    {{-- Pada Edit, tidak 'required' agar tidak memaksa upload ulang jika sudah ada --}}
                                     <input type="file" name="bukti_pembayaran" id="file-upload" class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer" @change="fileChosen">
 
                                     <div class="border-2 border-dashed border-stone-200 rounded-[1.5rem] p-4 flex items-center gap-4 transition-all group-hover:border-amber-400 group-hover:bg-amber-50/30"
@@ -328,14 +331,14 @@
                         {{-- Actions --}}
                         <div class="space-y-3 pt-2">
                             <button type="submit"
-                                class="w-full group relative px-6 py-4 bg-stone-800 hover:bg-stone-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-stone-500/30 hover:-translate-y-1 overflow-hidden">
+                                    class="w-full group relative px-6 py-4 bg-stone-800 hover:bg-stone-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-stone-200 hover:shadow-stone-500/30 hover:-translate-y-1 overflow-hidden">
                                 <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                                 <span class="material-symbols-rounded bg-white/20 rounded-full p-0.5 group-hover:rotate-12 transition-transform">save_as</span>
                                 <span class="font-bold tracking-wide">Simpan Perubahan</span>
                             </button>
 
                             <a href="{{ route('kas-keluar.index') }}"
-                                class="w-full bg-white hover:bg-stone-50 text-stone-500 hover:text-stone-700 font-bold py-4 rounded-[1.5rem] border border-stone-200 hover:border-stone-300 transition-all flex items-center justify-center gap-2 active:scale-95">
+                               class="w-full bg-white hover:bg-stone-50 text-stone-500 hover:text-stone-700 font-bold py-4 rounded-[1.5rem] border border-stone-200 hover:border-stone-300 transition-all flex items-center justify-center gap-2 active:scale-95">
                                 Batal
                             </a>
                         </div>

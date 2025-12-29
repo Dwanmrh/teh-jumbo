@@ -15,8 +15,7 @@
     <div class="min-h-screen pb-32 sm:pb-20" x-data="{ showDetail: false, selectedItem: {} }">
 
         {{-- 1. HEADER & ACTIONS --}}
-        <div
-            class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-[fadeIn_0.3s_ease-out]">
             <div>
                 <div class="flex items-center gap-2 mb-1">
                     <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
@@ -30,18 +29,16 @@
                 </p>
             </div>
 
-            @if(Auth::user()->role === 'admin' || Auth::user()->role === 'kasir' || Auth::user()->role === 'staff')
-                <div class="flex gap-3 w-full md:w-auto">
-                    {{-- REVISI: Z-Index diubah ke z-30 agar tidak menutupi menu/dropdown lain --}}
-                    <x-action-button
-                        href="{{ route('kas-keluar.create') }}"
-                        label="Catat Pengeluaran"
-                        icon="add"
-                        id="floatingAddBtn"
-                        class="z-30"
-                    />
-                </div>
-            @endif
+            {{-- TOMBOL TAMBAH (BISA UNTUK SEMUA ROLE) --}}
+            <div class="flex gap-3 w-full md:w-auto">
+                <x-action-button
+                    href="{{ route('kas-keluar.create') }}"
+                    label="Catat Pengeluaran"
+                    icon="add"
+                    id="floatingAddBtn"
+                    class="z-30"
+                />
+            </div>
         </div>
 
         {{-- 2. STATS CARD --}}
@@ -84,13 +81,12 @@
             </div>
         </div>
 
-        {{-- 3. FILTER & SEARCH BAR (Sticky z-40 > FAB z-30) --}}
+        {{-- 3. FILTER & SEARCH BAR --}}
         <form method="GET" action="{{ route('kas-keluar.index') }}" id="filterForm"
               class="sticky top-[80px] md:top-[170px] z-40 mb-8 animate-[fadeIn_0.5s_ease-out]">
 
             <div class="bg-white/80 backdrop-blur-xl p-3 sm:p-4 rounded-[2rem] shadow-soft border border-stone-200/60 ring-1 ring-stone-900/5 transition-all duration-300">
                 <div class="flex flex-col md:flex-row gap-3">
-
                     {{-- Search Input --}}
                     <div class="relative flex-1 w-full group">
                         <div class="absolute left-4 top-1/2 -translate-y-1/2 bg-stone-100 rounded-full p-1 transition-colors group-focus-within:bg-rose-50">
@@ -115,8 +111,7 @@
                                 </div>
                                 <span class="material-symbols-rounded text-stone-400 text-lg shrink-0 hidden sm:block">expand_more</span>
                             </button>
-
-                            {{-- Dropdown Content (z-50) --}}
+                            {{-- Dropdown Content --}}
                             <div x-cloak x-show="open" @click.outside="open = false"
                                  x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                                  class="absolute left-0 top-full mt-2 w-48 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1 ring-1 ring-black/5">
@@ -139,8 +134,7 @@
                                 </div>
                                 <span class="material-symbols-rounded text-stone-400 text-lg shrink-0 hidden sm:block">expand_more</span>
                             </button>
-
-                            {{-- Dropdown Content (z-50) --}}
+                            {{-- Dropdown Content --}}
                             <div x-cloak x-show="open" @click.outside="open = false"
                                  x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                                  class="absolute right-0 md:left-0 md:right-auto top-full mt-2 w-64 bg-white border border-stone-100 rounded-2xl shadow-xl z-50 p-1.5 flex flex-col gap-1 ring-1 ring-black/5">
@@ -186,7 +180,12 @@
                     <thead class="bg-stone-50 border-b border-stone-100">
                         <tr>
                             <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest w-10">
-                                <input type="checkbox" id="selectAll" class="w-4 h-4 text-rose-600 bg-white border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                {{-- CHECKBOX KHUSUS ADMIN --}}
+                                @if(Auth::user()->role === 'admin')
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 text-rose-600 bg-white border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                @else
+                                    <span class="text-stone-300">#</span>
+                                @endif
                             </th>
                             <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest">Info Transaksi</th>
                             <th class="p-6 text-xs font-extrabold text-stone-400 uppercase tracking-widest">Penerima & Ket</th>
@@ -209,7 +208,12 @@
                                 data-kode="{{ strtolower($item->kode_kas) }}">
 
                                 <td class="p-6 align-top">
-                                    <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                    {{-- CHECKBOX KHUSUS ADMIN --}}
+                                    @if(Auth::user()->role === 'admin')
+                                        <input type="checkbox" name="ids[]" value="{{ $item->id }}" class="user-checkbox w-4 h-4 text-rose-600 bg-stone-100 border-stone-300 rounded-md focus:ring-rose-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                    @else
+                                        <span class="text-xs text-stone-300 font-bold">{{ $loop->iteration }}</span>
+                                    @endif
                                 </td>
                                 <td class="p-6 align-top">
                                     <div class="font-bold text-stone-800 whitespace-nowrap group-hover:text-rose-700 transition-colors">{{ $item->kode_kas }}</div>
@@ -259,11 +263,18 @@
                                     @endif
                                 </td>
                                 <td class="p-6 align-top text-center">
-                                    @if(Auth::user()->role === 'admin')
-                                        <div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                                            <a href="{{ route('kas-keluar.edit', $item->id) }}" class="p-2 rounded-xl text-stone-400 hover:bg-amber-50 hover:text-amber-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-amber-100" title="Edit">
-                                                <span class="material-symbols-rounded text-xl">edit_square</span>
-                                            </a>
+                                    {{-- REVISI: WRAPPER FLEX UNTUK SEMUA ROLE --}}
+                                    <div class="flex items-center justify-center gap-2">
+
+                                        {{-- 1. TOMBOL EDIT (UNTUK SEMUA USER YANG BISA AKSES HALAMAN INI) --}}
+                                        <a href="{{ route('kas-keluar.edit', $item->id) }}"
+                                           class="p-2 rounded-xl text-stone-400 hover:bg-amber-50 hover:text-amber-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-amber-100"
+                                           title="Edit">
+                                            <span class="material-symbols-rounded text-xl">edit_square</span>
+                                        </a>
+
+                                        {{-- 2. TOMBOL HAPUS (KHUSUS ADMIN) --}}
+                                        @if(Auth::user()->role === 'admin')
                                             <button type="button"
                                                     class="delete-btn p-2 rounded-xl text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:scale-105 transition-all tooltip border border-transparent hover:border-rose-100"
                                                     title="Hapus"
@@ -275,10 +286,8 @@
                                             <form action="{{ route('kas-keluar.destroy', $item->id) }}" method="POST" id="deleteForm-{{ $item->id }}" class="hidden">
                                                 @csrf @method('DELETE')
                                             </form>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-stone-300 font-bold">-</span>
-                                    @endif
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -356,7 +365,7 @@
                                     };
                                 @endphp
 
-                                {{-- CHECKBOX KHUSUS MOBILE --}}
+                                {{-- CHECKBOX KHUSUS MOBILE (HANYA ADMIN) --}}
                                 @if(Auth::user()->role === 'admin')
                                     <div class="absolute top-0 right-0 p-4 z-10" @click.stop>
                                         <label class="relative cursor-pointer flex items-center justify-center p-2 -m-2">
@@ -502,18 +511,24 @@
                         </div>
                     </div>
 
-                    @if(Auth::user()->role === 'admin')
-                        <div class="grid grid-cols-2 gap-3 mt-4">
-                            <a :href="selectedItem.edit_url" class="bg-white border border-stone-200 text-stone-700 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all text-sm shadow-sm">
-                                <span class="material-symbols-rounded text-lg">edit</span> Edit
-                            </a>
+                    {{-- REVISI: GRID BUTTON DI MODAL --}}
+                    {{-- Tombol Edit selalu muncul, Hapus hanya Admin --}}
+                    <div class="grid {{ Auth::user()->role === 'admin' ? 'grid-cols-2' : 'grid-cols-1' }} gap-3 mt-4">
 
+                        {{-- EDIT (SEMUA ROLE) --}}
+                        <a :href="selectedItem.edit_url" class="bg-white border border-stone-200 text-stone-700 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all text-sm shadow-sm">
+                            <span class="material-symbols-rounded text-lg">edit</span> Edit
+                        </a>
+
+                        {{-- HAPUS (ADMIN ONLY) --}}
+                        @if(Auth::user()->role === 'admin')
                             <button @click="confirmDelete(selectedItem.id, selectedItem.penerima, selectedItem.delete_url)"
                                     class="bg-rose-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 hover:bg-rose-700 active:scale-95 transition-all text-sm">
                                 <span class="material-symbols-rounded text-lg">delete</span> Hapus
                             </button>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
+
                 </div>
             </div>
         </div>

@@ -20,12 +20,13 @@ class Product extends Model
         'foto',
     ];
 
-    // Relasi ke User (Opsional tapi bagus untuk struktur)
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    // Relasi ke Outlet
     public function outlet()
     {
         return $this->belongsTo(Outlet::class);

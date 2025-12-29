@@ -22,19 +22,107 @@
                     <h1 class="text-3xl sm:text-4xl font-black text-stone-800 tracking-tight leading-none">
                         Kasir <span class="text-brand-600">Utama</span>
                     </h1>
+
                     <div class="flex items-center gap-2 mt-2">
+                        {{-- Indikator Status (Dot) --}}
                         <span class="relative flex h-2.5 w-2.5">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </span>
+
                         <div class="flex flex-col">
-                            <p class="text-xs font-bold text-stone-500 uppercase tracking-wider">
-                                {{ Auth::user()->outlet ? Auth::user()->outlet->name : 'Cabang Utama' }}
-                            </p>
-                            <p class="text-[10px] font-medium text-stone-400">
+                            {{-- LOGIKA TAMPILAN OUTLET (UPDATED DESIGN) --}}
+                            @if(Auth::user()->role === 'admin')
+                                {{-- Custom Dropdown Wrapper --}}
+                                <div x-data="{ open: false }" class="relative z-50">
+
+                                    {{-- 1. Trigger Button --}}
+                                    <button @click="open = !open" @click.outside="open = false"
+                                        class="group flex items-center gap-2 pl-3 pr-2 py-1.5 bg-white border border-stone-200 rounded-full shadow-sm hover:shadow-md hover:border-brand-500 transition-all duration-300">
+
+                                        <div class="w-6 h-6 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-rounded text-sm">storefront</span>
+                                        </div>
+
+                                        <div class="flex flex-col items-start mr-1">
+                                            <span class="text-[9px] font-bold text-stone-400 uppercase tracking-wider leading-none mb-0.5">Lokasi</span>
+                                            <span class="text-xs font-black text-stone-800 uppercase tracking-wide leading-none group-hover:text-brand-600 transition-colors">
+                                                {{ request('outlet_id') ? $outlets->firstWhere('id', request('outlet_id'))->name : 'Semua Outlet' }}
+                                            </span>
+                                        </div>
+
+                                        <div class="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-brand-600 group-hover:text-white transition-all">
+                                            <span class="material-symbols-rounded text-sm transition-transform duration-300" :class="open ? 'rotate-180' : ''">expand_more</span>
+                                        </div>
+                                    </button>
+
+                                    {{-- 2. Dropdown Menu --}}
+                                    <div x-show="open"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                        x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                                        class="absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden p-2 origin-top-left">
+
+                                        <div class="flex flex-col gap-1 max-h-[300px] overflow-y-auto no-scrollbar">
+
+                                            {{-- Opsi: Semua Outlet --}}
+                                            <a href="{{ route('pos.index') }}"
+                                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all {{ request('outlet_id') == '' ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900' }}">
+                                                <div class="w-8 h-8 rounded-lg {{ request('outlet_id') == '' ? 'bg-white text-brand-600 shadow-sm' : 'bg-stone-100 text-stone-400' }} flex items-center justify-center">
+                                                    <span class="material-symbols-rounded text-lg">domain</span>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-xs font-black uppercase tracking-wide">Semua Outlet</p>
+                                                    <p class="text-[10px] opacity-70 font-medium">Gabungan data stok</p>
+                                                </div>
+                                                @if(request('outlet_id') == '')
+                                                    <span class="material-symbols-rounded text-brand-600 text-lg">check_circle</span>
+                                                @endif
+                                            </a>
+
+                                            <div class="h-px bg-stone-100 my-1"></div>
+
+                                            {{-- Loop Outlets --}}
+                                            @foreach($outlets as $outlet)
+                                                <a href="{{ route('pos.index', ['outlet_id' => $outlet->id]) }}"
+                                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all {{ request('outlet_id') == $outlet->id ? 'bg-brand-50 text-brand-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900' }}">
+
+                                                    <div class="w-8 h-8 rounded-lg {{ request('outlet_id') == $outlet->id ? 'bg-white text-brand-600 shadow-sm' : 'bg-stone-100 text-stone-400' }} flex items-center justify-center">
+                                                        <span class="material-symbols-rounded text-lg">store</span>
+                                                    </div>
+
+                                                    <div class="flex-1">
+                                                        <p class="text-xs font-black uppercase tracking-wide">{{ $outlet->name }}</p>
+                                                        <p class="text-[10px] opacity-70 font-medium truncate w-32">{{ $outlet->alamat ?? 'Cabang Terdaftar' }}</p>
+                                                    </div>
+
+                                                    @if(request('outlet_id') == $outlet->id)
+                                                        <span class="material-symbols-rounded text-brand-600 text-lg">check_circle</span>
+                                                    @endif
+                                                </a>
+                                            @endforeach
+
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Tampilan untuk Kasir Biasa (Non-Admin) --}}
+                                <div class="flex items-center gap-2 pl-1 mt-1">
+                                    <span class="material-symbols-rounded text-stone-400 text-sm">store</span>
+                                    <p class="text-xs font-black text-stone-700 uppercase tracking-wider">
+                                        {{ $currentOutletName }}
+                                    </p>
+                                </div>
+                            @endif
+
+                            <p class="text-[10px] font-medium text-stone-400 mt-1 pl-1">
                                 {{ date('d M Y') }}
                             </p>
                         </div>
+
                     </div>
                 </div>
 
@@ -100,12 +188,16 @@
                     @forelse($products as $p)
                         @php $isHabis = $p->stok <= 0; @endphp
 
+                        {{-- REVISI VIEW:
+                             1. Hapus class 'grayscale' dan 'cursor-not-allowed'
+                             2. Hapus pengecekan @if(!$isHabis) pada @click
+                        --}}
                         <div x-show="filterProduct('{{ strtolower($p->nama) }}', '{{ strtolower($p->kategori) }}')"
                              x-transition:enter="transition ease-out duration-300"
                              x-transition:enter-start="opacity-0 scale-90"
                              x-transition:enter-end="opacity-100 scale-100"
-                             class="group relative bg-white rounded-[2rem] border border-stone-100 shadow-soft hover:shadow-glow hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden cursor-pointer h-full {{ $isHabis ? 'opacity-60 grayscale cursor-not-allowed' : '' }}"
-                             @if(!$isHabis) @click="addToCart({{ $p->id }}, '{{ $p->nama }}', {{ $p->harga }}, {{ $p->stok }}, '{{ $p->ukuran }}')" @endif>
+                             class="group relative bg-white rounded-[2rem] border border-stone-100 shadow-soft hover:shadow-glow hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden cursor-pointer h-full {{ $isHabis ? 'ring-2 ring-red-100' : '' }}"
+                             @click="addToCart({{ $p->id }}, '{{ $p->nama }}', {{ $p->harga }}, {{ $p->stok }}, '{{ $p->ukuran }}')">
 
                             {{-- Image --}}
                             <div class="relative w-full pt-[90%] bg-stone-100 overflow-hidden">
@@ -131,7 +223,16 @@
                                     @endif
                                 </div>
                                 <div class="absolute top-3 right-3">
-                                    <span class="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg shadow border border-white/20 backdrop-blur-md {{ $isHabis ? 'bg-rose-600 text-white' : 'bg-black/40 text-white' }}">
+                                    @php
+                                        $stokBadgeColor = 'bg-black/40 text-white'; // Default Aman
+                                        if($isHabis) {
+                                            $stokBadgeColor = 'bg-rose-600 text-white'; // Habis
+                                        } elseif($p->stok <= 10) {
+                                            $stokBadgeColor = 'bg-orange-500 text-white animate-pulse'; // Sekarat
+                                        }
+                                    @endphp
+
+                                    <span class="px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg shadow border border-white/20 backdrop-blur-md {{ $stokBadgeColor }}">
                                         {{ $isHabis ? 'HABIS' : 'Stok: ' . $p->stok }}
                                     </span>
                                 </div>
@@ -264,53 +365,83 @@
              ========================================== --}}
         <template x-teleport="body">
             <div x-show="mobileCartOpen" x-cloak class="lg:hidden fixed inset-0 z-[150] flex items-end justify-center">
+                {{-- Backdrop --}}
                 <div class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"
                      @click="mobileCartOpen = false" x-show="mobileCartOpen"
                      x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                      x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
 
+                {{-- Drawer Container --}}
                 <div class="relative bg-stone-50 w-full rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.2)] h-[85vh] flex flex-col overflow-hidden"
                      x-show="mobileCartOpen"
                      x-transition:enter="ease-out duration-300" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
                      x-transition:leave="ease-in duration-200" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full">
 
-                     <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-stone-300 rounded-full"></div>
-                     <div class="pt-8 pb-4 px-6 bg-white border-b border-stone-200 flex justify-between items-center">
+                     {{-- Handle Bar --}}
+                     <div class="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-1.5 bg-stone-300 rounded-full"></div>
+
+                     {{-- Header Drawer --}}
+                     <div class="pt-8 pb-4 px-6 bg-white border-b border-stone-200 flex justify-between items-center shrink-0">
                         <div>
                             <h2 class="text-xl font-black text-stone-900">Rincian Pesanan</h2>
                             <p class="text-xs text-stone-500 font-medium">Periksa kembali pesanan anda</p>
                         </div>
-                        <button @click="mobileCartOpen = false" class="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 hover:bg-stone-200 transition">
-                            <span class="material-symbols-rounded">close</span>
+                        <button @click="mobileCartOpen = false" class="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 hover:bg-stone-200 transition active:scale-90">
+                            <span class="material-symbols-rounded text-2xl">close</span>
                         </button>
                      </div>
 
+                     {{-- List Item (Scrollable) --}}
                      <div class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
                          <template x-for="(item, id) in cart" :key="id">
-                             <div class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-stone-100 flex justify-between items-center">
-                                 <div>
-                                     <h4 class="font-bold text-stone-800 text-sm mb-1" x-text="item.name"></h4>
-                                     <span class="inline-block px-1.5 py-0.5 rounded-md bg-stone-100 text-[10px] font-bold text-stone-500 uppercase tracking-wide mb-2" x-text="item.size"></span>
-                                     <div class="flex items-center gap-2">
-                                         <button @click="updateQty(id, -1)" class="w-8 h-8 bg-stone-100 rounded-lg text-stone-600 font-bold text-sm flex items-center justify-center active:scale-90 transition">-</button>
-                                         <span class="text-sm font-black w-6 text-center" x-text="item.qty"></span>
-                                         <button @click="updateQty(id, 1)" class="w-8 h-8 bg-stone-800 text-white rounded-lg font-bold text-sm flex items-center justify-center active:scale-90 transition">+</button>
+                             <div class="bg-white p-5 rounded-[1.75rem] shadow-sm border border-stone-100 flex justify-between items-start gap-3">
+                                 <div class="flex-1">
+                                     <h4 class="font-black text-stone-800 text-base mb-2 leading-tight" x-text="item.name"></h4>
+                                     <div class="mb-4">
+                                         <span class="inline-block px-2.5 py-1 rounded-lg bg-stone-100 text-[11px] font-bold text-stone-600 uppercase tracking-wide border border-stone-200" x-text="item.size"></span>
+                                     </div>
+                                     <div class="flex items-center gap-3">
+                                         <button @click="updateQty(id, -1)"
+                                            class="w-12 h-12 bg-stone-100 rounded-2xl text-stone-600 shadow-sm border border-stone-200 flex items-center justify-center active:scale-90 active:bg-stone-200 transition touch-manipulation">
+                                             <span class="material-symbols-rounded text-xl font-bold">remove</span>
+                                          </button>
+                                          <span class="text-xl font-black w-10 text-center text-stone-800" x-text="item.qty"></span>
+                                          <button @click="updateQty(id, 1)"
+                                             class="w-12 h-12 bg-stone-900 text-white rounded-2xl shadow-lg shadow-stone-900/20 flex items-center justify-center active:scale-90 active:bg-black transition touch-manipulation">
+                                              <span class="material-symbols-rounded text-xl font-bold">add</span>
+                                           </button>
                                      </div>
                                  </div>
-                                 <div class="text-right flex flex-col items-end gap-2">
-                                     <p class="font-black text-base text-stone-900" x-text="formatRupiah(item.price * item.qty)"></p>
-                                     <button @click="deleteItem(id)" class="text-[10px] text-rose-500 font-bold uppercase tracking-wider bg-rose-50 px-2 py-1 rounded-lg">Hapus</button>
+                                 <div class="text-right flex flex-col items-end justify-between h-full gap-4 pt-1">
+                                     <div>
+                                         <p class="font-black text-lg text-stone-900 tracking-tight" x-text="formatRupiah(item.price * item.qty)"></p>
+                                         <p class="text-[11px] text-stone-400 font-medium" x-text="'@' + formatRupiah(item.price)"></p>
+                                     </div>
+                                     <button @click="deleteItem(id)"
+                                         class="flex items-center gap-1.5 text-xs text-rose-600 font-bold uppercase tracking-wider bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-100 hover:bg-rose-100 transition active:scale-95">
+                                         <span class="material-symbols-rounded text-base">delete</span>
+                                         Hapus
+                                      </button>
                                  </div>
                              </div>
-                         </template>
-                     </div>
+                          </template>
+                          <div x-show="Object.keys(cart).length === 0" class="flex flex-col items-center justify-center py-20 text-stone-300 opacity-60">
+                             <span class="material-symbols-rounded text-7xl mb-3">shopping_basket</span>
+                             <p class="text-sm font-bold text-center uppercase tracking-widest">Keranjang Kosong</p>
+                         </div>
+                      </div>
 
-                     <div class="p-6 bg-white border-t border-stone-200 pb-10">
-                        <button @click="openCheckoutModal()" class="w-full py-4 bg-stone-900 text-white rounded-[1.25rem] font-bold text-base shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2">
-                            <span>Bayar Sekarang</span>
-                            <span class="bg-white/20 px-2 py-0.5 rounded-md text-sm" x-text="formatRupiah(totalCart)"></span>
-                        </button>
-                     </div>
+                      {{-- Footer Total & Button --}}
+                      <div class="p-6 bg-white border-t border-stone-200 pb-10 shrink-0 z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                         <div class="flex justify-between items-end mb-4 px-1">
+                             <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Tagihan</span>
+                             <span class="text-2xl font-black text-brand-600 tracking-tight" x-text="formatRupiah(totalCart)"></span>
+                         </div>
+                         <button @click="openCheckoutModal()" class="w-full py-5 bg-stone-900 text-white rounded-[1.5rem] font-bold text-lg shadow-xl shadow-stone-900/20 active:scale-[0.98] transition-transform flex items-center justify-center gap-3">
+                             <span>Bayar Sekarang</span>
+                             <span class="material-symbols-rounded text-2xl">arrow_forward</span>
+                         </button>
+                      </div>
                 </div>
             </div>
         </template>
@@ -351,6 +482,7 @@
                     <form method="POST" action="{{ route('pos.checkout') }}" class="flex flex-col flex-1 overflow-hidden" @submit.prevent="submitCheckout($event)">
                         @csrf
                         <input type="hidden" name="cart_json" :value="JSON.stringify(cart)">
+                        <input type="hidden" name="transaction_outlet_id" value="{{ $selectedOutletId }}">
                         <input type="hidden" name="total" :value="totalCart">
                         <input type="hidden" name="kembalian" :value="kembalian">
                         <input type="hidden" name="tipe_pesanan" :value="orderType">
@@ -401,35 +533,24 @@
                                 </div>
                             </div>
 
-                            {{-- TAMPILAN KHUSUS QRIS (BARU) --}}
+                            {{-- TAMPILAN KHUSUS QRIS --}}
                             <div x-show="selectedPaymentMethod === 'QRIS'" x-transition
-                                class="mt-4 bg-white border border-stone-200 rounded-[2rem] p-6 text-center shadow-sm relative overflow-hidden group">
-
-                                {{-- Background Pattern Decoration --}}
+                                 class="mt-4 bg-white border border-stone-200 rounded-[2rem] p-6 text-center shadow-sm relative overflow-hidden group">
                                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-gray-800"></div>
-
                                 <p class="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-4">Scan QRIS Untuk Membayar</p>
-
-                                {{-- Wadah Gambar QRIS --}}
                                 <div class="bg-white p-2 inline-block rounded-xl border border-stone-100 shadow-lg mx-auto relative">
-                                    {{-- Ganti src dengan lokasi gambar QRIS kamu --}}
                                     <img src="{{ asset('assets/images/qris.jpg') }}"
-                                        alt="QRIS Teh Solo"
-                                        class="w-56 h-auto object-contain mx-auto rounded-lg">
-
-                                    {{-- Logo Overlay (Opsional, agar terlihat resmi) --}}
+                                         alt="QRIS Teh Solo"
+                                         class="w-56 h-auto object-contain mx-auto rounded-lg">
                                     <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md border border-stone-100 shadow-sm">
                                         <span class="text-[10px] font-black text-stone-800">NMID: ID1025...</span>
                                     </div>
                                 </div>
-
                                 <div class="mt-6 flex flex-col items-center">
                                     <p class="text-xs text-stone-500 font-bold mb-1">Total yang harus dibayar</p>
                                     <div class="text-3xl font-black text-stone-900 tracking-tight bg-stone-100 px-4 py-2 rounded-xl border border-stone-200"
-                                        x-text="formatRupiah(totalCart)"></div>
+                                         x-text="formatRupiah(totalCart)"></div>
                                 </div>
-
-                                {{-- Peringatan Kasir --}}
                                 <div class="mt-5 p-3 bg-blue-50 text-blue-800 rounded-2xl text-xs flex items-start gap-2 text-left border border-blue-100">
                                     <span class="material-symbols-rounded text-lg shrink-0 mt-0.5">verified_user</span>
                                     <div>
@@ -472,7 +593,6 @@
                                     ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
                                     : (selectedPaymentMethod === 'QRIS' ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200' : 'bg-stone-900 text-white hover:bg-black hover:shadow-stone-900/20')">
 
-                                {{-- Teks Tombol Berubah Sesuai Metode --}}
                                 <span x-text="selectedPaymentMethod === 'QRIS' ? 'Konfirmasi Pembayaran QRIS' : 'Proses Transaksi'"></span>
                                 <span class="material-symbols-rounded">receipt_long</span>
                             </button>
@@ -480,129 +600,187 @@
                     </form>
                 </div>
             </div>
-
-
         </template>
 
     </div> {{-- END WRAPPER UTAMA --}}
 
     {{-- ==========================================
-         SECTION 6: RECEIPT MODAL (DIPISAH DARI WRAPPER UTAMA)
+         SECTION 6: ULTRA REALISTIC RECEIPT & PRINT LOGIC
          ========================================== --}}
     @if(session('print_data'))
         <div id="receipt-modal-wrapper"
              x-data="{ open: true }"
              x-show="open"
              class="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-             style="background-color: rgba(28, 25, 23, 0.9); backdrop-filter: blur(4px);">
+             style="background-color: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px);">
 
-            <div class="bg-white w-full max-w-[350px] shadow-2xl relative flex flex-col max-h-[90vh] rounded-[1.5rem] overflow-hidden animate-[scaleIn_0.3s_ease-out]">
+            {{-- Wrapper Utama --}}
+            <div class="w-full max-w-[450px] flex flex-col gap-6 animate-[slideUp_0.4s_ease-out] max-h-[95vh]">
 
-                {{-- Header Modal --}}
-                <div class="bg-emerald-50 p-6 text-center border-b border-emerald-100">
-                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
-                        <span class="material-symbols-rounded text-2xl">check_circle</span>
-                    </div>
-                    <h3 class="font-black text-emerald-800 text-lg">Transaksi Berhasil!</h3>
-                    <p class="text-xs text-emerald-600 font-bold">Struk siap dicetak</p>
-                </div>
-
-                {{-- AREA CETAK --}}
-                <div id="receiptArea" class="bg-white p-6 font-mono text-[12px] text-black overflow-y-auto no-scrollbar">
-                    <div class="text-center mb-4">
-                        <h2 class="font-bold text-lg uppercase leading-tight mb-1">{{ session('print_data')['store_name'] }}</h2>
-                        <p class="text-[10px] text-gray-500 leading-tight">{{ session('print_data')['address'] }}</p>
+                {{-- AREA STRUK KERTAS --}}
+                <div class="relative w-full filter drop-shadow-[0_15px_50px_rgba(0,0,0,0.6)]">
+                    {{-- 1. Hiasan Sobekan Atas --}}
+                    <div class="h-4 w-full relative z-10"
+                         style="background-color: #fcfcfc; mask-image: linear-gradient(to bottom, transparent, black), url('data:image/svg+xml;utf8,<svg width=\'12\' height=\'6\' viewBox=\'0 0 12 6\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M0 6L6 0L12 6H0Z\' fill=\'black\'/></svg>'); mask-size: 12px 6px; mask-repeat: repeat-x; mask-position: bottom; -webkit-mask-image: linear-gradient(to bottom, transparent, black), url('data:image/svg+xml;utf8,<svg width=\'12\' height=\'6\' viewBox=\'0 0 12 6\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M0 6L6 0L12 6H0Z\' fill=\'black\'/></svg>'); -webkit-mask-size: 12px 6px; -webkit-mask-repeat: repeat-x; -webkit-mask-position: bottom;">
                     </div>
 
-                    <div class="mb-3 pb-3 border-b border-dashed border-black">
-                        <div class="flex justify-between"><span>Tgl:</span> <span>{{ session('print_data')['tanggal'] }}</span></div>
-                        <div class="flex justify-between"><span>Ref:</span> <span>{{ session('print_data')['no_ref'] }}</span></div>
-                        <div class="flex justify-between"><span>Kasir:</span> <span>{{ session('print_data')['kasir'] }}</span></div>
-                        <div class="flex justify-between mt-1 font-bold"><span>Plg:</span> <span>{{ session('print_data')['nama_pelanggan'] }}</span></div>
-                    </div>
+                    {{-- 2. KONTAINER ISI --}}
+                    <div class="bg-[#fcfcfc] px-8 pt-8 pb-4 w-full relative">
+                        <div id="receiptArea" class="font-mono text-stone-900 text-base leading-relaxed relative">
+                            <div class="no-print absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 border-[8px] border-stone-200/50 rounded-full flex items-center justify-center -rotate-12 pointer-events-none select-none z-0">
+                                <span class="text-5xl font-black text-stone-200/50 uppercase tracking-widest">LUNAS</span>
+                            </div>
 
-                    <div class="space-y-2 mb-3 pb-3 border-b border-dashed border-black">
-                        @foreach(session('print_data')['items'] as $item)
-                            <div>
-                                <div class="font-bold">{{ $item['name'] }} @if(isset($item['ukuran']) && $item['ukuran'] != '-')({{ $item['ukuran'] }})@endif</div>
-                                <div class="flex justify-between mt-0.5 pl-2">
-                                    <span>{{ $item['qty'] }} x {{ number_format($item['price'], 0, ',', '.') }}</span>
-                                    <span class="font-bold">{{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                            <div class="relative z-10">
+                                {{-- Header --}}
+                                <div class="text-center mb-8">
+                                    <div class="font-black text-2xl uppercase tracking-wider text-stone-900 mb-1">{{ session('print_data')['store_name'] }}</div>
+                                    <div class="text-xs font-bold text-stone-500 uppercase px-4 leading-tight">{{ session('print_data')['address'] }}</div>
+                                </div>
+
+                                {{-- Meta Data --}}
+                                <div class="border-b-2 border-dashed border-stone-300 pb-4 mb-4 text-xs font-bold text-stone-600 uppercase tracking-wide">
+                                    <div class="flex justify-between mb-1"><span>Tanggal</span> <span class="text-stone-900">{{ session('print_data')['tanggal'] }}</span></div>
+                                    <div class="flex justify-between mb-1"><span>No. Ref</span> <span class="text-stone-900">{{ session('print_data')['no_ref'] }}</span></div>
+                                    <div class="flex justify-between mb-1"><span>Kasir</span> <span class="text-stone-900">{{ session('print_data')['kasir'] }}</span></div>
+                                    <div class="flex justify-between"><span>Customer</span> <span class="text-stone-900">{{ session('print_data')['nama_pelanggan'] }}</span></div>
+                                </div>
+
+                                {{-- Items List --}}
+                                <div class="pb-4 mb-4 border-b-2 border-dashed border-stone-300 min-h-[100px]">
+                                    @foreach(session('print_data')['items'] as $item)
+                                        <div class="mb-3 last:mb-0">
+                                            <div class="font-black text-sm text-stone-800 uppercase leading-tight">{{ $item['name'] }} @if(isset($item['ukuran']) && $item['ukuran'] != '-')({{ $item['ukuran'] }})@endif</div>
+                                            <div class="flex justify-between text-xs pl-2 text-stone-500 mt-1 font-medium">
+                                                <span>{{ $item['qty'] }} x {{ number_format($item['price'], 0, ',', '.') }}</span>
+                                                <span class="text-stone-900 font-bold">{{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Totals Section --}}
+                                <div class="space-y-1 mb-8">
+                                    <div class="flex justify-between text-2xl font-black text-stone-900 items-end">
+                                        <span class="text-xs font-bold text-stone-500 mb-1">TOTAL</span>
+                                        <span>{{ number_format(session('print_data')['total'], 0, ',', '.') }}</span>
+                                    </div>
+
+                                    {{-- Payment Details --}}
+                                    <div class="pt-3 mt-3 border-t border-stone-200">
+                                        @if(session('print_data')['metode'] == 'Tunai')
+                                            <div class="flex justify-between text-xs font-bold text-stone-500">
+                                                <span>TUNAI</span>
+                                                <span>{{ number_format(session('print_data')['bayar'], 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="flex justify-between text-xs font-bold text-stone-500 mt-1.5">
+                                                <span>KEMBALIAN</span>
+                                                <span>{{ number_format(session('print_data')['kembali'], 0, ',', '.') }}</span>
+                                            </div>
+                                        @else
+                                            <div class="flex justify-between items-center bg-stone-100 p-2.5 rounded-lg border border-stone-200/50">
+                                                <span class="text-[11px] font-bold uppercase text-stone-500">Metode Bayar</span>
+                                                <span class="text-xs font-black uppercase text-stone-800">{{ session('print_data')['metode'] }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Footer & Barcode Simulation --}}
+                                <div class="text-center">
+                                    <p class="font-bold text-[11px] text-stone-800 mb-4 uppercase">*** Terima Kasih ***</p>
+                                    <div class="h-10 w-full max-w-[240px] mx-auto flex items-stretch justify-center gap-[1px] opacity-80 overflow-hidden mb-1">
+                                        @for($i = 0; $i < 50; $i++)
+                                            <div class="bg-stone-900 w-[{{ rand(1,4) }}px]"></div>
+                                            <div class="bg-transparent w-[{{ rand(1,3) }}px]"></div>
+                                        @endfor
+                                    </div>
+                                    <p class="text-[10px] font-mono text-stone-400 tracking-widest">{{ session('print_data')['no_ref'] }}</p>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-
-                    <div class="space-y-1 mb-4">
-                        <div class="flex justify-between text-sm font-bold">
-                            <span>TOTAL</span>
-                            <span>{{ number_format(session('print_data')['total'], 0, ',', '.') }}</span>
                         </div>
-                        @if(session('print_data')['metode'] == 'Tunai')
-                            <div class="flex justify-between"><span>Tunai</span><span>{{ number_format(session('print_data')['bayar'], 0, ',', '.') }}</span></div>
-                            <div class="flex justify-between"><span>Kembali</span><span>{{ number_format(session('print_data')['kembali'], 0, ',', '.') }}</span></div>
-                        @else
-                            <div class="flex justify-between italic text-[10px]"><span>Pembayaran via {{ session('print_data')['metode'] }}</span></div>
-                        @endif
                     </div>
 
-                    <div class="text-center pt-2 border-t border-dashed border-black">
-                        <p class="font-bold mb-1">TERIMA KASIH</p>
-                        <p class="text-[10px]">Silahkan Datang Kembali</p>
+                    {{-- 3. Hiasan Sobekan Bawah --}}
+                    <div class="h-4 w-full relative z-10"
+                         style="background-color: #fcfcfc; mask-image: url('data:image/svg+xml;utf8,<svg width=\'12\' height=\'6\' viewBox=\'0 0 12 6\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M0 0L6 6L12 0H0Z\' fill=\'black\'/></svg>'); mask-size: 12px 6px; mask-repeat: repeat-x; mask-position: top; -webkit-mask-image: url('data:image/svg+xml;utf8,<svg width=\'12\' height=\'6\' viewBox=\'0 0 12 6\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M0 0L6 6L12 0H0Z\' fill=\'black\'/></svg>'); -webkit-mask-size: 12px 6px; -webkit-mask-repeat: repeat-x; -webkit-mask-position: top;">
                     </div>
                 </div>
 
                 {{-- TOMBOL AKSI --}}
-                <div class="p-4 bg-stone-50 border-t border-stone-200 flex gap-3">
-                    <button onclick="printReceipt()" class="flex-1 bg-stone-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-black transition flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                        <span class="material-symbols-rounded text-lg">print</span> Cetak
+                <div class="grid grid-cols-2 gap-4 shrink-0 px-2">
+                    <button onclick="printReceipt()" class="col-span-1 bg-white text-stone-900 py-4 rounded-2xl font-black text-sm hover:bg-emerald-50 shadow-xl shadow-black/20 active:scale-95 transition-all flex items-center justify-center gap-2 group border border-white/10">
+                        <span class="material-symbols-rounded group-hover:animate-bounce">print</span> CETAK
                     </button>
-                    {{-- Tutup modal me-reload halaman agar session hilang --}}
-                    <a href="{{ request()->url() }}" class="flex-1 bg-white border border-stone-300 text-stone-600 py-3 rounded-xl font-bold text-sm hover:bg-stone-100 transition flex items-center justify-center active:scale-95">
-                        Tutup
+                    <a href="{{ request()->url() }}" class="col-span-1 bg-rose-600 text-white py-4 rounded-2xl font-bold text-sm hover:bg-rose-700 shadow-xl shadow-rose-900/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-rounded">close</span> TUTUP
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- SCRIPT KHUSUS UNTUK MEMUTAR AUDIO (DIPISAH DARI ALPINE AGAR LEBIH STABIL) --}}
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var audio = document.getElementById('successSound');
                 if(audio) {
                     audio.currentTime = 0;
-                    // Menggunakan promise catch untuk menangani error jika browser memblokir autoplay
-                    var playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(_ => {
-                            // Autoplay started!
-                        })
-                        .catch(error => {
-                            console.log("Audio autoplay prevented by browser. User interaction needed.");
-                        });
-                    }
+                    audio.play().catch(e => console.log("Audio autoplay prevented."));
                 }
             });
         </script>
     @endif
 
-    {{-- Script Print --}}
+    {{-- Script Print Thermal Optimization --}}
     <script>
         function printReceipt() {
             const content = document.getElementById('receiptArea').innerHTML;
-            const win = window.open('', '', 'height=600,width=400');
-            win.document.write('<html><head><title>Struk Belanja</title>');
-            win.document.write('<style>body { font-family: "Courier New", monospace; margin: 0; padding: 0; font-size: 12px; color: #000; } .text-center { text-align: center; } .flex { display: flex; justify-content: space-between; } .font-bold { font-weight: bold; } .border-b { border-bottom: 1px dashed #000; } .border-t { border-top: 1px dashed #000; } .pb-3 { padding-bottom: 8px; } .mb-4 { margin-bottom: 16px; } </style>');
-            win.document.write('</head><body>');
-            win.document.write(content);
-            win.document.write('</body></html>');
-            win.document.close();
-            win.focus();
-            setTimeout(() => { win.print(); win.close(); }, 500);
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write('<html><head><title>Struk Transaksi</title>');
+            doc.write('<style>');
+            doc.write(`
+                @page { margin: 0; size: auto; }
+                body { font-family: 'Courier New', monospace; margin: 0; padding: 5px 2px; font-size: 12px; color: #000; width: 58mm; }
+                .text-center { text-align: center; }
+                .text-right { text-align: right; }
+                .flex { display: flex; justify-content: space-between; align-items: center; }
+                .font-black { font-weight: 900; }
+                .font-bold { font-weight: bold; }
+                .uppercase { text-transform: uppercase; }
+                .mb-1 { margin-bottom: 4px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; } .mb-8 { margin-bottom: 24px; }
+                .mt-1 { margin-top: 4px; } .mt-1\\.5 { margin-top: 6px; }
+                .pb-4 { padding-bottom: 16px; } .pl-2 { padding-left: 8px; } .pt-3 { padding-top: 12px; } .px-4 { padding-left: 16px; padding-right: 16px; }
+                .text-xs { font-size: 10px; } .text-sm { font-size: 12px; } .text-base { font-size: 14px; } .text-xl { font-size: 18px; } .text-2xl { font-size: 22px; }
+                .border-b-2 { border-bottom: 1px dashed #000; } .border-t { border-top: 1px dashed #000; }
+                .text-stone-900, .text-stone-800, .text-stone-600, .text-stone-500 { color: #000; }
+                .bg-stone-900, .bg-black { background-color: #000 !important; -webkit-print-color-adjust: exact; }
+                .bg-transparent { background-color: transparent !important; }
+                .h-10 { height: 40px; margin-top: 10px; display: flex; justify-content: center; overflow: hidden; }
+                .bg-\\[\\#fcfcfc\\] { background: none; } .bg-stone-100 { background: none; border: 1px solid #000; }
+                .absolute, .shadow-lg, .rounded-lg, .rounded-xl, .material-symbols-rounded { display: none; }
+            `);
+            doc.write('</style>');
+            doc.write('</head><body>');
+            doc.write('<div style="padding-bottom: 20px;">' + content + '</div>');
+            doc.write('</body></html>');
+            doc.close();
+
+            iframe.contentWindow.focus();
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                setTimeout(() => { document.body.removeChild(iframe); }, 2000);
+            }, 500);
         }
     </script>
 
-    {{-- LOGIC JS --}}
+    {{-- LOGIC JS (REVISI: HAPUS BLOKIR STOK) --}}
     <script>
         function posSystem() {
             return {
@@ -612,7 +790,7 @@
                 mobileCartOpen: false,
                 checkoutModalOpen: false,
                 customerName: '',
-                orderType: 'Dine-in',
+                orderType: 'Take-away',
                 selectedPaymentMethod: 'Tunai',
                 bayar: 0,
                 bayarDisplay: '',
@@ -641,23 +819,24 @@
                 },
                 setCategory(cat) { this.activeCategory = cat; },
 
+                // REVISI: HAPUS VALIDASI MAXSTOCK
                 addToCart(id, name, price, maxStock, size) {
                     this.playSound('beep');
 
                     if (this.cart[id]) {
-                        if(this.cart[id].qty >= maxStock) { this.showError('Stok Habis', 'Sisa stok produk ini: ' + maxStock); return; }
+                        // REVISI: Validasi maxStock dihapus agar bisa minus
                         this.cart[id].qty++;
                     } else {
-                        if(maxStock <= 0) { this.showError('Habis', 'Stok produk ini kosong.'); return; }
+                        // REVISI: Validasi stok kosong dihapus agar bisa minus
                         this.cart[id] = { name: name, price: price, qty: 1, maxStock: maxStock, size: size || '-' };
                     }
                 },
 
+                // REVISI: HAPUS VALIDASI MAXSTOCK
                 updateQty(id, change) {
                     if (this.cart[id]) {
                         const newQty = this.cart[id].qty + change;
-                        if(newQty > this.cart[id].maxStock) { this.showError('Mencapai Batas', 'Stok tidak mencukupi'); return; }
-
+                        // Validasi batas atas dihapus
                         this.cart[id].qty = newQty;
                         if (this.cart[id].qty <= 0) delete this.cart[id];
                         else this.playSound('beep');
@@ -688,8 +867,8 @@
                 openCheckoutModal() {
                     this.mobileCartOpen = false; this.checkoutModalOpen = true;
                     this.bayar = 0; this.bayarDisplay = ''; this.customerName = '';
-                    this.orderType = 'Dine-in'; this.selectedPaymentMethod = 'Tunai';
-
+                    this.orderType = 'Take-away';
+                    this.selectedPaymentMethod = 'Tunai';
                     setTimeout(() => {
                         if(this.selectedPaymentMethod === 'Tunai' && document.getElementById('inputBayar')) {
                             document.getElementById('inputBayar').focus();
@@ -721,37 +900,29 @@
                 },
 
                 submitCheckout(e) {
-                    // Validasi Pembayaran
                     if(this.selectedPaymentMethod === 'Tunai' && this.bayar < this.totalCart) {
                         this.playSound('beep');
                         this.showError('Pembayaran Kurang', 'Nominal uang tidak mencukupi.');
                         return;
                     }
-
                     if(Object.keys(this.cart).length === 0) {
                         this.showError('Error', 'Keranjang kosong');
                         return;
                     }
-
-                    // Loading State
                     let btn = e.target.querySelector('button[type="submit"]');
                     if(btn) {
                         btn.innerHTML = '<span class="animate-spin material-symbols-rounded">progress_activity</span> Memproses...';
                         btn.disabled = true;
                         btn.classList.add('opacity-75', 'cursor-not-allowed');
                     }
-
-                    // Submit Form langsung (Native submit)
                     e.target.submit();
                 },
 
                 formatRupiah(number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); },
-
                 showToast(title) {
                     const Toast = Swal.mixin({ toast: true, position: 'bottom-center', showConfirmButton: false, timer: 1000, background: '#1c1917', color: '#fff', iconColor: '#ea580c', customClass: { popup: 'rounded-2xl mb-20 font-sans font-bold' } });
                     Toast.fire({ icon: 'success', title: title });
                 },
-
                 showError(title, text) {
                     Swal.fire({ icon: 'error', title: title, text: text, toast: true, position: 'top-center', showConfirmButton: false, timer: 2000, background: '#1c1917', color: '#fff', iconColor: '#f43f5e', customClass: { popup: 'rounded-2xl font-sans font-bold' } });
                 }
